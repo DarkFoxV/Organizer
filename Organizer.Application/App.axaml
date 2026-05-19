@@ -1,0 +1,84 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Organizer.Application.App"
+             RequestedThemeVariant="Default">
+
+    <Application.Resources>
+        <SolidColorBrush x:Key="SurfaceBrush">#161b22</SolidColorBrush>
+        <SolidColorBrush x:Key="SurfaceAltBrush">#1c2230</SolidColorBrush>
+        <SolidColorBrush x:Key="BorderBrushColor">#2a3347</SolidColorBrush>
+        <SolidColorBrush x:Key="TextPrimaryBrush">#e6edf3</SolidColorBrush>
+        <SolidColorBrush x:Key="TextMutedBrush">#8b949e</SolidColorBrush>
+        <SolidColorBrush x:Key="TextSubtleBrush">#484f58</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryBrush">#3b82f6</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryHoverBrush">#1d4ed8</SolidColorBrush>
+        <SolidColorBrush x:Key="SuccessBrush">#16a34a</SolidColorBrush>
+        <SolidColorBrush x:Key="SuccessHoverBrush">#15803d</SolidColorBrush>
+        <SolidColorBrush x:Key="DangerBrush">#dc2626</SolidColorBrush>
+        <SolidColorBrush x:Key="DangerHoverBrush">#b91c1c</SolidColorBrush>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <Style Selector="Button.btn">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.btn-primary">
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="Foreground" Value="#fff" />
+        </Style>
+        <Style Selector="Button.btn-primary:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PrimaryHoverBrush}" />
+        </Style>
+
+        <Style Selector="Button.btn-success">
+            <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
+            <Setter Property="Foreground" Value="#fff" />
+        </Style>
+        <Style Selector="Button.btn-success:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SuccessHoverBrush}" />
+        </Style>
+        <Style Selector="Button.btn-success:disabled">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+        </Style>
+
+        <Style Selector="Button.btn-danger">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="Foreground" Value="#fff" />
+        </Style>
+        <Style Selector="Button.btn-danger:pointerover">
+            <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}" />
+        </Style>
+
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+        <Style Selector="TextBox.field:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+        <Style Selector="TextBox.field /template/ Border#PART_BorderElement">
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+    </Application.Styles>
+</Application>

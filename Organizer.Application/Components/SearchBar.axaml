@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels.Components"
+             x:Class="Organizer.Application.Components.SearchBar"
+             x:DataType="vm:SearchBarViewModel">
+
+    <UserControl.Styles>
+
+        <Style Selector="TextBox.search-input">
+            <Setter Property="Background" Value="#1c2230" />
+            <Setter Property="Foreground" Value="#e6edf3" />
+            <Setter Property="BorderBrush" Value="#2a3347" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12 10" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="CaretBrush" Value="#3b82f6" />
+        </Style>
+        <Style Selector="TextBox.search-input:focus">
+            <Setter Property="BorderBrush" Value="#3b82f6" />
+        </Style>
+        <Style Selector="TextBox.search-input /template/ Border#PART_BorderElement">
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <Style Selector="Button.btn">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Padding" Value="16 0" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.btn-search">
+            <Setter Property="Background" Value="#3b82f6" />
+            <Setter Property="Foreground" Value="#ffffff" />
+        </Style>
+        <Style Selector="Button.btn-search:pointerover">
+            <Setter Property="Background" Value="#1d4ed8" />
+        </Style>
+
+        <Style Selector="Button.btn-register">
+            <Setter Property="Background" Value="#16a34a" />
+            <Setter Property="Foreground" Value="#ffffff" />
+        </Style>
+        <Style Selector="Button.btn-register:pointerover">
+            <Setter Property="Background" Value="#15803d" />
+        </Style>
+
+        <Style Selector="ComboBox.sort-picker">
+            <Setter Property="Background" Value="#1c2230" />
+            <Setter Property="Foreground" Value="#e6edf3" />
+            <Setter Property="BorderBrush" Value="#2a3347" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12 0" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+        <Style Selector="ComboBox.sort-picker:focus">
+            <Setter Property="BorderBrush" Value="#3b82f6" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <Border Background="#161b22"
+            BorderBrush="#2a3347"
+            BorderThickness="0 0 0 1"
+            Padding="20 14">
+
+        <Grid ColumnDefinitions="*,Auto,160">
+            <!-- Campo de busca -->
+            <TextBox Grid.Column="0"
+                     Classes="search-input"
+                     Text="{Binding Query}"
+                     PlaceholderText="Buscar por descrição, tag..."
+                     Margin="0 0 10 0" />
+
+            <!-- Botão registrar -->
+            <Button Grid.Column="1"
+                    Classes="btn btn-register"
+                    Command="{Binding RegisterCommand}"
+                    Margin="0 0 8 0">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="+" VerticalAlignment="Center" FontSize="16" />
+                    <TextBlock Text="Registrar" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <!-- Ordenação -->
+            <ComboBox Grid.Column="2"
+                      Classes="sort-picker"
+                      ItemsSource="{Binding SortOptions}"
+                      SelectedItem="{Binding SelectedSort}" />
+
+        </Grid>
+
+    </Border>
+
+</UserControl>

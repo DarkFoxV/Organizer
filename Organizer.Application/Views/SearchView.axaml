@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             xmlns:cvm="using:Organizer.Application.ViewModels.Components"
+             xmlns:components="using:Organizer.Application.Components"
+             xmlns:views="using:Organizer.Application.Views"
+             x:Class="Organizer.Application.Views.SearchView"
+             x:DataType="vm:SearchViewModel">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <StackPanel Grid.Row="0">
+
+            <components:SearchBar
+                DataContext="{Binding SearchBar}" />
+
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrushColor}"
+                    BorderThickness="0 0 0 1"
+                    Padding="20 12">
+
+                <components:TagSelector
+                    DataContext="{Binding TagSelector}" />
+
+            </Border>
+
+        </StackPanel>
+
+        <!-- Área central -->
+        <Grid Grid.Row="1">
+
+            <StackPanel IsVisible="{Binding IsLoading}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="12">
+                <TextBlock Text="⏳" FontSize="32" HorizontalAlignment="Center" />
+                <TextBlock Text="Carregando..."
+                           FontSize="14"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <StackPanel IsVisible="{Binding IsEmpty}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="12">
+                <TextBlock Text="🔍" FontSize="48" HorizontalAlignment="Center" />
+                <TextBlock Text="Nenhuma imagem encontrada"
+                           FontSize="16"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="Tente outros termos ou registre uma nova imagem"
+                           FontSize="13"
+                           Foreground="{DynamicResource TextSubtleBrush}"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <Border Padding="20 20 20 56">
+                <ScrollViewer IsVisible="{Binding !IsEmpty}"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+
+                    <ItemsControl HorizontalAlignment="Center" ItemsSource="{Binding Cards}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="cvm:CardItemViewModel">
+                                <components:ImageContainer DataContext="{Binding}" Margin="8" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+        </Grid>
+
+        <!-- Paginação -->
+        <Border Grid.Row="2"
+                BorderBrush="{DynamicResource BorderBrushColor}"
+                BorderThickness="0 1 0 0"
+                Background="{DynamicResource SurfaceBrush}">
+
+            <components:Pagination
+                DataContext="{Binding Pagination}"
+                HorizontalAlignment="Center" />
+
+        </Border>
+
+        <components:ImagePreviewModal
+            Grid.RowSpan="3"
+            DataContext="{Binding Preview}" />
+
+        <views:GroupCopyPickerModal
+            Grid.RowSpan="3"
+            DataContext="{Binding CopyPicker}" />
+
+    </Grid>
+
+</UserControl>

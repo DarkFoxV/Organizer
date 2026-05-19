@@ -1,0 +1,162 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             xmlns:components="using:Organizer.Application.Components"
+             x:Class="Organizer.Application.Views.EditView"
+             x:DataType="vm:EditViewModel">
+
+    <UserControl.Styles>
+
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Border.section-card">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="24" />
+            <Setter Property="Margin" Value="0 0 0 16" />
+        </Style>
+
+        <Style Selector="Button.btn">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Padding" Value="20 0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+
+        <Style Selector="TextBox.field">
+            <Setter Property="Padding" Value="12 10" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+
+        <Border Grid.Row="0"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrushColor}"
+                BorderThickness="0 0 0 1"
+                Padding="28 18">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0"
+                            Spacing="4">
+                    <TextBlock Text="{Binding Title}"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                    <TextBlock Text="{Binding Subtitle}"
+                               FontSize="13"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Classes="btn btn-danger"
+                        Width="40" Height="40"
+                        Padding="0"
+                        VerticalAlignment="Top"
+                        Command="{Binding CloseCommand}">
+                    <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+
+            <Border HorizontalAlignment="Stretch"
+                    Padding="28 24 28 40">
+
+                <StackPanel Spacing="0">
+                    <Border Classes="section-card">
+                        <StackPanel Spacing="12">
+                            <TextBlock Classes="section-title"
+                                       Text="📝 Descrição" />
+                            <TextBlock Text="Atualize a descrição da imagem de capa. Isso impacta a busca textual."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
+                            <TextBox Classes="field"
+                                     Text="{Binding Description}"
+                                     PlaceholderText="Descreva a imagem..." />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="section-card">
+                        <StackPanel Spacing="12">
+                            <TextBlock Classes="section-title"
+                                       Text="🏷 Tags" />
+                            <TextBlock Text="Selecione as tags associadas à imagem de capa."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock IsVisible="{Binding !TagsLoaded}"
+                                       Text="Carregando tags..."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+
+                            <components:TagSelector
+                                x:Name="TagSelectorControl"
+                                IsVisible="{Binding TagsLoaded}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="section-card">
+                        <StackPanel Spacing="18">
+                            <Border Background="{DynamicResource SurfaceAltBrush}"
+                                    BorderBrush="{DynamicResource BorderBrushColor}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="14 12">
+                                <TextBlock Text="{Binding StatusText}"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource TextMutedBrush}" />
+                            </Border>
+
+                            <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                    Background="#2d1515"
+                                    BorderBrush="{DynamicResource DangerBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12 10">
+                                <TextBlock Text="{Binding ErrorMessage}"
+                                           FontSize="13"
+                                           Foreground="#f87171"
+                                           TextWrapping="Wrap" />
+                            </Border>
+
+                            <Button Classes="btn btn-success"
+                                    IsEnabled="{Binding IsReady}"
+                                    Command="{Binding SubmitCommand}"
+                                    HorizontalAlignment="Left"
+                                    MinWidth="180">
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="10">
+                                    <TextBlock Text="💾"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock IsVisible="{Binding !IsSubmitting}"
+                                               Text="Salvar alterações"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock IsVisible="{Binding IsSubmitting}"
+                                               Text="Salvando..."
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+            </Border>
+
+        </ScrollViewer>
+
+    </Grid>
+
+</UserControl>

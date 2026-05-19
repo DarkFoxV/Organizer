@@ -1,0 +1,201 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             xmlns:cvm="using:Organizer.Application.ViewModels.Components"
+             x:Class="Organizer.Application.Views.ManageTagsView"
+             x:DataType="vm:ManageTagsViewModel">
+
+    <UserControl.Styles>
+
+        <Style Selector="TextBox.field">
+            <Setter Property="Padding" Value="12 8" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <Style Selector="ComboBox.color-picker">
+            <Setter Property="Background" Value="#1c2230" />
+            <Setter Property="Foreground" Value="#e6edf3" />
+            <Setter Property="BorderBrush" Value="#2a3347" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12 0" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="MinWidth" Value="130" />
+        </Style>
+
+        <Style Selector="Button.btn">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="14 0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+
+        <Style Selector="Button.btn-ghost">
+            <Setter Property="Background" Value="#1c2230" />
+            <Setter Property="Foreground" Value="#8b949e" />
+            <Setter Property="BorderBrush" Value="#2a3347" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.btn-ghost:pointerover">
+            <Setter Property="Background" Value="#263b82f6" />
+            <Setter Property="Foreground" Value="#60a5fa" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Background="#161b22"
+                BorderBrush="#2a3347"
+                BorderThickness="0 0 0 1"
+                Padding="28 16">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Gerenciar Tags"
+                           FontSize="20"
+                           FontWeight="Bold"
+                           Foreground="#e6edf3" />
+                <TextBlock Text="Crie, edite ou remova as tags da sua coleção"
+                           FontSize="13"
+                           Foreground="#8b949e" />
+            </StackPanel>
+        </Border>
+
+        <!-- Formulário de nova tag -->
+        <Border Grid.Row="1"
+                Background="#161b22"
+                BorderBrush="#2a3347"
+                BorderThickness="0 0 0 1"
+                Padding="28 16">
+            <StackPanel Spacing="12">
+
+                <TextBlock Text="Nova tag"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="#e6edf3" />
+
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                    <TextBox Grid.Column="0"
+                             Classes="field"
+                             Text="{Binding NewTagName}"
+                             PlaceholderText="Nome da tag..." />
+
+                    <ComboBox Grid.Column="1"
+                              Classes="color-picker"
+                              ItemsSource="{Binding ColorOptions}"
+                              SelectedItem="{Binding NewTagColor}" />
+
+                    <Button Grid.Column="2"
+                            Classes="btn btn-success"
+                            Command="{Binding CreateTagCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="Criar" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+            </StackPanel>
+        </Border>
+
+        <!-- Cabeçalho da tabela -->
+        <Border Grid.Row="2"
+                Background="#0d1117"
+                Padding="28 10">
+            <Grid ColumnDefinitions="*,130,200" ColumnSpacing="20">
+                <TextBlock Grid.Column="0" Text="Nome"
+                           FontSize="12" FontWeight="SemiBold"
+                           Foreground="#484f58" />
+                <TextBlock Grid.Column="1" Text="Cor"
+                           FontSize="12" FontWeight="SemiBold"
+                           Foreground="#484f58" />
+                <TextBlock Grid.Column="2" Text="Ações"
+                           FontSize="12" FontWeight="SemiBold"
+                           Foreground="#484f58" />
+            </Grid>
+        </Border>
+
+        <!-- Lista scrollável de tags -->
+        <ScrollViewer Grid.Row="3"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+
+            <ItemsControl ItemsSource="{Binding Tags}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="cvm:TagRowViewModel">
+
+                        <Border Padding="28 14"
+                                BorderBrush="#2a3347"
+                                BorderThickness="0 0 0 1">
+
+                            <Grid ColumnDefinitions="*,130,200" ColumnSpacing="20">
+
+                                <!-- Nome -->
+                                <Panel Grid.Column="0" VerticalAlignment="Center">
+                                    <StackPanel IsVisible="{Binding IsNotEditing}"
+                                                Orientation="Horizontal" Spacing="10">
+                                        <Border Width="12" Height="12"
+                                                CornerRadius="6"
+                                                Background="{Binding ColorHex}"
+                                                VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontSize="14" Foreground="#e6edf3"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBox IsVisible="{Binding IsEditing}"
+                                             Classes="field"
+                                             Text="{Binding EditName}" />
+                                </Panel>
+
+                                <!-- Cor -->
+                                <Panel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock IsVisible="{Binding IsNotEditing}"
+                                               Text="{Binding Color}"
+                                               FontSize="13" Foreground="#8b949e"
+                                               VerticalAlignment="Center" />
+                                    <ComboBox IsVisible="{Binding IsEditing}"
+                                              Classes="color-picker"
+                                              ItemsSource="{Binding $parent[UserControl].((vm:ManageTagsViewModel)DataContext).ColorOptions}"
+                                              SelectedItem="{Binding EditColor}" />
+                                </Panel>
+
+                                <!-- Ações -->
+                                <Panel Grid.Column="2" VerticalAlignment="Center">
+                                    <StackPanel IsVisible="{Binding IsNotEditing}"
+                                                Orientation="Horizontal" Spacing="8">
+                                        <Button Classes="btn btn-primary"
+                                                Command="{Binding StartEditCommand}">
+                                            <TextBlock Text="✏ Editar" />
+                                        </Button>
+                                        <Button Classes="btn btn-danger"
+                                                Command="{Binding DeleteCommand}">
+                                            <TextBlock Text="🗑 Deletar" />
+                                        </Button>
+                                    </StackPanel>
+                                    <StackPanel IsVisible="{Binding IsEditing}"
+                                                Orientation="Horizontal" Spacing="8">
+                                        <Button Classes="btn btn-success"
+                                                Command="{Binding SaveCommand}">
+                                            <TextBlock Text="✓ Salvar" />
+                                        </Button>
+                                        <Button Classes="btn btn-ghost"
+                                                Command="{Binding CancelEditCommand}">
+                                            <TextBlock Text="✕ Cancelar" />
+                                        </Button>
+                                    </StackPanel>
+                                </Panel>
+
+                            </Grid>
+                        </Border>
+
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+        </ScrollViewer>
+
+    </Grid>
+
+</UserControl>

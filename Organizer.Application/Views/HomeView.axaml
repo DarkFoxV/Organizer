@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             x:Class="Organizer.Application.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+
+    <Grid>
+        <TextBlock Text="Home"
+                   FontSize="24"
+                   Foreground="#8b949e"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center" />
+    </Grid>
+
+</UserControl>

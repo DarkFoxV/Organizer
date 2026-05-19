@@ -1,0 +1,287 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             xmlns:components="using:Organizer.Application.Components"
+             x:Class="Organizer.Application.Views.RegisterView"
+             x:DataType="vm:RegisterViewModel">
+
+    <UserControl.Styles>
+
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Border.section-card">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="24" />
+            <Setter Property="Margin" Value="0 0 0 16" />
+        </Style>
+
+        <Style Selector="Button.btn">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Padding" Value="20 0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+
+        <Style Selector="TextBox.field">
+            <Setter Property="Padding" Value="12 10" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrushColor}"
+                BorderThickness="0 0 0 1"
+                Padding="28 18">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0"
+                            Spacing="4">
+                    <TextBlock Text="Registrar"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                    <TextBlock Text="Monte o card, organize a ordem das imagens e associe as tags antes de salvar."
+                               FontSize="13"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Classes="btn btn-danger"
+                        Width="40" Height="40"
+                        Padding="0"
+                        VerticalAlignment="Top"
+                        Command="{Binding CloseCommand}">
+                    <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Conteúdo scrollável -->
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+
+            <Border HorizontalAlignment="Stretch"
+                    Padding="28 24 28 40">
+
+                <StackPanel Spacing="0">
+                    <!-- Seção: Selecionar imagens -->
+                    <Border Classes="section-card">
+
+                        <StackPanel Spacing="16">
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                  ColumnSpacing="16">
+                                <StackPanel Grid.Column="0"
+                                            Spacing="4">
+                                    <TextBlock Classes="section-title"
+                                               Text="Imagens" />
+                                    <TextBlock Text="Selecione uma ou mais imagens. Se houver várias, você pode reorganizar abaixo."
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <Button Grid.Column="1"
+                                        Classes="btn btn-primary"
+                                        x:Name="BtnPickImages"
+                                        Click="OnPickImages"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top">
+
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="8">
+
+                                        <TextBlock Text="🖼"
+                                                   VerticalAlignment="Center" />
+
+                                        <TextBlock Text="Selecionar imagens"
+                                                   VerticalAlignment="Center" />
+
+                                    </StackPanel>
+
+                                </Button>
+                            </Grid>
+
+                            <Grid>
+
+                                <components:ImageOrderList
+                                    IsVisible="{Binding !ImageOrder.IsEmpty}"
+                                    x:Name="ImageOrderListControl" />
+
+                                <Border IsVisible="{Binding ImageOrder.IsEmpty}"
+                                        Background="{DynamicResource SurfaceAltBrush}"
+                                        BorderBrush="{DynamicResource BorderBrushColor}"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Padding="28">
+
+                                    <StackPanel HorizontalAlignment="Center"
+                                                Spacing="10">
+
+                                        <TextBlock Text="🖼"
+                                                   FontSize="36"
+                                                   HorizontalAlignment="Center" />
+
+                                        <TextBlock Text="Nenhuma imagem selecionada"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   HorizontalAlignment="Center" />
+
+                                        <TextBlock Text="Use o botão acima para começar a montar o card."
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   HorizontalAlignment="Center" />
+
+                                    </StackPanel>
+
+                                </Border>
+
+                            </Grid>
+
+                        </StackPanel>
+
+                    </Border>
+
+                    <!-- Seção: Descrição -->
+                    <Border Classes="section-card">
+
+                        <StackPanel Spacing="12">
+
+                            <TextBlock Classes="section-title"
+                                       Text="📝 Descrição" />
+                            <TextBlock Text="Obrigatória para grupos de imagens. Em cards com uma única imagem, o título será o nome do arquivo."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
+
+                            <TextBox Classes="field"
+                                     Text="{Binding Description}"
+                                     PlaceholderText="Descreva a imagem ou grupo..." />
+
+                        </StackPanel>
+
+                    </Border>
+
+                    <!-- Seção: Tags -->
+                    <Border Classes="section-card">
+
+                        <StackPanel Spacing="12">
+
+                            <TextBlock Classes="section-title"
+                                       Text="🏷 Tags" />
+                            <TextBlock Text="Selecione as tags que serão associadas a todas as imagens deste registro."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock IsVisible="{Binding !TagsLoaded}"
+                                       Text="Carregando tags..."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+
+                            <components:TagSelector
+                                x:Name="TagSelectorControl"
+                                IsVisible="{Binding TagsLoaded}" />
+
+                        </StackPanel>
+
+                    </Border>
+
+                    <!-- Seção: Submit -->
+                    <Border Classes="section-card">
+
+                        <StackPanel Spacing="18">
+
+                            <Border Background="{DynamicResource SurfaceAltBrush}"
+                                    BorderBrush="{DynamicResource BorderBrushColor}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="14 12">
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="8">
+
+                                    <TextBlock IsVisible="{Binding StatusIsReady}"
+                                               Text="✓"
+                                               Foreground="#4ade80"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+
+                                    <TextBlock IsVisible="{Binding !StatusIsReady}"
+                                               Text="⚠"
+                                               Foreground="#fb923c"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+
+                                    <TextBlock Text="{Binding StatusText}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               VerticalAlignment="Center" />
+
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Erro -->
+                            <Border
+                                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                Background="#2d1515"
+                                BorderBrush="{DynamicResource DangerBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12 10">
+
+                                <TextBlock Text="{Binding ErrorMessage}"
+                                           FontSize="13"
+                                           Foreground="#f87171"
+                                           TextWrapping="Wrap" />
+
+                            </Border>
+
+                            <Button Classes="btn btn-success"
+                                    IsEnabled="{Binding IsReady}"
+                                    Command="{Binding SubmitCommand}"
+                                    HorizontalAlignment="Left"
+                                    MinWidth="180">
+
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="10">
+
+                                    <TextBlock Text="💾"
+                                               VerticalAlignment="Center" />
+
+                                    <TextBlock IsVisible="{Binding !IsSubmitting}"
+                                               Text="Salvar"
+                                               VerticalAlignment="Center" />
+
+                                    <TextBlock IsVisible="{Binding IsSubmitting}"
+                                               Text="Salvando..."
+                                               VerticalAlignment="Center" />
+
+                                </StackPanel>
+
+                            </Button>
+
+                        </StackPanel>
+
+                    </Border>
+
+                </StackPanel>
+
+            </Border>
+
+        </ScrollViewer>
+
+    </Grid>
+
+</UserControl>

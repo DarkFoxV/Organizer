@@ -1,0 +1,139 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             x:Class="Organizer.Application.Views.GroupCopyPickerModal"
+             x:DataType="vm:GroupCopyPickerViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Button.modal-btn">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.close-btn">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="Foreground" Value="#fff" />
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="40" />
+        </Style>
+
+        <Style Selector="Button.copy-btn">
+            <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
+            <Setter Property="Foreground" Value="#fff" />
+            <Setter Property="Padding" Value="16 10" />
+            <Setter Property="MinWidth" Value="160" />
+        </Style>
+
+        <Style Selector="Button.nav-btn">
+            <Setter Property="Width" Value="50" />
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="20" />
+        </Style>
+        <Style Selector="Button.nav-btn:disabled">
+            <Setter Property="Opacity" Value="0.2" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid IsVisible="{Binding IsVisible}">
+        <Border Background="#CC000000" />
+
+        <Border Background="Transparent"
+                CornerRadius="0"
+                Padding="20"
+                Margin="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                BoxShadow="0 0 0 0 Transparent">
+
+            <Grid RowDefinitions="Auto,*,Auto">
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="*,Auto"
+                      Margin="0 0 0 16">
+                    <Border Grid.Column="0"
+                            Background="#AA0B1018"
+                            CornerRadius="10"
+                            Padding="14 10"
+                            HorizontalAlignment="Left">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding Title}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                            <TextBlock Text="{Binding Counter}"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Button Grid.Column="1"
+                            Classes="modal-btn close-btn"
+                            Command="{Binding CloseCommand}">
+                        <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
+                    </Button>
+                </Grid>
+
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="72,*,72">
+                    <Button Grid.Column="0"
+                            Classes="nav-btn"
+                            Command="{Binding PreviousCommand}"
+                            IsEnabled="{Binding CanGoPrevious}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="‹" />
+                    </Button>
+
+                    <Border Grid.Column="1"
+                            Background="#220b1018"
+                            CornerRadius="10"
+                            Padding="12">
+                        <Image Source="{Binding CurrentBitmap}"
+                               Stretch="Uniform"
+                               HorizontalAlignment="Stretch"
+                               VerticalAlignment="Stretch" />
+                    </Border>
+
+                    <Button Grid.Column="2"
+                            Classes="nav-btn"
+                            Command="{Binding NextCommand}"
+                            IsEnabled="{Binding CanGoNext}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="›" />
+                    </Button>
+                </Grid>
+
+                <Border Grid.Row="2"
+                        Background="#AA0B1018"
+                        CornerRadius="10"
+                        Padding="10"
+                        HorizontalAlignment="Center"
+                        Margin="0 18 0 0">
+                    <Button Classes="modal-btn copy-btn"
+                            Click="OnCopyCurrentImage">
+                        <TextBlock Text="Copiar esta imagem"
+                                   FontSize="13"
+                                   FontWeight="SemiBold" />
+                    </Button>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

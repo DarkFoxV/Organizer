@@ -1,0 +1,150 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels.Components"
+             xmlns:controls="clr-namespace:Organizer.Application.Controls"
+             x:Class="Organizer.Application.Components.ImagePreviewModal"
+             x:DataType="vm:ImagePreviewViewModel">
+
+    <UserControl.Styles>
+
+        <Style Selector="Button.modal-btn">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.modal-btn:pointerover">
+            <Setter Property="Background" Value="#263b82f6" />
+        </Style>
+        <Style Selector="Button.modal-btn:disabled">
+            <Setter Property="Opacity" Value="0.25" />
+        </Style>
+
+        <Style Selector="Button.close-btn">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="Foreground" Value="#fff" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.close-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}" />
+        </Style>
+
+        <Style Selector="Button.nav-btn">
+            <Setter Property="Width" Value="50" />
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="20" />
+        </Style>
+        <Style Selector="Button.nav-btn:pointerover">
+            <Setter Property="Background" Value="#263b82f6" />
+        </Style>
+        <Style Selector="Button.nav-btn:disabled">
+            <Setter Property="Opacity" Value="0.2" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <!-- Overlay escuro — só visível quando IsVisible = true -->
+    <Grid IsVisible="{Binding IsVisible}">
+
+        <!-- Fundo semitransparente -->
+        <Border Background="#CC000000" />
+
+        <!-- Painel ocupa toda a area util do SearchView -->
+        <Border Background="Transparent"
+                CornerRadius="0"
+                Padding="20"
+                Margin="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                BoxShadow="0 0 0 0 Transparent">
+
+            <Grid RowDefinitions="Auto,*">
+
+                <!-- Header: contador + botão fechar -->
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="*,Auto"
+                      Margin="0 0 0 16">
+                    <Border Grid.Column="0"
+                            Background="#AA0B1018"
+                            CornerRadius="10"
+                            Padding="14 10"
+                            HorizontalAlignment="Left">
+                        <TextBlock Text="{Binding Counter}"
+                                   FontSize="15"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                    <Button Grid.Column="1"
+                            Classes="close-btn"
+                            Command="{Binding CloseCommand}">
+                        <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
+                    </Button>
+                </Grid>
+
+                <!-- Body: prev + imagem + next -->
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="72,*,72">
+
+                    <!-- Botão anterior -->
+                    <Button Grid.Column="0"
+                            Classes="nav-btn"
+                            Command="{Binding PreviousCommand}"
+                            IsEnabled="{Binding CanGoPrevious}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="‹" />
+                    </Button>
+                    <!-- ZoomBorder: scroll = zoom, drag = pan -->
+                    <Border Grid.Column="1"
+                            Background="#220b1018"
+                            CornerRadius="12"
+                            Padding="12">
+                        <controls:ZoomBorder x:Name="ZoomArea"
+                                             Background="Transparent"
+                                             HorizontalAlignment="Stretch"
+                                             VerticalAlignment="Stretch">
+                            <Image Source="{Binding CurrentBitmap}"
+                                   Stretch="Uniform"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch"/>
+                        </controls:ZoomBorder>
+                    </Border>
+                    <!-- Botão próximo -->
+                    <Button Grid.Column="2"
+                            Classes="nav-btn"
+                            Command="{Binding NextCommand}"
+                            IsEnabled="{Binding CanGoNext}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="›" />
+                    </Button>
+
+                </Grid>
+
+            </Grid>
+
+        </Border>
+    </Grid>
+
+</UserControl>

@@ -1,0 +1,132 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels.Components"
+             x:Class="Organizer.Application.Components.ImageOrderList"
+             x:DataType="vm:ImageOrderListViewModel">
+
+    <UserControl.Styles>
+
+        <Style Selector="Border.order-card">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="Margin" Value="0 0 0 6" />
+        </Style>
+
+        <Style Selector="Border.order-card.dragging">
+            <Setter Property="Opacity" Value="0.35" />
+        </Style>
+
+        <Style Selector="Border.order-card.drop-target">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Background" Value="#0d1f3c" />
+        </Style>
+
+        <Style Selector="Button.remove-btn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.remove-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="Foreground" Value="#fff" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <StackPanel Spacing="0">
+
+        <!-- Cabeçalho -->
+        <Grid ColumnDefinitions="*,Auto" Margin="0 0 0 8">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding CountLabel}"
+                       FontSize="13"
+                       Foreground="{DynamicResource TextMutedBrush}"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1"
+                       Text="Arraste ⠿ para reordenar"
+                       FontSize="11"
+                       Foreground="{DynamicResource TextSubtleBrush}"
+                       VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Lista -->
+        <ItemsControl ItemsSource="{Binding Items}" x:Name="OrderList">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:ImageOrderItemViewModel">
+                    <Border Classes="order-card"
+                            Classes.dragging="{Binding IsDragging}"
+                            Classes.drop-target="{Binding IsDropTarget}">
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+
+                            <!-- Handle -->
+                            <TextBlock Grid.Column="0"
+                                       Text="⠿"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextSubtleBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0 0 10 0"
+                                       Cursor="SizeAll"
+                                       x:Name="DragHandle" />
+
+                            <!-- Thumbnail -->
+                            <Border Grid.Column="1"
+                                    Width="64" Height="64"
+                                    CornerRadius="6"
+                                    ClipToBounds="True"
+                                    Background="#0d1117"
+                                    Margin="0 0 10 0">
+                                <Image Source="{Binding Thumbnail}"
+                                       Stretch="UniformToFill" />
+                            </Border>
+
+                            <!-- Nome -->
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding Filename}"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+
+                            <!-- Remover -->
+                            <Button Grid.Column="3"
+                                    Classes="remove-btn"
+                                    Command="{Binding RemoveCommand}"
+                                    ToolTip.Tip="Remover"
+                                    Margin="8 0 0 0">
+                                <TextBlock Text="✕" FontSize="12" />
+                            </Button>
+
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Empty state -->
+        <Border Background="{DynamicResource SurfaceAltBrush}"
+                BorderBrush="{DynamicResource BorderBrushColor}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="24"
+                IsVisible="{Binding IsEmpty}">
+            <StackPanel HorizontalAlignment="Center" Spacing="8">
+                <TextBlock Text="🖼" FontSize="32" HorizontalAlignment="Center" />
+                <TextBlock Text="Nenhuma imagem selecionada"
+                           FontSize="13"
+                           Foreground="{DynamicResource TextSubtleBrush}"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+    </StackPanel>
+
+</UserControl>

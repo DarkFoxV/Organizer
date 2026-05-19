@@ -1,0 +1,97 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Organizer.Application.ViewModels"
+        xmlns:views="using:Organizer.Application.Views"
+        xmlns:components="using:Organizer.Application.Components"
+        xmlns:views1="clr-namespace:Organizer.Organizer.Application.Views"
+        x:Class="Organizer.Application.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Organizer"
+        Width="1100" Height="700"
+        MinWidth="800" MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+        Background="#0d1117">
+
+    <Window.Styles>
+        <Style Selector="Border.global-loading-overlay">
+            <Setter Property="Background" Value="#8c030712" />
+        </Style>
+
+        <Style Selector="Border.global-loading-card">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="22" />
+            <Setter Property="MinWidth" Value="320" />
+            <Setter Property="MaxWidth" Value="360" />
+        </Style>
+    </Window.Styles>
+
+    <!-- Mapeamento ViewModel → View -->
+    <Window.DataTemplates>
+        <DataTemplate DataType="vm:HomeViewModel">
+            <views:HomeView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:SearchViewModel">
+            <views:SearchView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:WorkspaceViewModel">
+            <views1:WorkspaceView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:ManageTagsViewModel">
+            <views:ManageTagsView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:RegisterViewModel">
+            <views:RegisterView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:EditViewModel">
+            <views:EditView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:PreferencesViewModel">
+            <views1:PreferencesView />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <Grid ColumnDefinitions="Auto,*">
+
+        <!-- Navbar (coluna fixa à esquerda) -->
+        <components:Navbar Grid.Column="0"
+                           DataContext="{Binding Navbar}" />
+
+        <!-- Área de conteúdo (muda conforme navegação) -->
+        <ContentControl Grid.Column="1"
+                        Content="{Binding CurrentView}" />
+
+        <Border Grid.ColumnSpan="2"
+                ZIndex="1000"
+                Classes="global-loading-overlay"
+                IsVisible="{Binding IsGlobalLoading}">
+            <Grid HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+                <Border Classes="global-loading-card"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="Carregando"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding GlobalLoadingText}"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap" />
+                        <ProgressBar IsIndeterminate="True"
+                                     Height="8"
+                                     MinWidth="240" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+    </Grid>
+
+</Window>

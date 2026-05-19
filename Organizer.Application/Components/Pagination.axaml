@@ -1,0 +1,118 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:components="clr-namespace:Organizer.Application.ViewModels.Components"
+             x:Class="Organizer.Application.Components.Pagination"
+             x:DataType="components:PaginationViewModel">
+
+    <UserControl.Styles>
+
+        <Style Selector="Button.page-btn">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="Padding" Value="8 0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="#1c2230" />
+            <Setter Property="Foreground" Value="#8b949e" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.page-btn:pointerover">
+            <Setter Property="Background" Value="#263b82f6" />
+            <Setter Property="Foreground" Value="#60a5fa" />
+        </Style>
+
+        <Style Selector="Button.page-btn.current">
+            <Setter Property="Background" Value="#3b82f6" />
+            <Setter Property="Foreground" Value="#ffffff" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="Button.page-btn.nav">
+            <Setter Property="Background" Value="#1c2230" />
+            <Setter Property="Foreground" Value="#e6edf3" />
+            <Setter Property="Padding" Value="12 0" />
+        </Style>
+        <Style Selector="Button.page-btn.nav:pointerover">
+            <Setter Property="Background" Value="#263b82f6" />
+        </Style>
+        <Style Selector="Button.page-btn.nav:disabled">
+            <Setter Property="Opacity" Value="0.35" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <Border IsVisible="{Binding ShowPagination}"
+            Padding="0 16">
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="6">
+
+            <!-- Anterior -->
+            <Button Classes="page-btn nav"
+                    Command="{Binding PreviousCommand}"
+                    IsEnabled="{Binding CanGoPrevious}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="‹" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="Anterior" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <!-- Páginas dinâmicas -->
+            <ItemsControl ItemsSource="{Binding Pages}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="6" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="components:PageItem">
+                        <Panel VerticalAlignment="Center">
+
+                            <!-- Ellipsis -->
+                            <TextBlock IsVisible="{Binding IsEllipsis}"
+                                       Text="..."
+                                       Foreground="#484f58"
+                                       FontSize="13"
+                                       VerticalAlignment="Center"
+                                       Margin="2 0" />
+
+                            <!-- Botão de página -->
+                            <Button IsVisible="{Binding !IsEllipsis}"
+                                    Classes="page-btn"
+                                    Classes.current="{Binding IsCurrent}"
+                                    Command="{Binding $parent[UserControl].((components:PaginationViewModel)DataContext).GoToPageCommand}"
+                                    CommandParameter="{Binding Index}"
+                                    Content="{Binding Label}" />
+
+                        </Panel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Próximo -->
+            <Button Classes="page-btn nav"
+                    Command="{Binding NextCommand}"
+                    IsEnabled="{Binding CanGoNext}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="Próximo" VerticalAlignment="Center" />
+                    <TextBlock Text="›" FontSize="16" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+        </StackPanel>
+    </Border>
+
+</UserControl>

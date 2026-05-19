@@ -1,0 +1,137 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:components="clr-namespace:Organizer.Application.ViewModels.Components"
+             x:Class="Organizer.Application.Components.TagSelector"
+             x:DataType="components:TagSelectorViewModel">
+
+    <UserControl.Styles>
+
+        <Style Selector="Button.tag-btn">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="99" />
+            <Setter Property="Padding" Value="12 6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.add-tag-btn">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="CornerRadius" Value="99" />
+            <Setter Property="Padding" Value="12 6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.add-tag-btn:pointerover">
+            <Setter Property="Background" Value="#263b82f6" />
+            <Setter Property="Foreground" Value="#60a5fa" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.confirm-btn">
+            <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
+            <Setter Property="Foreground" Value="#fff" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="10 6" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.cancel-btn">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="Foreground" Value="#fff" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="10 6" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="TextBox.tag-input">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="10 6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+        <Style Selector="TextBox.tag-input:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <StackPanel Spacing="12">
+
+        <!-- Lista de tags -->
+        <ItemsControl ItemsSource="{Binding Tags}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="components:TagItemViewModel">
+                    <Button Classes="tag-btn"
+                            Background="{Binding BackgroundColor}"
+                            Foreground="{Binding ForegroundColor}"
+                            Command="{Binding ToggleCommand}"
+                            Margin="0 0 6 6"
+                            Content="{Binding Name}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Seção de adicionar tag -->
+        <StackPanel IsVisible="{Binding ShowAddButton}">
+
+            <!-- Input de nova tag -->
+            <Grid IsVisible="{Binding ShowNewTagInput}"
+                  ColumnDefinitions="*,Auto,Auto"
+                  ColumnSpacing="8">
+                <TextBox Grid.Column="0"
+                         Classes="tag-input"
+                         Text="{Binding NewTagName}"
+                         PlaceholderText="Nome da nova tag" />
+                <Button Grid.Column="1"
+                        Classes="confirm-btn"
+                        Command="{Binding ConfirmNewTagCommand}">
+                    <TextBlock Text="✓" FontSize="14" />
+                </Button>
+                <Button Grid.Column="2"
+                        Classes="cancel-btn"
+                        Command="{Binding CancelNewTagCommand}">
+                    <TextBlock Text="✕" FontSize="14" />
+                </Button>
+            </Grid>
+
+            <!-- Botão adicionar tag -->
+            <Button IsVisible="{Binding !ShowNewTagInput}"
+                    Classes="add-tag-btn"
+                    Command="{Binding OpenNewTagInputCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="+" FontSize="15" VerticalAlignment="Center" />
+                    <TextBlock Text="Nova tag" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+        </StackPanel>
+
+    </StackPanel>
+
+</UserControl>

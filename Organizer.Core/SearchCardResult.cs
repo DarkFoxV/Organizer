@@ -13,5 +13,6 @@ public class SearchCardResult
     public int? CoverImageId { get; init; }
     public byte[]? CoverThumbnail { get; init; }
     public string CoverFilename { get; init; } = string.Empty;
+    public string? CoverMimeType { get; init; }
     public string CoverDescription { get; init; } = string.Empty;
 }

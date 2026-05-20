@@ -9,6 +9,7 @@ public partial class MainWindowViewModel : ObservableObject
 {
     private readonly IServiceProvider _services;
     private RegisterViewModel? _activeRegisterViewModel;
+    private readonly WorkspaceViewModel _workspaceViewModel;
 
     [ObservableProperty] private ObservableObject _currentView;
 
@@ -27,6 +28,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         _services = services;
         _searchViewModel = searchViewModel;
+        _workspaceViewModel = _services.GetRequiredService<WorkspaceViewModel>();
         Navbar = navbar;
 
         _searchViewModel.RegisterRequested += GoToRegister;
@@ -47,7 +49,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             NavButton.Home => _services.GetRequiredService<HomeViewModel>(),
             NavButton.Search => _searchViewModel,
-            NavButton.Workspace => _services.GetRequiredService<WorkspaceViewModel>(),
+            NavButton.Workspace => _workspaceViewModel,
             NavButton.ManageTags => _services.GetRequiredService<ManageTagsViewModel>(),
             NavButton.Preferences => _services.GetRequiredService<PreferencesViewModel>(),
             _ => _searchViewModel

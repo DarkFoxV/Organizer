@@ -10,7 +10,7 @@ public partial class SearchViewModel : ObservableObject
 {
 }
 
-public class WorkspaceViewModel : ObservableObject
+public partial class WorkspaceViewModel : ObservableObject
 {
 }
 

@@ -138,11 +138,11 @@ public partial class SearchViewModel : ObservableObject
             if (!card.IsGroup)
                 return;
 
-            var imageIds = await _imageService.GetIdsByCardAsync(card.CardId);
-            if (imageIds.Count == 0)
+            var images = await _imageService.GetGroupImageSummariesAsync(card.CardId);
+            if (images.Count == 0)
                 return;
 
-            await CopyPicker.OpenAsync(imageIds, _imageService.GetDataAsync);
+            await CopyPicker.OpenAsync(images, _imageService.GetDataAsync);
         }
         catch (Exception ex)
         {
@@ -185,7 +185,7 @@ public partial class SearchViewModel : ObservableObject
             {
                 return cards.Select(card =>
                 {
-                    var thumbnail = ImageHelper.ToBitmap(card.CoverThumbnail);
+                    var thumbnail = ImageHelper.ToBitmap(card.CoverThumbnail, maxWidth: 204, maxHeight: 164);
 
                     return new CardItemViewModel
                     {
@@ -193,6 +193,7 @@ public partial class SearchViewModel : ObservableObject
                         CardId = card.CardId,
                         Thumbnail = thumbnail,
                         Filename = card.CoverFilename,
+                        MimeType = card.CoverMimeType ?? "application/octet-stream",
                         Description = card.CoverDescription,
                         CreatedAt = card.CreatedAt.ToString("dd/MM/yyyy"),
                         LoadImageDataAsync = card.CoverImageId is null

@@ -36,6 +36,14 @@
             <Setter Property="Background" Value="{DynamicResource SuccessHoverBrush}" />
         </Style>
 
+        <Style Selector="Border.image-card">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+        </Style>
+        <Style Selector="Border.image-card:pointerover">
+            <Setter Property="BorderBrush" Value="#3b82f6" />
+            <Setter Property="BoxShadow" Value="0 16 36 #55000000" />
+        </Style>
+
         <Style Selector="Button.btn-edit">
             <Setter Property="Background" Value="#d97706" />
             <Setter Property="Foreground" Value="#fff" />
@@ -54,11 +62,13 @@
 
     </UserControl.Styles>
 
-    <Border Background="{DynamicResource SurfaceBrush}"
-            BorderBrush="{DynamicResource BorderBrushColor}"
+    <Border Classes="image-card"
+            Background="{DynamicResource SurfaceBrush}"
             BorderThickness="1"
             CornerRadius="12"
-            ClipToBounds="True">
+            ClipToBounds="True"
+            Cursor="Hand"
+            PointerReleased="OnCardPointerReleased">
 
         <DockPanel>
 
@@ -99,7 +109,7 @@
 
             <!-- Botões -->
             <Grid DockPanel.Dock="Bottom"
-                  ColumnDefinitions="*,6,*,6,*,6,*"
+                  ColumnDefinitions="*,6,*,6,*"
                   Margin="10 8 10 10">
 
                 <Button Grid.Column="0"
@@ -111,19 +121,12 @@
 
                 <Button Grid.Column="2"
                         Classes="action-btn btn-view"
-                        Command="{Binding ViewCommand}"
-                        ToolTip.Tip="Visualizar">
-                    <TextBlock Text="👁 Ver" FontSize="12" />
-                </Button>
-
-                <Button Grid.Column="4"
-                        Classes="action-btn btn-view"
                         Click="OnCopyImage"
                         ToolTip.Tip="Copiar imagem">
                     <TextBlock Text="⎘ Cop" FontSize="12" />
                 </Button>
 
-                <Button Grid.Column="6"
+                <Button Grid.Column="4"
                         Classes="action-btn btn-edit"
                         Command="{Binding EditCommand}"
                         ToolTip.Tip="Editar">

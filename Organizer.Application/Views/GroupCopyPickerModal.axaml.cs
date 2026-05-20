@@ -1,27 +1,30 @@
-using System.IO;
 using Avalonia.Controls;
-using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
-using Avalonia.Media.Imaging;
+using Microsoft.Extensions.DependencyInjection;
+using Organizer.Application.Services;
 using Organizer.Application.ViewModels;
 
 namespace Organizer.Application.Views;
 
 public partial class GroupCopyPickerModal : UserControl
 {
-    private static Bitmap? _clipboardBitmap;
+    private static IClipboardService ClipboardService =>
+        global::Organizer.Application.App.Services.GetRequiredService<IClipboardService>();
 
     public GroupCopyPickerModal()
     {
         InitializeComponent();
     }
 
-    private async void OnCopyCurrentImage(object? sender, RoutedEventArgs e)
+    private async void OnCopyImage(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not GroupCopyPickerViewModel vm)
             return;
 
-        var data = await vm.LoadCurrentImageDataAsync();
+        if (sender is not Control { DataContext: GroupCopyPickerItemViewModel item })
+            return;
+
+        var data = await vm.LoadImageDataAsync(item.Id);
         if (data is null || data.Length == 0)
             return;
 
@@ -29,15 +32,7 @@ public partial class GroupCopyPickerModal : UserControl
         if (clipboard is null)
             return;
 
-        await using var stream = new MemoryStream(data);
-        var bitmap = new Bitmap(stream);
-
-        var previousBitmap = _clipboardBitmap;
-        _clipboardBitmap = bitmap;
-
-        await ClipboardExtensions.SetBitmapAsync(clipboard, bitmap);
-
-        previousBitmap?.Dispose();
-        vm.CloseCommand.Execute(null);
+        if (await ClipboardService.SetImageAsync(clipboard, data, item.MimeType))
+            vm.CloseCommand.Execute(null);
     }
 }

@@ -40,6 +40,7 @@ internal class Program
         services.AddTransient<ICardService, CardService>();
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<ITagService, TagService>();
+        services.AddSingleton<IClipboardService, ClipboardService>();
 
         // ─────────────────────────────
         // VIEW-MODELS (ROOT)

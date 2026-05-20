@@ -7,11 +7,13 @@
     <UserControl.Styles>
         <Style Selector="Button.modal-btn">
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="{TemplateBinding CornerRadius}"
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalContentAlignment="Center"
@@ -25,62 +27,82 @@
         <Style Selector="Button.close-btn">
             <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
             <Setter Property="Foreground" Value="#fff" />
-            <Setter Property="Width" Value="40" />
-            <Setter Property="Height" Value="40" />
+            <Setter Property="Width" Value="42" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Padding" Value="0" />
         </Style>
 
-        <Style Selector="Button.copy-btn">
-            <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
-            <Setter Property="Foreground" Value="#fff" />
-            <Setter Property="Padding" Value="16 10" />
-            <Setter Property="MinWidth" Value="160" />
-        </Style>
-
-        <Style Selector="Button.nav-btn">
-            <Setter Property="Width" Value="50" />
-            <Setter Property="Height" Value="50" />
-            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="8" />
+        <Style Selector="Button.copy-card">
+            <Setter Property="Width" Value="246" />
+            <Setter Property="MinHeight" Value="270" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="#E6121824" />
+            <Setter Property="BorderBrush" Value="#3A50677D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="Stretch"
+                                          VerticalContentAlignment="Stretch"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
         </Style>
-        <Style Selector="Button.nav-btn:disabled">
-            <Setter Property="Opacity" Value="0.2" />
+        <Style Selector="Button.copy-card:pointerover">
+            <Setter Property="BorderBrush" Value="#3b82f6" />
+            <Setter Property="Background" Value="#F0161D2A" />
         </Style>
     </UserControl.Styles>
 
     <Grid IsVisible="{Binding IsVisible}">
-        <Border Background="#CC000000" />
+        <Border Background="#D90A0F18" />
 
-        <Border Background="Transparent"
-                CornerRadius="0"
-                Padding="20"
-                Margin="0"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
-                BoxShadow="0 0 0 0 Transparent">
+        <Panel IsHitTestVisible="False">
+            <Ellipse Width="560"
+                     Height="560"
+                     Fill="#163047"
+                     Opacity="0.32"
+                     HorizontalAlignment="Left"
+                     VerticalAlignment="Top"
+                     Margin="-190 -230 0 0" />
+            <Ellipse Width="460"
+                     Height="460"
+                     Fill="#153321"
+                     Opacity="0.22"
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Bottom"
+                     Margin="0 0 -160 -170" />
+        </Panel>
 
-            <Grid RowDefinitions="Auto,*,Auto">
-                <Grid Grid.Row="0"
-                      ColumnDefinitions="*,Auto"
-                      Margin="0 0 0 16">
-                    <Border Grid.Column="0"
-                            Background="#AA0B1018"
-                            CornerRadius="10"
-                            Padding="14 10"
-                            HorizontalAlignment="Left">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="{Binding Title}"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextPrimaryBrush}" />
-                            <TextBlock Text="{Binding Counter}"
-                                       FontSize="13"
-                                       Foreground="{DynamicResource TextMutedBrush}" />
-                        </StackPanel>
-                    </Border>
+        <Grid HorizontalAlignment="Center" RowDefinitions="Auto,*"
+              Margin="28">
+            <Border Grid.Row="0"
+                    Background="#E6121824"
+                    BorderBrush="#3A50677D"
+                    BorderThickness="1"
+                    CornerRadius="22"
+                    Padding="22 18"
+                    Margin="0 0 0 16"
+                    BoxShadow="0 18 50 #77000000">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="5">
+                        <TextBlock Text="{Binding Title}"
+                                   FontSize="22"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="{Binding CountText}"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                    </StackPanel>
 
                     <Button Grid.Column="1"
                             Classes="modal-btn close-btn"
@@ -88,52 +110,76 @@
                         <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
                     </Button>
                 </Grid>
+            </Border>
 
-                <Grid Grid.Row="1"
-                      ColumnDefinitions="72,*,72">
-                    <Button Grid.Column="0"
-                            Classes="nav-btn"
-                            Command="{Binding PreviousCommand}"
-                            IsEnabled="{Binding CanGoPrevious}"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                        <TextBlock Text="‹" />
-                    </Button>
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
 
-                    <Border Grid.Column="1"
-                            Background="#220b1018"
-                            CornerRadius="10"
-                            Padding="12">
-                        <Image Source="{Binding CurrentBitmap}"
-                               Stretch="Uniform"
-                               HorizontalAlignment="Stretch"
-                               VerticalAlignment="Stretch" />
-                    </Border>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:GroupCopyPickerItemViewModel">
+                            <Button Classes="copy-card"
+                                    Click="OnCopyImage"
+                                    Margin="0 0 14 14">
+                                <Grid RowDefinitions="170,Auto,*">
+                                    <Border Grid.Row="0"
+                                            Background="#220b1018"
+                                            CornerRadius="18 18 0 0"
+                                            Padding="10">
+                                        <Grid>
+                                            <Image Source="{Binding Thumbnail}"
+                                                   Stretch="Uniform"
+                                                   IsVisible="{Binding HasThumbnail}" />
+                                            <TextBlock Text="Sem preview"
+                                                       IsVisible="{Binding !HasThumbnail}"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
 
-                    <Button Grid.Column="2"
-                            Classes="nav-btn"
-                            Command="{Binding NextCommand}"
-                            IsEnabled="{Binding CanGoNext}"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                        <TextBlock Text="›" />
-                    </Button>
-                </Grid>
+                                    <Grid Grid.Row="1"
+                                          ColumnDefinitions="Auto,*"
+                                          Margin="14 12 14 0"
+                                          ColumnSpacing="10">
+                                        <Border Grid.Column="0"
+                                                Background="#263b82f6"
+                                                CornerRadius="99"
+                                                Padding="8 3"
+                                                VerticalAlignment="Top">
+                                            <TextBlock Text="{Binding NumberText}"
+                                                       Foreground="#93c5fd"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold" />
+                                        </Border>
 
-                <Border Grid.Row="2"
-                        Background="#AA0B1018"
-                        CornerRadius="10"
-                        Padding="10"
-                        HorizontalAlignment="Center"
-                        Margin="0 18 0 0">
-                    <Button Classes="modal-btn copy-btn"
-                            Click="OnCopyCurrentImage">
-                        <TextBlock Text="Copiar esta imagem"
-                                   FontSize="13"
-                                   FontWeight="SemiBold" />
-                    </Button>
-                </Border>
-            </Grid>
-        </Border>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Filename}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+
+                                    <TextBlock Grid.Row="2"
+                                               Text="{Binding Caption}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               MaxLines="3"
+                                               Margin="14 8 14 14" />
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

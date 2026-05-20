@@ -70,7 +70,7 @@ public class ImageService(AppDbContext db) : IImageService
     {
         using var input = new MemoryStream(data);
 
-        var full = new Bitmap(input);
+        using var full = new Bitmap(input);
 
         var ratio = Math.Min(
             ThumbnailWidth / (double)full.PixelSize.Width,
@@ -79,7 +79,7 @@ public class ImageService(AppDbContext db) : IImageService
         var width = (int)(full.PixelSize.Width * ratio);
         var height = (int)(full.PixelSize.Height * ratio);
 
-        var thumb = full.CreateScaledBitmap(
+        using var thumb = full.CreateScaledBitmap(
             new Avalonia.PixelSize(width, height));
 
         using var output = new MemoryStream();
@@ -159,6 +159,9 @@ public class ImageService(AppDbContext db) : IImageService
                 CoverFilename = card.CoverImage != null
                     ? card.CoverImage.Filename
                     : card.Title,
+                CoverMimeType = card.CoverImage != null
+                    ? card.CoverImage.MimeType
+                    : null,
                 CoverDescription = card.CoverImage != null
                     ? card.CoverImage.Description ?? string.Empty
                     : string.Empty
@@ -174,6 +177,24 @@ public class ImageService(AppDbContext db) : IImageService
             .Where(i => i.CardId == cardId)
             .OrderBy(i => i.Position)
             .Select(i => i.Id)
+            .ToListAsync();
+    }
+
+    public async Task<List<GroupImageSummary>> GetGroupImageSummariesAsync(int cardId)
+    {
+        return await db.Images
+            .AsNoTracking()
+            .Where(i => i.CardId == cardId)
+            .OrderBy(i => i.Position)
+            .Select(i => new GroupImageSummary
+            {
+                Id = i.Id,
+                Position = i.Position,
+                Thumbnail = i.Thumbnail,
+                Filename = i.Filename,
+                MimeType = i.MimeType,
+                Description = i.Description ?? string.Empty
+            })
             .ToListAsync();
     }
 

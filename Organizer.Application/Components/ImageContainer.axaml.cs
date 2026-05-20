@@ -1,15 +1,17 @@
-using System.IO;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Input.Platform;
-using Avalonia.Media.Imaging;
+using Avalonia.VisualTree;
+using Microsoft.Extensions.DependencyInjection;
+using Organizer.Application.Services;
 using Organizer.Application.ViewModels.Components;
 
 namespace Organizer.Application.Components;
 
 public partial class ImageContainer : UserControl
 {
-    private static Bitmap? _clipboardBitmap;
+    private static IClipboardService ClipboardService =>
+        App.Services.GetRequiredService<IClipboardService>();
 
     public ImageContainer()
     {
@@ -38,14 +40,18 @@ public partial class ImageContainer : UserControl
         if (clipboard is null)
             return;
 
-        await using var stream = new MemoryStream(imageData);
-        var bitmap = new Bitmap(stream);
+        await ClipboardService.SetImageAsync(clipboard, imageData, vm.MimeType);
+    }
 
-        var previousBitmap = _clipboardBitmap;
-        _clipboardBitmap = bitmap;
+    private void OnCardPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (e.InitialPressMouseButton != MouseButton.Left)
+            return;
 
-        await clipboard.SetBitmapAsync(bitmap);
+        if (e.Source is Control control && control.FindAncestorOfType<Button>() is not null)
+            return;
 
-        previousBitmap?.Dispose();
+        if (DataContext is CardItemViewModel vm)
+            vm.ViewCommand.Execute(null);
     }
 }

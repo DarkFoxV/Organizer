@@ -22,6 +22,8 @@ public interface IImageService
 
     Task<List<int>> GetIdsByCardAsync(int cardId);
 
+    Task<List<GroupImageSummary>> GetGroupImageSummariesAsync(int cardId);
+
     Task<Image?> GetByIdAsync(int id);
 
     Task<byte[]?> GetDataAsync(int id);

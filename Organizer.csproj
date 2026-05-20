@@ -4,6 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>Organizer.Application\Assets\Icons\icon.ico</ApplicationIcon>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     </PropertyGroup>
 
@@ -55,9 +56,17 @@
         <Compile Update="Organizer.Application\Views\GroupCopyPickerModal.axaml.cs">
           <DependentUpon>GroupCopyPickerModal.axaml</DependentUpon>
         </Compile>
+        <Compile Update="Organizer.Application\Components\WorkspaceCanvasItem.axaml.cs">
+          <DependentUpon>WorkspaceCanvasItem.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Organizer.Application\Assets.Styles\"/>
+        <Folder Include="Organizer.Application\Assets\Styles\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Organizer.Application\Assets\**" />
     </ItemGroup>
 </Project>

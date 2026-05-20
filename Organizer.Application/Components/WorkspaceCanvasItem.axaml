@@ -1,0 +1,140 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             x:Class="Organizer.Application.Controls.WorkspaceCanvasItem"
+             x:DataType="vm:WorkspaceCanvasItemViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.item-root">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+
+        <Style Selector="Border.item-root.selected">
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+
+        <Style Selector="Button.canvas-remove">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="#d91f2937" />
+            <Setter Property="Foreground" Value="#ffffff" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.canvas-remove:pointerover">
+            <Setter Property="Background" Value="#e11d48" />
+        </Style>
+
+        <Style Selector="Border.resize-handle">
+            <Setter Property="Width" Value="45" />
+            <Setter Property="Height" Value="45" />
+            <Setter Property="Background" Value="#0d1420" />
+            <Setter Property="BorderBrush" Value="#ffffff" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="CornerRadius" Value="999" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Classes="item-root"
+            Classes.selected="{Binding IsSelected}"
+            Width="{Binding ContainerWidth}"
+            Height="{Binding ContainerHeight}">
+        <Grid x:Name="InteractionLayer"
+              ClipToBounds="False"
+              PointerPressed="OnPointerPressed"
+              PointerMoved="OnPointerMoved"
+              PointerReleased="OnPointerReleased"
+              PointerCaptureLost="OnPointerCaptureLost">
+            <Image Source="{Binding Bitmap}"
+                   Width="{Binding Width}"
+                   Height="{Binding Height}"
+                   Margin="{Binding ImageMargin}"
+                   Stretch="Fill"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Top" />
+
+            <Border IsVisible="{Binding IsSelected}"
+                    BorderBrush="#60a5fa"
+                    BorderThickness="12"
+                    Margin="{Binding ImageMargin}"
+                    IsHitTestVisible="False" />
+
+            <Button Classes="canvas-remove"
+                    IsVisible="{Binding IsSelected}"
+                    Margin="0 10 10 0"
+                    Command="{Binding RemoveCommand}">
+                <TextBlock Text="✕"
+                           FontSize="12"
+                           FontWeight="Bold" />
+            </Button>
+
+            <Grid IsVisible="{Binding IsSelected}"
+                  ClipToBounds="False"
+                  ColumnDefinitions="Auto,*,Auto"
+                  RowDefinitions="Auto,*,Auto"
+                  Margin="{Binding ImageMargin}">
+                <Border x:Name="TopLeftHandle"
+                        Classes="resize-handle"
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Margin="-22.5 -22.5 0 0"
+                        Cursor="TopLeftCorner" />
+                <Border x:Name="TopCenterHandle"
+                        Classes="resize-handle"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        HorizontalAlignment="Center"
+                        Margin="0 -22.5 0 0"
+                        Cursor="TopSide" />
+                <Border x:Name="TopRightHandle"
+                        Classes="resize-handle"
+                        Grid.Row="0"
+                        Grid.Column="2"
+                        Margin="0 -22.5 -22.5 0"
+                        Cursor="TopRightCorner" />
+                <Border x:Name="MiddleLeftHandle"
+                        Classes="resize-handle"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Margin="-22.5 0 0 0"
+                        Cursor="LeftSide" />
+                <Border x:Name="MiddleRightHandle"
+                        Classes="resize-handle"
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Margin="0 0 -22.5 0"
+                        Cursor="RightSide" />
+                <Border x:Name="BottomLeftHandle"
+                        Classes="resize-handle"
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Margin="-22.5 0 0 -22.5"
+                        Cursor="BottomLeftCorner" />
+                <Border x:Name="BottomCenterHandle"
+                        Classes="resize-handle"
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        HorizontalAlignment="Center"
+                        Margin="0 0 0 -22.5"
+                        Cursor="BottomSide" />
+                <Border x:Name="BottomRightHandle"
+                        Classes="resize-handle"
+                        Grid.Row="2"
+                        Grid.Column="2"
+                        Margin="0 0 -22.5 -22.5"
+                        Cursor="BottomRightCorner" />
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

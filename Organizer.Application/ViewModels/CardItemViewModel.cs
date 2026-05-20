@@ -15,6 +15,7 @@ public partial class CardItemViewModel : ObservableObject
     public int Id { get; init; }
     public int CardId { get; init; }
     public string Filename { get; init; } = string.Empty;
+    public string MimeType { get; init; } = "application/octet-stream";
     public string Description { get; init; } = string.Empty;
     public string CreatedAt { get; init; } = string.Empty;
     public Func<Task<byte[]?>>? LoadImageDataAsync { get; init; }

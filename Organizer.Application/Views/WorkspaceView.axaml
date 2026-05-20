@@ -1,8 +1,96 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             xmlns:controls="using:Organizer.Application.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Organizer.Organizer.Application.Views.WorkspaceView">
-    Welcome to Avalonia!
+             x:Class="Organizer.Organizer.Application.Views.WorkspaceView"
+             x:DataType="vm:WorkspaceViewModel">
+
+    <Grid x:Name="Viewport"
+          Background="#0a101a"
+          ClipToBounds="True"
+          Focusable="True">
+        <Border x:Name="BoardRoot"
+                Width="{Binding BoardWidth}"
+                Height="{Binding BoardHeight}"
+                Background="#0d1420"
+                BorderBrush="#1f2c3e"
+                BorderThickness="1"
+                CornerRadius="0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top">
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.Styles>
+                    <Style Selector="ContentPresenter">
+                        <Setter Property="Canvas.Left" Value="{ReflectionBinding ContainerX}" />
+                        <Setter Property="Canvas.Top" Value="{ReflectionBinding ContainerY}" />
+                        <Setter Property="Panel.ZIndex" Value="{ReflectionBinding ZIndex}" />
+                    </Style>
+                </ItemsControl.Styles>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:WorkspaceCanvasItemViewModel">
+                        <controls:WorkspaceCanvasItem />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="18"
+                Background="#cc2d1515"
+                BorderBrush="{DynamicResource DangerBrush}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="12 10"
+                ZIndex="10">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="#fca5a5"
+                       FontSize="13"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <StackPanel IsVisible="{Binding IsEmpty}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8"
+                    IsHitTestVisible="False">
+            <TextBlock Text="Cole imagens com Ctrl+V"
+                       FontSize="22"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="Use a roda do mouse para zoom e segure Space para navegar."
+                       FontSize="13"
+                       Foreground="{DynamicResource TextMutedBrush}"
+                       HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <Border HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="18"
+                Background="#b30d1420"
+                BorderBrush="#233145"
+                BorderThickness="1"
+                CornerRadius="999"
+                Padding="10 6"
+                IsHitTestVisible="False"
+                ZIndex="10">
+            <TextBlock x:Name="ZoomText"
+                       Text="100%"
+                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       FontSize="12"
+                       FontWeight="SemiBold" />
+        </Border>
+    </Grid>
 </UserControl>

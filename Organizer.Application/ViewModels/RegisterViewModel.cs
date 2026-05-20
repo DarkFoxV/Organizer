@@ -1,18 +1,16 @@
 using System;
 using System.Collections.Specialized;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Input;
 using Avalonia.Input.Platform;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Organize.Organizer.Core;
 using Organize.Organizer.Core.Enums;
 using Organize.Organizer.Core.Interfaces;
+using Organizer.Application.Services;
 using Organizer.Application.ViewModels.Components;
 
 namespace Organizer.Application.ViewModels;
@@ -22,21 +20,10 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
     private static readonly string[] SupportedImagePatterns =
         ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"];
 
-    private static readonly HashSet<string> SupportedImageExtensions =
-        new([".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"], StringComparer.OrdinalIgnoreCase);
-
-    private static readonly (string MimeType, string Extension)[] SupportedClipboardMimeTypes =
-    [
-        ("image/png", ".png"),
-        ("image/jpeg", ".jpg"),
-        ("image/gif", ".gif"),
-        ("image/bmp", ".bmp"),
-        ("image/webp", ".webp")
-    ];
-
     private readonly ICardService _cardService;
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
+    private readonly IClipboardService _clipboardService;
 
     // ── Componentes ───────────────────────────────────────────────────────────
     public TagSelectorViewModel TagSelector { get; }
@@ -75,11 +62,13 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
     public RegisterViewModel(
         ICardService cardService,
         IImageService imageService,
-        ITagService tagService)
+        ITagService tagService,
+        IClipboardService clipboardService)
     {
         _cardService = cardService;
         _imageService = imageService;
         _tagService = tagService;
+        _clipboardService = clipboardService;
 
         TagSelector = new TagSelectorViewModel(_tagService, showAddButton: true);
 
@@ -146,8 +135,6 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         if (IsPickingImages || IsSubmitting)
             return false;
 
-        var pastedAny = false;
-
         IsPickingImages = true;
         BusyStateChanged?.Invoke(true, "Colando imagens, aguarde...");
 
@@ -155,40 +142,27 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         {
             ErrorMessage = null;
 
-            var items = await clipboard.TryGetFilesAsync();
-            if (items is not null)
-            {
-                foreach (var file in items.OfType<IStorageFile>())
-                {
-                    if (!IsSupportedImageFile(file.Name))
-                        continue;
-
-                    await ImageOrder.AddImageAsync(file);
-                    pastedAny = true;
-                }
-            }
-
-            if (pastedAny)
-                return true;
-
-            if (await TryPasteRawImageAsync(clipboard))
-                return true;
-
-            var bitmap = await ClipboardExtensions.TryGetBitmapAsync(clipboard);
-            if (bitmap is null)
+            var images = await _clipboardService.GetImagesAsync(clipboard);
+            if (images.Count == 0)
             {
                 ErrorMessage = "Clipboard nao contem uma imagem suportada para colar.";
                 return false;
             }
 
-            await using var stream = new MemoryStream();
-            bitmap.Save(stream);
-            await ImageOrder.AddImageAsync(
-                filename: $"clipboard-{DateTime.Now:yyyyMMdd-HHmmss}.png",
-                mimeType: "image/png",
-                data: stream.ToArray());
-            pastedAny = true;
+            foreach (var image in images)
+            {
+                await ImageOrder.AddImageAsync(
+                    filename: image.Filename,
+                    mimeType: image.MimeType,
+                    data: image.Data);
+            }
+
             return true;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao colar imagem: {ex.Message}";
+            return false;
         }
         finally
         {
@@ -296,42 +270,4 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
     {
         NotifyReady();
     }
-
-    private async Task<bool> TryPasteRawImageAsync(IClipboard clipboard)
-    {
-        using var dataTransfer = await clipboard.TryGetDataAsync();
-        if (dataTransfer is null)
-            return false;
-
-        foreach (var (mimeType, extension) in SupportedClipboardMimeTypes)
-        {
-            var format = DataFormat.CreateBytesPlatformFormat(mimeType);
-            var bytes = await dataTransfer.TryGetValueAsync(format);
-            if (bytes is null || bytes.Length == 0)
-                continue;
-
-            await ImageOrder.AddImageAsync(
-                filename: $"clipboard-{DateTime.Now:yyyyMMdd-HHmmss}{extension}",
-                mimeType: mimeType,
-                data: bytes);
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsSupportedImageFile(string filename) =>
-        SupportedImageExtensions.Contains(Path.GetExtension(filename));
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-    private static string DetectMime(string filename) =>
-        Path.GetExtension(filename).ToLower() switch
-        {
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".png" => "image/png",
-            ".gif" => "image/gif",
-            ".webp" => "image/webp",
-            ".bmp" => "image/bmp",
-            _ => "application/octet-stream"
-        };
 }

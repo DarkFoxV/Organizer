@@ -76,38 +76,30 @@
 
     </UserControl.Styles>
 
-    <Border Background="#161b22"
-            BorderBrush="#2a3347"
-            BorderThickness="0 0 0 1"
-            Padding="20 14">
+    <Grid ColumnDefinitions="*,Auto,170"
+          ColumnSpacing="10">
+        <!-- Campo de busca -->
+        <TextBox Grid.Column="0"
+                 Classes="search-input"
+                 Text="{Binding Query}"
+                 PlaceholderText="Buscar por descrição, tag..." />
 
-        <Grid ColumnDefinitions="*,Auto,160">
-            <!-- Campo de busca -->
-            <TextBox Grid.Column="0"
-                     Classes="search-input"
-                     Text="{Binding Query}"
-                     PlaceholderText="Buscar por descrição, tag..."
-                     Margin="0 0 10 0" />
+        <!-- Botão registrar -->
+        <Button Grid.Column="1"
+                Classes="btn btn-register"
+                Command="{Binding RegisterCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="+" VerticalAlignment="Center" FontSize="16" />
+                <TextBlock Text="Registrar" VerticalAlignment="Center" />
+            </StackPanel>
+        </Button>
 
-            <!-- Botão registrar -->
-            <Button Grid.Column="1"
-                    Classes="btn btn-register"
-                    Command="{Binding RegisterCommand}"
-                    Margin="0 0 8 0">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="+" VerticalAlignment="Center" FontSize="16" />
-                    <TextBlock Text="Registrar" VerticalAlignment="Center" />
-                </StackPanel>
-            </Button>
+        <!-- Ordenação -->
+        <ComboBox Grid.Column="2"
+                  Classes="sort-picker"
+                  ItemsSource="{Binding SortOptions}"
+                  SelectedItem="{Binding SelectedSort}" />
 
-            <!-- Ordenação -->
-            <ComboBox Grid.Column="2"
-                      Classes="sort-picker"
-                      ItemsSource="{Binding SortOptions}"
-                      SelectedItem="{Binding SelectedSort}" />
-
-        </Grid>
-
-    </Border>
+    </Grid>
 
 </UserControl>

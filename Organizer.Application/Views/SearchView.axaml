@@ -7,27 +7,54 @@
              x:Class="Organizer.Application.Views.SearchView"
              x:DataType="vm:SearchViewModel">
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <UserControl.Styles>
+        <Style Selector="Border.floating-panel">
+            <Setter Property="Background" Value="#E6121824" />
+            <Setter Property="BorderBrush" Value="#3A50677D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="BoxShadow" Value="0 18 50 #77000000" />
+        </Style>
 
-        <StackPanel Grid.Row="0">
+        <Style Selector="Border.search-shell">
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="MaxWidth" Value="1080" />
+        </Style>
 
-            <components:SearchBar
-                DataContext="{Binding SearchBar}" />
+        <Style Selector="Border.tags-shell">
+            <Setter Property="Padding" Value="18 14 18 10" />
+            <Setter Property="MaxWidth" Value="1080" />
+        </Style>
 
-            <Border Background="{DynamicResource SurfaceBrush}"
-                    BorderBrush="{DynamicResource BorderBrushColor}"
-                    BorderThickness="0 0 0 1"
-                    Padding="20 12">
+        <Style Selector="Border.pagination-shell">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+            <Setter Property="Padding" Value="10 0" />
+            <Setter Property="MaxWidth" Value="760" />
+        </Style>
+    </UserControl.Styles>
 
-                <components:TagSelector
-                    DataContext="{Binding TagSelector}" />
+    <Grid Background="#0d1117">
 
-            </Border>
+        <Panel IsHitTestVisible="False">
+            <Ellipse Width="520"
+                     Height="520"
+                     Fill="#182A3F"
+                     Opacity="0.28"
+                     HorizontalAlignment="Left"
+                     VerticalAlignment="Top"
+                     Margin="-160 -210 0 0" />
+            <Ellipse Width="440"
+                     Height="440"
+                     Fill="#123528"
+                     Opacity="0.18"
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Bottom"
+                     Margin="0 0 -130 -170" />
+        </Panel>
 
-        </StackPanel>
-
-        <!-- Área central -->
-        <Grid Grid.Row="1">
+        <Grid>
 
             <StackPanel IsVisible="{Binding IsLoading}"
                         HorizontalAlignment="Center"
@@ -43,7 +70,8 @@
             <StackPanel IsVisible="{Binding IsEmpty}"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Spacing="12">
+                        Spacing="12"
+                        Margin="0 76 0 0">
                 <TextBlock Text="🔍" FontSize="48" HorizontalAlignment="Center" />
                 <TextBlock Text="Nenhuma imagem encontrada"
                            FontSize="16"
@@ -55,7 +83,7 @@
                            HorizontalAlignment="Center" />
             </StackPanel>
 
-            <Border Padding="20 20 20 56">
+            <Border Padding="20 184 20 92">
                 <ScrollViewer IsVisible="{Binding !IsEmpty}"
                               HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Auto">
@@ -79,11 +107,31 @@
 
         </Grid>
 
-        <!-- Paginação -->
-        <Border Grid.Row="2"
-                BorderBrush="{DynamicResource BorderBrushColor}"
-                BorderThickness="0 1 0 0"
-                Background="{DynamicResource SurfaceBrush}">
+        <StackPanel ZIndex="20"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Stretch"
+                    Margin="24 18"
+                    Spacing="10">
+
+            <Border Classes="floating-panel search-shell"
+                    HorizontalAlignment="Stretch">
+                <components:SearchBar
+                    DataContext="{Binding SearchBar}" />
+            </Border>
+
+            <Border Classes="floating-panel tags-shell"
+                    HorizontalAlignment="Stretch">
+                <components:TagSelector
+                    DataContext="{Binding TagSelector}" />
+            </Border>
+
+        </StackPanel>
+
+        <Border ZIndex="20"
+                Classes="floating-panel pagination-shell"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Center"
+                Margin="24 0 24 18">
 
             <components:Pagination
                 DataContext="{Binding Pagination}"
@@ -92,11 +140,11 @@
         </Border>
 
         <components:ImagePreviewModal
-            Grid.RowSpan="3"
+            ZIndex="100"
             DataContext="{Binding Preview}" />
 
         <views:GroupCopyPickerModal
-            Grid.RowSpan="3"
+            ZIndex="100"
             DataContext="{Binding CopyPicker}" />
 
     </Grid>

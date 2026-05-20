@@ -54,7 +54,7 @@
     </UserControl.Styles>
 
     <Border IsVisible="{Binding ShowPagination}"
-            Padding="0 16">
+            Padding="0 10">
 
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center"

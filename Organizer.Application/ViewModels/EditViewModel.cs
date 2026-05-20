@@ -69,7 +69,7 @@ public partial class EditViewModel : ObservableObject
 
         Description = _initialDescription;
 
-        await TagSelector.LoadAsync(_tagService);
+        await TagSelector.LoadAsync();
         TagSelector.SetSelectedTagIds(_initialTagIds);
 
         TagsLoaded = true;

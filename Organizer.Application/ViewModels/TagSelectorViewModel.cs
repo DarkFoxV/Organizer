@@ -35,14 +35,14 @@ public partial class TagSelectorViewModel : ObservableObject
         Console.WriteLine($"ShowAddButton = {ShowAddButton}");
     }
 
-// Carrega tags do banco e monta os ViewModels
-    public async Task LoadAsync(ITagService tagService)
+    // Carrega tags do banco e monta os ViewModels
+    public async Task LoadAsync()
     {
         var selectedTagIds = SelectedTags
             .Select(tag => tag.Id)
             .ToHashSet();
 
-        var tags = await tagService.GetAllAsync();
+        var tags = await _tagService.GetAllAsync();
 
         Tags.Clear();
 

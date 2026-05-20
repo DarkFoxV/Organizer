@@ -100,7 +100,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
     private async Task LoadTagsAsync()
     {
-        await TagSelector.LoadAsync(_tagService);
+        await TagSelector.LoadAsync();
         TagsLoaded = true;
         NotifyReady();
     }

@@ -59,7 +59,7 @@ public partial class SearchViewModel : ObservableObject
 
     private async Task LoadTagsAsync()
     {
-        await TagSelector.LoadAsync(_tagService);
+        await TagSelector.LoadAsync();
         TagsLoaded = true;
     }
 

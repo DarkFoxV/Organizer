@@ -21,7 +21,7 @@ public interface IImageService
         int pageSize);
 
     Task<List<int>> GetIdsByCardAsync(int cardId);
-    
+
     Task<Image?> GetByIdAsync(int id);
 
     Task<byte[]?> GetDataAsync(int id);

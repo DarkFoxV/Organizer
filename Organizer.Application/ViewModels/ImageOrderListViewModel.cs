@@ -51,7 +51,6 @@ public partial class ImageOrderListViewModel : ObservableObject
 
     private async Task AddImageAsync(ImageOrderItemViewModel vm)
     {
-
         vm.RemoveRequested += Remove;
 
         await vm.LoadThumbnailAsync();
@@ -60,7 +59,7 @@ public partial class ImageOrderListViewModel : ObservableObject
 
         OnPropertyChanged(nameof(IsEmpty));
     }
-    
+
     public void Remove(ImageOrderItemViewModel item)
     {
         item.Dispose();
@@ -69,7 +68,7 @@ public partial class ImageOrderListViewModel : ObservableObject
 
         OnPropertyChanged(nameof(IsEmpty));
     }
-    
+
     public void Move(int fromIndex, int toIndex)
     {
         if (fromIndex == toIndex) return;
@@ -85,11 +84,10 @@ public partial class ImageOrderListViewModel : ObservableObject
         Path.GetExtension(filename).ToLowerInvariant() switch
         {
             ".jpg" or ".jpeg" => "image/jpeg",
-            ".png"            => "image/png",
-            ".gif"            => "image/gif",
-            ".webp"           => "image/webp",
-            ".bmp"            => "image/bmp",
-            _                 => "application/octet-stream"
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            ".bmp" => "image/bmp",
+            _ => "application/octet-stream"
         };
-    
 }

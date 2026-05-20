@@ -19,23 +19,18 @@ public partial class TagRowViewModel : ObservableObject
 
     public int Id { get; init; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayName))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(DisplayName))]
     private string _name = string.Empty;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayColor))]
-    [NotifyPropertyChangedFor(nameof(ColorHex))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(DisplayColor))] [NotifyPropertyChangedFor(nameof(ColorHex))]
     private TagColor _color;
 
     // ── Dados temporários da edição ───────────────────────────────────────────
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayName))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(DisplayName))]
     private string _editName = string.Empty;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayColor))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(DisplayColor))]
     private TagColor _editColor;
 
     // ── Display ───────────────────────────────────────────────────────────────

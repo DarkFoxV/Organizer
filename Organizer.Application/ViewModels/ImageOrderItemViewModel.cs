@@ -11,14 +11,11 @@ namespace Organizer.Application.ViewModels.Components;
 
 public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
 {
-    [ObservableProperty]
-    private bool _isDragging;
+    [ObservableProperty] private bool _isDragging;
 
-    [ObservableProperty]
-    private bool _isDropTarget;
+    [ObservableProperty] private bool _isDropTarget;
 
-    [ObservableProperty]
-    private Bitmap? _thumbnail;
+    [ObservableProperty] private Bitmap? _thumbnail;
 
     public string Filename { get; init; } = string.Empty;
 
@@ -37,7 +34,7 @@ public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
             80.0 / full.PixelSize.Width,
             80.0 / full.PixelSize.Height);
 
-        var width  = (int)(full.PixelSize.Width  * ratio);
+        var width = (int)(full.PixelSize.Width * ratio);
         var height = (int)(full.PixelSize.Height * ratio);
 
         Thumbnail = await Task.Run(() =>

@@ -19,11 +19,9 @@ public partial class SearchBarViewModel : ObservableObject
 {
     private CancellationTokenSource? _searchCts;
 
-    [ObservableProperty]
-    private string _query = string.Empty;
+    [ObservableProperty] private string _query = string.Empty;
 
-    [ObservableProperty]
-    private SortOrder _selectedSort = SortOrder.MaisRecente;
+    [ObservableProperty] private SortOrder _selectedSort = SortOrder.MaisRecente;
 
     public ObservableCollection<SortOrder> SortOptions { get; } =
         new(Enum.GetValues<SortOrder>());

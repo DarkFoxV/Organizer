@@ -12,7 +12,7 @@ public partial class PaginationViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanGoNext))]
     [NotifyPropertyChangedFor(nameof(Pages))]
     public partial int CurrentPage { get; set; }
-    
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanGoPrevious))]
     [NotifyPropertyChangedFor(nameof(CanGoNext))]

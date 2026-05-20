@@ -7,8 +7,7 @@ namespace Organizer.Application.ViewModels;
 
 public partial class NavbarViewModel : ObservableObject
 {
-    [ObservableProperty]
-    private bool _isNavigationEnabled = true;
+    [ObservableProperty] private bool _isNavigationEnabled = true;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(

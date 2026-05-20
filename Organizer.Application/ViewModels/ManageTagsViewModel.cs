@@ -14,16 +14,13 @@ public partial class ManageTagsViewModel : ObservableObject
 {
     private readonly ITagService _tagService;
 
-    [ObservableProperty]
-    private bool _isLoading;
+    [ObservableProperty] private bool _isLoading;
 
-    [ObservableProperty]
-    private TagColor _newTagColor = TagColor.Blue;
+    [ObservableProperty] private TagColor _newTagColor = TagColor.Blue;
 
     // ── Nova tag ──────────────────────────────────────────────────────────────
 
-    [ObservableProperty]
-    private string _newTagName = string.Empty;
+    [ObservableProperty] private string _newTagName = string.Empty;
 
     // ── Init ──────────────────────────────────────────────────────────────────
 

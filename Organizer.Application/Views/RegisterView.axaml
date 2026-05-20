@@ -87,10 +87,11 @@
                                             Spacing="4">
                                     <TextBlock Classes="section-title"
                                                Text="Imagens" />
-                                    <TextBlock Text="Selecione uma ou mais imagens. Se houver várias, você pode reorganizar abaixo."
-                                               FontSize="13"
-                                               Foreground="{DynamicResource TextMutedBrush}"
-                                               TextWrapping="Wrap" />
+                                    <TextBlock
+                                        Text="Selecione uma ou mais imagens. Se houver várias, você pode reorganizar abaixo."
+                                        FontSize="13"
+                                        Foreground="{DynamicResource TextMutedBrush}"
+                                        TextWrapping="Wrap" />
                                 </StackPanel>
 
                                 <Button Grid.Column="1"
@@ -161,10 +162,11 @@
 
                             <TextBlock Classes="section-title"
                                        Text="📝 Descrição" />
-                            <TextBlock Text="Obrigatória para grupos de imagens. Em cards com uma única imagem, o título será o nome do arquivo."
-                                       FontSize="13"
-                                       Foreground="{DynamicResource TextMutedBrush}"
-                                       TextWrapping="Wrap" />
+                            <TextBlock
+                                Text="Obrigatória para grupos de imagens. Em cards com uma única imagem, o título será o nome do arquivo."
+                                FontSize="13"
+                                Foreground="{DynamicResource TextMutedBrush}"
+                                TextWrapping="Wrap" />
 
                             <TextBox Classes="field"
                                      Text="{Binding Description}"

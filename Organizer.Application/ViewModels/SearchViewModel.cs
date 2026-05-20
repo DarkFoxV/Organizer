@@ -17,18 +17,18 @@ public partial class SearchViewModel : ObservableObject
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
     private int _loadVersion;
-    
+
     [ObservableProperty] private bool _isEmpty;
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _tagsLoaded;
-    
+
     // ── Componentes ───────────────────────────────────────────────────────────
-    public SearchBarViewModel    SearchBar  { get; } = new();
-    public PaginationViewModel   Pagination { get; } = new();
-    public ImagePreviewViewModel Preview    { get; } = new();
+    public SearchBarViewModel SearchBar { get; } = new();
+    public PaginationViewModel Pagination { get; } = new();
+    public ImagePreviewViewModel Preview { get; } = new();
     public GroupCopyPickerViewModel CopyPicker { get; } = new();
-    public TagSelectorViewModel  TagSelector { get; }
-    
+    public TagSelectorViewModel TagSelector { get; }
+
     // ── Estado ────────────────────────────────────────────────────────────────
     public ObservableCollection<CardItemViewModel> Cards { get; } = [];
 
@@ -47,16 +47,16 @@ public partial class SearchViewModel : ObservableObject
         _tagService = tagService;
 
         TagSelector = new TagSelectorViewModel(_tagService, showAddButton: false);
-        
-        SearchBar.SearchRequested   += OnSearch;
+
+        SearchBar.SearchRequested += OnSearch;
         SearchBar.RegisterRequested += OnRegister;
-        Pagination.PageChanged      += OnPageChanged;
+        Pagination.PageChanged += OnPageChanged;
         TagSelector.SelectionChanged += OnTagSelectionChanged;
 
         _ = LoadCardsAsync();
         _ = LoadTagsAsync();
     }
-    
+
     private async Task LoadTagsAsync()
     {
         await TagSelector.LoadAsync(_tagService);
@@ -92,8 +92,8 @@ public partial class SearchViewModel : ObservableObject
     // ── Card actions ──────────────────────────────────────────────────────────
     private void SubscribeCard(CardItemViewModel card)
     {
-        card.ViewRequested   += OnViewCard;
-        card.EditRequested   += OnEditCard;
+        card.ViewRequested += OnViewCard;
+        card.EditRequested += OnEditCard;
         card.DeleteRequested += OnDeleteCard;
         card.CopyRequested += OnCopyCard;
     }
@@ -189,18 +189,18 @@ public partial class SearchViewModel : ObservableObject
 
                     return new CardItemViewModel
                     {
-                        Id          = card.CoverImageId ?? 0,
-                        CardId      = card.CardId,
-                        Thumbnail   = thumbnail,
-                        Filename    = card.CoverFilename,
+                        Id = card.CoverImageId ?? 0,
+                        CardId = card.CardId,
+                        Thumbnail = thumbnail,
+                        Filename = card.CoverFilename,
                         Description = card.CoverDescription,
-                        CreatedAt   = card.CreatedAt.ToString("dd/MM/yyyy"),
+                        CreatedAt = card.CreatedAt.ToString("dd/MM/yyyy"),
                         LoadImageDataAsync = card.CoverImageId is null
                             ? null
                             : () => _imageService.GetDataAsync(card.CoverImageId.Value),
-                        IsGroup     = card.CardType == CardType.Group,
-                        ImageCount  = card.ImageCount,
-                        IsLoaded    = thumbnail is not null
+                        IsGroup = card.CardType == CardType.Group,
+                        ImageCount = card.ImageCount,
+                        IsLoaded = thumbnail is not null
                     };
                 }).ToList();
             });

@@ -127,7 +127,7 @@
                             <Image Source="{Binding CurrentBitmap}"
                                    Stretch="Uniform"
                                    HorizontalAlignment="Stretch"
-                                   VerticalAlignment="Stretch"/>
+                                   VerticalAlignment="Stretch" />
                         </controls:ZoomBorder>
                     </Border>
                     <!-- Botão próximo -->

@@ -19,28 +19,25 @@ public partial class EditViewModel : ObservableObject
 
     public TagSelectorViewModel TagSelector { get; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady))]
     private string _description = string.Empty;
 
-    [ObservableProperty]
-    private string _title = "Editar";
+    [ObservableProperty] private string _title = "Editar";
 
-    [ObservableProperty]
-    private string _subtitle = string.Empty;
+    [ObservableProperty] private string _subtitle = string.Empty;
 
-    [ObservableProperty]
-    private bool _tagsLoaded;
+    [ObservableProperty] private bool _tagsLoaded;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady))]
     private bool _isSubmitting;
 
-    [ObservableProperty]
-    private string? _errorMessage;
+    [ObservableProperty] private string? _errorMessage;
 
     public bool IsReady => TagsLoaded && !IsSubmitting;
-    public string StatusText => IsSubmitting ? "Salvando alterações..." : "Atualize a descrição e as tags da imagem de capa";
+
+    public string StatusText =>
+        IsSubmitting ? "Salvando alterações..." : "Atualize a descrição e as tags da imagem de capa";
+
     public bool StatusIsReady => !IsSubmitting;
 
     public event Action? CloseRequested;
@@ -65,7 +62,7 @@ public partial class EditViewModel : ObservableObject
         ErrorMessage = null;
 
         var image = await _imageService.GetByIdAsync(card.Id)
-            ?? throw new InvalidOperationException("Imagem de capa não encontrada.");
+                    ?? throw new InvalidOperationException("Imagem de capa não encontrada.");
 
         _initialDescription = image.Description ?? string.Empty;
         _initialTagIds = image.ImageTags.Select(tag => tag.TagId).ToArray();
@@ -96,7 +93,8 @@ public partial class EditViewModel : ObservableObject
 
         try
         {
-            await _imageService.UpdateDescriptionAsync(_imageId, string.IsNullOrWhiteSpace(Description) ? null : Description.Trim());
+            await _imageService.UpdateDescriptionAsync(_imageId,
+                string.IsNullOrWhiteSpace(Description) ? null : Description.Trim());
 
             var selectedTagIds = TagSelector.SelectedTags.Select(tag => tag.Id).OrderBy(id => id).ToArray();
             var tagsToAdd = selectedTagIds.Except(_initialTagIds).ToArray();

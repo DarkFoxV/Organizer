@@ -21,14 +21,11 @@ public partial class GroupCopyPickerViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanGoNext))]
     private int _currentIndex;
 
-    [ObservableProperty]
-    private bool _isVisible;
+    [ObservableProperty] private bool _isVisible;
 
-    [ObservableProperty]
-    private Bitmap? _currentBitmap;
+    [ObservableProperty] private Bitmap? _currentBitmap;
 
-    [ObservableProperty]
-    private string _title = "Escolha a imagem para copiar";
+    [ObservableProperty] private string _title = "Escolha a imagem para copiar";
 
     public IReadOnlyList<int> ImageIds { get; private set; } = [];
 

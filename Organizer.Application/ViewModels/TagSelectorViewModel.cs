@@ -16,14 +16,11 @@ public partial class TagSelectorViewModel : ObservableObject
 
     public ObservableCollection<TagItemViewModel> Tags { get; } = [];
 
-    [ObservableProperty]
-    private bool _showAddButton;
+    [ObservableProperty] private bool _showAddButton;
 
-    [ObservableProperty]
-    private bool _showNewTagInput;
+    [ObservableProperty] private bool _showNewTagInput;
 
-    [ObservableProperty]
-    private string _newTagName = string.Empty;
+    [ObservableProperty] private string _newTagName = string.Empty;
 
     public IEnumerable<TagItemViewModel> SelectedTags =>
         Tags.Where(t => t.IsSelected);
@@ -33,7 +30,7 @@ public partial class TagSelectorViewModel : ObservableObject
 
     public TagSelectorViewModel(ITagService tagService, bool showAddButton = true)
     {
-        _tagService   = tagService;
+        _tagService = tagService;
         ShowAddButton = showAddButton;
         Console.WriteLine($"ShowAddButton = {ShowAddButton}");
     }
@@ -53,8 +50,8 @@ public partial class TagSelectorViewModel : ObservableObject
         {
             var vm = new TagItemViewModel
             {
-                Id    = tag.Id,
-                Name  = tag.Name,
+                Id = tag.Id,
+                Name = tag.Name,
                 Color = (TagColor)(int)tag.Color,
                 IsSelected = selectedTagIds.Contains(tag.Id)
             };
@@ -86,14 +83,14 @@ public partial class TagSelectorViewModel : ObservableObject
     private void OpenNewTagInput()
     {
         ShowNewTagInput = true;
-        NewTagName      = string.Empty;
+        NewTagName = string.Empty;
     }
 
     [RelayCommand]
     private void CancelNewTag()
     {
         ShowNewTagInput = false;
-        NewTagName      = string.Empty;
+        NewTagName = string.Empty;
     }
 
     [RelayCommand]
@@ -109,8 +106,8 @@ public partial class TagSelectorViewModel : ObservableObject
 
             var vm = new TagItemViewModel
             {
-                Id    = tag.Id,
-                Name  = tag.Name,
+                Id = tag.Id,
+                Name = tag.Name,
                 Color = TagColor.Blue,
             };
             vm.Toggled += _ =>
@@ -127,7 +124,7 @@ public partial class TagSelectorViewModel : ObservableObject
         finally
         {
             ShowNewTagInput = false;
-            NewTagName      = string.Empty;
+            NewTagName = string.Empty;
         }
     }
 }

@@ -75,14 +75,14 @@ internal class Program
 
         Services = services.BuildServiceProvider();
         App.Services = Services;
-        
+
         using (var scope = Services.CreateScope())
         {
             using var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             db.Database.EnsureCreated();
         }
-        
+
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }

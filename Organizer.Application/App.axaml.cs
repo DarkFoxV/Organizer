@@ -9,7 +9,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 
-
 public class App : Application
 {
     public static IServiceProvider Services { get; set; } = null!;

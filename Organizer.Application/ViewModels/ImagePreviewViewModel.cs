@@ -21,11 +21,9 @@ public partial class ImagePreviewViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanGoNext))]
     private int _currentIndex;
 
-    [ObservableProperty]
-    private bool _isVisible;
+    [ObservableProperty] private bool _isVisible;
 
-    [ObservableProperty]
-    private Bitmap? _currentBitmap;
+    [ObservableProperty] private Bitmap? _currentBitmap;
 
     public IReadOnlyList<int> ImageIds { get; private set; } = [];
 

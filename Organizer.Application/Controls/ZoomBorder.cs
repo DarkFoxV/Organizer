@@ -1,4 +1,5 @@
 namespace Organizer.Application.Controls;
+
 using System;
 using Avalonia;
 using Avalonia.Controls;
@@ -8,23 +9,23 @@ using Avalonia.Media.Imaging;
 
 public class ZoomBorder : Border
 {
-    private Point  _origin;
-    private Point  _start;
-    private bool   _isDragging;
+    private Point _origin;
+    private Point _start;
+    private bool _isDragging;
     private double _zoom = 1.0;
 
     private const double ZoomFactor = 1.1;
-    private const double MinZoom    = 0.1;
-    private const double MaxZoom    = 10.0;
+    private const double MinZoom = 0.1;
+    private const double MaxZoom = 10.0;
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
 
         PointerWheelChanged += OnWheel;
-        PointerPressed      += OnPointerPressed;
-        PointerMoved        += OnPointerMoved;
-        PointerReleased     += OnPointerReleased;
+        PointerPressed += OnPointerPressed;
+        PointerMoved += OnPointerMoved;
+        PointerReleased += OnPointerReleased;
 
         ClipToBounds = true;
         ResetTransform();
@@ -33,9 +34,9 @@ public class ZoomBorder : Border
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         PointerWheelChanged -= OnWheel;
-        PointerPressed      -= OnPointerPressed;
-        PointerMoved        -= OnPointerMoved;
-        PointerReleased     -= OnPointerReleased;
+        PointerPressed -= OnPointerPressed;
+        PointerMoved -= OnPointerMoved;
+        PointerReleased -= OnPointerReleased;
 
         base.OnDetachedFromVisualTree(e);
     }
@@ -45,8 +46,8 @@ public class ZoomBorder : Border
     {
         if (Child is null) return;
 
-        var delta    = e.Delta.Y > 0 ? ZoomFactor : 1.0 / ZoomFactor;
-        var newZoom  = Math.Clamp(_zoom * delta, MinZoom, MaxZoom);
+        var delta = e.Delta.Y > 0 ? ZoomFactor : 1.0 / ZoomFactor;
+        var newZoom = Math.Clamp(_zoom * delta, MinZoom, MaxZoom);
 
         if (Child.RenderTransform is not TransformGroup group)
             return;
@@ -55,7 +56,7 @@ public class ZoomBorder : Border
 
         scale.ScaleX = newZoom;
         scale.ScaleY = newZoom;
-        _zoom        = newZoom;
+        _zoom = newZoom;
 
         ClampTranslation();
 
@@ -68,10 +69,10 @@ public class ZoomBorder : Border
         if (Child?.RenderTransform is not TransformGroup group) return;
 
         var translate = (TranslateTransform)group.Children[1];
-        _start      = e.GetPosition(this);
-        _origin     = new Point(translate.X, translate.Y);
+        _start = e.GetPosition(this);
+        _origin = new Point(translate.X, translate.Y);
         _isDragging = true;
-        Cursor      = new Cursor(StandardCursorType.SizeAll);
+        Cursor = new Cursor(StandardCursorType.SizeAll);
         e.Pointer.Capture(this);
     }
 
@@ -80,16 +81,16 @@ public class ZoomBorder : Border
         if (!_isDragging || Child?.RenderTransform is not TransformGroup group) return;
 
         var translate = (TranslateTransform)group.Children[1];
-        var pos       = e.GetPosition(this);
-        translate.X   = _origin.X + (pos.X - _start.X);
-        translate.Y   = _origin.Y + (pos.Y - _start.Y);
+        var pos = e.GetPosition(this);
+        translate.X = _origin.X + (pos.X - _start.X);
+        translate.Y = _origin.Y + (pos.Y - _start.Y);
         ClampTranslation();
     }
 
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         _isDragging = false;
-        Cursor      = Cursor.Default;
+        Cursor = Cursor.Default;
         e.Pointer.Capture(null);
     }
 
@@ -143,7 +144,7 @@ public class ZoomBorder : Border
     {
         if (Child is Image { Source: Bitmap bitmap })
         {
-            var sourceWidth  = bitmap.PixelSize.Width;
+            var sourceWidth = bitmap.PixelSize.Width;
             var sourceHeight = bitmap.PixelSize.Height;
 
             if (sourceWidth <= 0 || sourceHeight <= 0 || Bounds.Width <= 0 || Bounds.Height <= 0)

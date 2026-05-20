@@ -34,30 +34,25 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         ("image/webp", ".webp")
     ];
 
-    private readonly ICardService  _cardService;
+    private readonly ICardService _cardService;
     private readonly IImageService _imageService;
-    private readonly ITagService   _tagService;
+    private readonly ITagService _tagService;
 
     // ── Componentes ───────────────────────────────────────────────────────────
-    public TagSelectorViewModel    TagSelector { get; }
-    public ImageOrderListViewModel ImageOrder  { get; } = new();
+    public TagSelectorViewModel TagSelector { get; }
+    public ImageOrderListViewModel ImageOrder { get; } = new();
 
     // ── Estado ────────────────────────────────────────────────────────────────
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady))]
     private string _description = string.Empty;
 
-    [ObservableProperty]
-    private bool _tagsLoaded;
+    [ObservableProperty] private bool _tagsLoaded;
 
-    [ObservableProperty]
-    private bool _isSubmitting;
+    [ObservableProperty] private bool _isSubmitting;
 
-    [ObservableProperty]
-    private bool _isPickingImages;
+    [ObservableProperty] private bool _isPickingImages;
 
-    [ObservableProperty]
-    private string? _errorMessage;
+    [ObservableProperty] private string? _errorMessage;
 
     private bool _isDisposed;
 
@@ -68,8 +63,8 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         && !IsPickingImages
         && (ImageOrder.Items.Count <= 1 || !string.IsNullOrWhiteSpace(Description));
 
-    public string StatusText    => IsReady ? "✓ Pronto para salvar" : "Preencha todos os campos";
-    public bool   StatusIsReady => IsReady;
+    public string StatusText => IsReady ? "✓ Pronto para salvar" : "Preencha todos os campos";
+    public bool StatusIsReady => IsReady;
 
     // ── Eventos ───────────────────────────────────────────────────────────────
     public event Action? CloseRequested;
@@ -89,7 +84,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         TagSelector = new TagSelectorViewModel(_tagService, showAddButton: true);
 
         ImageOrder.Items.CollectionChanged += OnImagesChanged;
-        
+
         // SelectionChanged dispara quando qualquer tag é selecionada/deselecionada
         TagSelector.SelectionChanged += NotifyReady;
 
@@ -121,7 +116,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         {
             var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title         = "Selecionar imagens",
+                Title = "Selecionar imagens",
                 AllowMultiple = true,
                 FileTypeFilter =
                 [
@@ -208,15 +203,15 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
     {
         if (!IsReady) return;
 
-        IsSubmitting  = true;
-        ErrorMessage  = null;
+        IsSubmitting = true;
+        ErrorMessage = null;
         BusyStateChanged?.Invoke(true, "Salvando imagens, aguarde...");
 
         try
         {
-            var items     = ImageOrder.Items.ToList();
-            var cardType  = items.Count == 1 ? CardType.Single : CardType.Group;
-            var title     = items.Count == 1
+            var items = ImageOrder.Items.ToList();
+            var cardType = items.Count == 1 ? CardType.Single : CardType.Group;
+            var title = items.Count == 1
                 ? Path.GetFileNameWithoutExtension(items[0].Filename)
                 : Description.Trim();
 
@@ -227,14 +222,14 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
             Image? firstImage = null;
             for (var i = 0; i < items.Count; i++)
             {
-                var item  = items[i];
-                var mime  = item.MimeType;
-                var data  = await item.ReadDataAsync();
+                var item = items[i];
+                var mime = item.MimeType;
+                var data = await item.ReadDataAsync();
                 var image = await _imageService.CreateAsync(
-                    cardId:      card.Id,
-                    data:        data,
-                    filename:    item.Filename,
-                    mimeType:    mime,
+                    cardId: card.Id,
+                    data: data,
+                    filename: item.Filename,
+                    mimeType: mime,
                     description: i == 0 ? Description.Trim() : null);
 
                 firstImage ??= image;
@@ -296,7 +291,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         Description = string.Empty;
         ErrorMessage = null;
     }
-    
+
     private void OnImagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         NotifyReady();
@@ -327,16 +322,16 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
     private static bool IsSupportedImageFile(string filename) =>
         SupportedImageExtensions.Contains(Path.GetExtension(filename));
-    
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     private static string DetectMime(string filename) =>
         Path.GetExtension(filename).ToLower() switch
         {
             ".jpg" or ".jpeg" => "image/jpeg",
-            ".png"            => "image/png",
-            ".gif"            => "image/gif",
-            ".webp"           => "image/webp",
-            ".bmp"            => "image/bmp",
-            _                 => "application/octet-stream"
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            ".bmp" => "image/bmp",
+            _ => "application/octet-stream"
         };
 }

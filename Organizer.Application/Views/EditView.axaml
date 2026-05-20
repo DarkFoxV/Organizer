@@ -120,12 +120,13 @@
                                            Foreground="{DynamicResource TextMutedBrush}" />
                             </Border>
 
-                            <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                    Background="#2d1515"
-                                    BorderBrush="{DynamicResource DangerBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="12 10">
+                            <Border
+                                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                Background="#2d1515"
+                                BorderBrush="{DynamicResource DangerBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12 10">
                                 <TextBlock Text="{Binding ErrorMessage}"
                                            FontSize="13"
                                            Foreground="#f87171"

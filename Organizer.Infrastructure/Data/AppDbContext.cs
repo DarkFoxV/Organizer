@@ -60,14 +60,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(t => t.Name)
                 .IsRequired()
                 .HasMaxLength(100);
-            
+
             e.Property(c => c.Color)
                 .HasConversion<string>()
                 .IsRequired();
-            
-            e.HasIndex(t => t.Name).IsUnique();
-            
 
+            e.HasIndex(t => t.Name).IsUnique();
         });
 
         // ── ImageTag (N:N) ────────────────────────────────────────────────────

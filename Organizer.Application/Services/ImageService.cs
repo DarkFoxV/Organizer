@@ -14,9 +14,9 @@ namespace Organizer.Application.Services;
 
 public class ImageService(AppDbContext db) : IImageService
 {
-    private const int ThumbnailWidth  = 220;
+    private const int ThumbnailWidth = 220;
     private const int ThumbnailHeight = 300;
-    
+
     public async Task<Image> CreateAsync(
         int cardId,
         byte[] data,
@@ -38,13 +38,13 @@ public class ImageService(AppDbContext db) : IImageService
 
         Image image = new()
         {
-            CardId      = cardId,
-            Data        = data,
-            Thumbnail   = thumbnail,
-            Filename    = filename,
-            MimeType    = mimeType,
+            CardId = cardId,
+            Data = data,
+            Thumbnail = thumbnail,
+            Filename = filename,
+            MimeType = mimeType,
             Description = description,
-            Position    = nextPosition
+            Position = nextPosition
         };
 
         db.Images.Add(image);
@@ -52,13 +52,13 @@ public class ImageService(AppDbContext db) : IImageService
         await db.SaveChangesAsync();
         var result = new Image
         {
-            Id          = image.Id,
-            CardId      = image.CardId,
-            Position    = image.Position,
-            Filename    = image.Filename,
-            MimeType    = image.MimeType,
+            Id = image.Id,
+            CardId = image.CardId,
+            Position = image.Position,
+            Filename = image.Filename,
+            MimeType = image.MimeType,
             Description = image.Description,
-            CreatedAt   = image.CreatedAt
+            CreatedAt = image.CreatedAt
         };
 
         db.ChangeTracker.Clear();
@@ -76,7 +76,7 @@ public class ImageService(AppDbContext db) : IImageService
             ThumbnailWidth / (double)full.PixelSize.Width,
             ThumbnailHeight / (double)full.PixelSize.Height);
 
-        var width  = (int)(full.PixelSize.Width * ratio);
+        var width = (int)(full.PixelSize.Width * ratio);
         var height = (int)(full.PixelSize.Height * ratio);
 
         var thumb = full.CreateScaledBitmap(
@@ -121,9 +121,7 @@ public class ImageService(AppDbContext db) : IImageService
                 c.Images.Any(i =>
                     (i.Description != null &&
                      i.Description.ToLower().Contains(query))
-
                     ||
-
                     i.ImageTags.Any(it =>
                         it.Tag.Name.ToLower().Contains(query))));
         }
@@ -178,7 +176,7 @@ public class ImageService(AppDbContext db) : IImageService
             .Select(i => i.Id)
             .ToListAsync();
     }
-    
+
     public async Task<Image?> GetByIdAsync(int id)
     {
         return await db.Images

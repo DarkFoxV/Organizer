@@ -10,14 +10,11 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IServiceProvider _services;
     private RegisterViewModel? _activeRegisterViewModel;
 
-    [ObservableProperty]
-    private ObservableObject _currentView;
+    [ObservableProperty] private ObservableObject _currentView;
 
-    [ObservableProperty]
-    private bool _isGlobalLoading;
+    [ObservableProperty] private bool _isGlobalLoading;
 
-    [ObservableProperty]
-    private string _globalLoadingText = "Carregando, aguarde...";
+    [ObservableProperty] private string _globalLoadingText = "Carregando, aguarde...";
 
     public NavbarViewModel Navbar { get; }
 
@@ -48,12 +45,12 @@ public partial class MainWindowViewModel : ObservableObject
 
         CurrentView = button switch
         {
-            NavButton.Home        => _services.GetRequiredService<HomeViewModel>(),
-            NavButton.Search      => _searchViewModel,
-            NavButton.Workspace   => _services.GetRequiredService<WorkspaceViewModel>(),
-            NavButton.ManageTags  => _services.GetRequiredService<ManageTagsViewModel>(),
+            NavButton.Home => _services.GetRequiredService<HomeViewModel>(),
+            NavButton.Search => _searchViewModel,
+            NavButton.Workspace => _services.GetRequiredService<WorkspaceViewModel>(),
+            NavButton.ManageTags => _services.GetRequiredService<ManageTagsViewModel>(),
             NavButton.Preferences => _services.GetRequiredService<PreferencesViewModel>(),
-            _                     => _searchViewModel
+            _ => _searchViewModel
         };
 
         if (button == NavButton.Search)
@@ -65,8 +62,8 @@ public partial class MainWindowViewModel : ObservableObject
         if (IsGlobalLoading) return;
 
         var registerVm = _services.GetRequiredService<RegisterViewModel>();
-        registerVm.CloseRequested  += GoBackToSearch;
-        registerVm.SubmitSuccess   += GoBackToSearch;
+        registerVm.CloseRequested += GoBackToSearch;
+        registerVm.SubmitSuccess += GoBackToSearch;
         registerVm.BusyStateChanged += OnRegisterBusyStateChanged;
         _activeRegisterViewModel = registerVm;
         CurrentView = registerVm;
@@ -89,7 +86,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         DetachRegister();
         Navbar.Selected = NavButton.Search;
-        CurrentView     = _searchViewModel;
+        CurrentView = _searchViewModel;
         _ = _searchViewModel.ReloadAsync();
     }
 

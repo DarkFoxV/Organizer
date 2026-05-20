@@ -21,8 +21,7 @@ public partial class CardItemViewModel : ObservableObject
     public bool IsGroup { get; init; }
     public int ImageCount { get; init; }
 
-    [ObservableProperty]
-    private byte[]? _imageData;
+    [ObservableProperty] private byte[]? _imageData;
 
     public void ReleaseResources()
     {

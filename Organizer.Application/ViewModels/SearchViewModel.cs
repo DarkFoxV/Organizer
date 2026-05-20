@@ -98,6 +98,14 @@ public partial class SearchViewModel : ObservableObject
         card.CopyRequested += OnCopyCard;
     }
 
+    private void UnsubscribeCard(CardItemViewModel card)
+    {
+        card.ViewRequested -= OnViewCard;
+        card.EditRequested -= OnEditCard;
+        card.DeleteRequested -= OnDeleteCard;
+        card.CopyRequested -= OnCopyCard;
+    }
+
     private async void OnViewCard(CardItemViewModel card)
     {
         try
@@ -215,7 +223,10 @@ public partial class SearchViewModel : ObservableObject
             }
 
             foreach (var existingCard in Cards)
+            {
+                UnsubscribeCard(existingCard);
                 existingCard.ReleaseResources();
+            }
 
             Cards.Clear();
 

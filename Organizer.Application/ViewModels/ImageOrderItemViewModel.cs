@@ -23,7 +23,7 @@ public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
 
     public IStorageFile? SourceFile { get; init; }
 
-    public byte[]? SourceData { get; init; }
+    public byte[]? SourceData { get; set; }
 
     public async Task LoadThumbnailAsync()
     {
@@ -70,6 +70,7 @@ public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
     {
         Thumbnail?.Dispose();
         Thumbnail = null;
+        SourceData = null;
     }
 
     public event Action<ImageOrderItemViewModel>? RemoveRequested;

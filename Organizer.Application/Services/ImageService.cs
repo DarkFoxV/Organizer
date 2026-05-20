@@ -7,12 +7,11 @@ using Avalonia.Media.Imaging;
 using Microsoft.EntityFrameworkCore;
 using Organize.Organizer.Core;
 using Organize.Organizer.Core.Interfaces;
-using Organize.Organizer.Infrastructure.Data;
 using Organizer.Application.ViewModels.Components;
 
 namespace Organizer.Application.Services;
 
-public class ImageService(AppDbContext db) : IImageService
+public class ImageService(AppDbContextFactory dbFactory) : IImageService
 {
     private const int ThumbnailWidth = 220;
     private const int ThumbnailHeight = 300;
@@ -24,6 +23,8 @@ public class ImageService(AppDbContext db) : IImageService
         string? mimeType = null,
         string? description = null)
     {
+        await using var db = dbFactory.Create();
+
         var thumbnail = await Task.Run(() => CreateThumbnail(data));
         var cardExists = await db.Cards
             .AsNoTracking()
@@ -97,12 +98,10 @@ public class ImageService(AppDbContext db) : IImageService
         int page,
         int pageSize)
     {
+        await using var db = dbFactory.Create();
+
         var q = db.Cards
             .AsNoTracking()
-            .Include(c => c.CoverImage)
-            .ThenInclude(i => i!.ImageTags)
-            .ThenInclude(it => it.Tag)
-            .Include(c => c.Images)
             .AsQueryable();
 
         if (tagIds.Count > 0)
@@ -173,7 +172,10 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task<List<int>> GetIdsByCardAsync(int cardId)
     {
+        await using var db = dbFactory.Create();
+
         return await db.Images
+            .AsNoTracking()
             .Where(i => i.CardId == cardId)
             .OrderBy(i => i.Position)
             .Select(i => i.Id)
@@ -182,6 +184,8 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task<List<GroupImageSummary>> GetGroupImageSummariesAsync(int cardId)
     {
+        await using var db = dbFactory.Create();
+
         return await db.Images
             .AsNoTracking()
             .Where(i => i.CardId == cardId)
@@ -200,7 +204,10 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task<Image?> GetByIdAsync(int id)
     {
+        await using var db = dbFactory.Create();
+
         return await db.Images
+            .AsNoTracking()
             .Include(i => i.ImageTags)
             .ThenInclude(it => it.Tag)
             .FirstOrDefaultAsync(i => i.Id == id);
@@ -208,7 +215,10 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task<byte[]?> GetDataAsync(int id)
     {
+        await using var db = dbFactory.Create();
+
         return await db.Images
+            .AsNoTracking()
             .Where(i => i.Id == id)
             .Select(i => i.Data)
             .FirstOrDefaultAsync();
@@ -216,7 +226,10 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task<List<Image>> GetByCardAsync(int cardId)
     {
+        await using var db = dbFactory.Create();
+
         return await db.Images
+            .AsNoTracking()
             .Where(i => i.CardId == cardId)
             .OrderBy(i => i.Position)
             .ToListAsync();
@@ -224,6 +237,8 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task<Image> UpdateDescriptionAsync(int imageId, string? description)
     {
+        await using var db = dbFactory.Create();
+
         var image = await db.Images
                         .FirstOrDefaultAsync(i => i.Id == imageId)
                     ?? throw new KeyNotFoundException("Image not found.");
@@ -237,6 +252,8 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task<Image> MoveAsync(int imageId, int newPosition)
     {
+        await using var db = dbFactory.Create();
+
         var image = await db.Images
                         .FirstOrDefaultAsync(i => i.Id == imageId)
                     ?? throw new KeyNotFoundException("Image not found.");
@@ -263,6 +280,8 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task<Image> MoveToCardAsync(int imageId, int targetCardId)
     {
+        await using var db = dbFactory.Create();
+
         var image = await db.Images
                         .FirstOrDefaultAsync(i => i.Id == imageId)
                     ?? throw new KeyNotFoundException("Image not found.");
@@ -286,6 +305,8 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task AddTagAsync(int imageId, int tagId)
     {
+        await using var db = dbFactory.Create();
+
         var exists = await db.ImageTags
             .AnyAsync(it => it.ImageId == imageId && it.TagId == tagId);
 
@@ -306,6 +327,8 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task RemoveTagAsync(int imageId, int tagId)
     {
+        await using var db = dbFactory.Create();
+
         var imageTag = await db.ImageTags
             .FirstOrDefaultAsync(it =>
                 it.ImageId == imageId &&
@@ -322,6 +345,8 @@ public class ImageService(AppDbContext db) : IImageService
 
     public async Task DeleteAsync(int imageId)
     {
+        await using var db = dbFactory.Create();
+
         var image = await db.Images
                         .FirstOrDefaultAsync(i => i.Id == imageId)
                     ?? throw new KeyNotFoundException("Image not found.");

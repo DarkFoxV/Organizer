@@ -6,14 +6,15 @@ using Microsoft.EntityFrameworkCore;
 using Organize.Organizer.Core;
 using Organize.Organizer.Core.Enums;
 using Organize.Organizer.Core.Interfaces;
-using Organize.Organizer.Infrastructure.Data;
 
 namespace Organizer.Application.Services;
 
-public class CardService(AppDbContext db) : ICardService
+public class CardService(AppDbContextFactory dbFactory) : ICardService
 {
     public async Task<Card> CreateAsync(string title, CardType cardType)
     {
+        await using var db = dbFactory.Create();
+
         Card card = new()
         {
             Title = title.Trim(),
@@ -40,14 +41,20 @@ public class CardService(AppDbContext db) : ICardService
 
     public async Task<Card?> GetByIdAsync(int id)
     {
+        await using var db = dbFactory.Create();
+
         return await db.Cards
+            .AsNoTracking()
             .Include(c => c.Images)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<List<Card>> GetAllAsync()
     {
+        await using var db = dbFactory.Create();
+
         return await db.Cards
+            .AsNoTracking()
             .Include(c => c.CoverImage)
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
@@ -55,6 +62,8 @@ public class CardService(AppDbContext db) : ICardService
 
     public async Task<Card> RenameAsync(int id, string title)
     {
+        await using var db = dbFactory.Create();
+
         var card = await db.Cards
                        .FirstOrDefaultAsync(c => c.Id == id)
                    ?? throw new KeyNotFoundException("Card not found.");
@@ -69,12 +78,17 @@ public class CardService(AppDbContext db) : ICardService
 
     public async Task<Card> SetCoverAsync(int cardId, int imageId)
     {
+        await using var db = dbFactory.Create();
+
         var card = await db.Cards
                        .FirstOrDefaultAsync(c => c.Id == cardId)
                    ?? throw new KeyNotFoundException("Card not found.");
 
         var image = await db.Images
-                        .FirstOrDefaultAsync(i => i.Id == imageId)
+                        .AsNoTracking()
+                        .Where(i => i.Id == imageId)
+                        .Select(i => new { i.CardId })
+                        .FirstOrDefaultAsync()
                     ?? throw new KeyNotFoundException("Image not found.");
 
         if (image.CardId != cardId)
@@ -91,6 +105,8 @@ public class CardService(AppDbContext db) : ICardService
 
     public async Task DeleteAsync(int id)
     {
+        await using var db = dbFactory.Create();
+
         var card = await db.Cards
                        .FirstOrDefaultAsync(c => c.Id == id)
                    ?? throw new KeyNotFoundException("Card not found.");

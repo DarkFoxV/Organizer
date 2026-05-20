@@ -2,6 +2,7 @@ using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Threading.Tasks;
 using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
@@ -198,13 +199,16 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
             {
                 var item = items[i];
                 var mime = item.MimeType;
-                var data = await item.ReadDataAsync();
+                byte[]? data = await item.ReadDataAsync();
                 var image = await _imageService.CreateAsync(
                     cardId: card.Id,
                     data: data,
                     filename: item.Filename,
                     mimeType: mime,
                     description: i == 0 ? Description.Trim() : null);
+                data = null;
+                item.RemoveRequested -= ImageOrder.Remove;
+                item.Dispose();
 
                 firstImage ??= image;
 
@@ -249,6 +253,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
     {
         if (_isDisposed) return;
         _isDisposed = true;
+        var hadImages = ImageOrder.Items.Count > 0;
         BusyStateChanged?.Invoke(false, string.Empty);
 
         foreach (var item in ImageOrder.Items.ToList())
@@ -264,6 +269,17 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
         Description = string.Empty;
         ErrorMessage = null;
+
+        if (hadImages)
+            CompactLargeImageMemory();
+    }
+
+    private static void CompactLargeImageMemory()
+    {
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+        GC.WaitForPendingFinalizers();
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
     }
 
     private void OnImagesChanged(object? sender, NotifyCollectionChangedEventArgs e)

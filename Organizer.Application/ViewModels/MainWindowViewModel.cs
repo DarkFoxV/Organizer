@@ -9,6 +9,7 @@ public partial class MainWindowViewModel : ObservableObject
 {
     private readonly IServiceProvider _services;
     private RegisterViewModel? _activeRegisterViewModel;
+    private IServiceScope? _activeRegisterScope;
     private readonly WorkspaceViewModel _workspaceViewModel;
 
     [ObservableProperty] private ObservableObject _currentView;
@@ -63,7 +64,10 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (IsGlobalLoading) return;
 
-        var registerVm = _services.GetRequiredService<RegisterViewModel>();
+        DetachRegister();
+
+        _activeRegisterScope = _services.CreateScope();
+        var registerVm = _activeRegisterScope.ServiceProvider.GetRequiredService<RegisterViewModel>();
         registerVm.CloseRequested += GoBackToSearch;
         registerVm.SubmitSuccess += GoBackToSearch;
         registerVm.BusyStateChanged += OnRegisterBusyStateChanged;
@@ -108,7 +112,10 @@ public partial class MainWindowViewModel : ObservableObject
         _activeRegisterViewModel.CloseRequested -= GoBackToSearch;
         _activeRegisterViewModel.SubmitSuccess -= GoBackToSearch;
         _activeRegisterViewModel.BusyStateChanged -= OnRegisterBusyStateChanged;
+        _activeRegisterViewModel.Dispose();
         _activeRegisterViewModel = null;
+        _activeRegisterScope?.Dispose();
+        _activeRegisterScope = null;
 
         IsGlobalLoading = false;
         GlobalLoadingText = "Carregando, aguarde...";

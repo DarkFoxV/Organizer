@@ -14,12 +14,19 @@
         </Style>
 
         <Style Selector="Border.section-card">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="Background" Value="#E6121824" />
+            <Setter Property="BorderBrush" Value="#3A50677D" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="22" />
             <Setter Property="Padding" Value="24" />
-            <Setter Property="Margin" Value="0 0 0 16" />
+            <Setter Property="BoxShadow" Value="0 18 50 #77000000" />
+        </Style>
+
+        <Style Selector="StackPanel.page-shell">
+            <Setter Property="Margin" Value="28" />
+            <Setter Property="Spacing" Value="16" />
+            <Setter Property="MaxWidth" Value="860" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
 
         <Style Selector="Button.btn">
@@ -36,45 +43,41 @@
 
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+    <Grid Background="#0d1117"
+          VerticalAlignment="Stretch"
+          HorizontalAlignment="Stretch">
 
-        <Border Grid.Row="0"
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrushColor}"
-                BorderThickness="0 0 0 1"
-                Padding="28 18">
-            <Grid ColumnDefinitions="*,Auto">
-                <StackPanel Grid.Column="0"
-                            Spacing="4">
-                    <TextBlock Text="{Binding Title}"
-                               FontSize="22"
-                               FontWeight="Bold"
-                               Foreground="{DynamicResource TextPrimaryBrush}" />
-                    <TextBlock Text="{Binding Subtitle}"
-                               FontSize="13"
-                               Foreground="{DynamicResource TextMutedBrush}"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-                <Button Grid.Column="1"
-                        Classes="btn btn-danger"
-                        Width="40" Height="40"
-                        Padding="0"
-                        VerticalAlignment="Top"
-                        Command="{Binding CloseCommand}">
-                    <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
-                </Button>
-            </Grid>
-        </Border>
-
-        <ScrollViewer Grid.Row="1"
-                      HorizontalScrollBarVisibility="Disabled"
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
 
-            <Border HorizontalAlignment="Stretch"
-                    Padding="28 24 28 40">
+            <StackPanel Classes="page-shell">
 
-                <StackPanel Spacing="0">
-                    <Border Classes="section-card">
+                <Border Classes="section-card">
+                    <Grid ColumnDefinitions="*,Auto"
+                          ColumnSpacing="16">
+                        <StackPanel Grid.Column="0"
+                                    Spacing="4">
+                            <TextBlock Text="{Binding Title}"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                            <TextBlock Text="{Binding Subtitle}"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Classes="btn btn-danger"
+                                Width="40" Height="40"
+                                Padding="0"
+                                VerticalAlignment="Top"
+                                Command="{Binding CloseCommand}">
+                            <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <Border Classes="section-card">
                         <StackPanel Spacing="12">
                             <TextBlock Classes="section-title"
                                        Text="📝 Descrição" />
@@ -86,9 +89,9 @@
                                      Text="{Binding Description}"
                                      PlaceholderText="Descreva a imagem..." />
                         </StackPanel>
-                    </Border>
+                </Border>
 
-                    <Border Classes="section-card">
+                <Border Classes="section-card">
                         <StackPanel Spacing="12">
                             <TextBlock Classes="section-title"
                                        Text="🏷 Tags" />
@@ -106,9 +109,9 @@
                                 x:Name="TagSelectorControl"
                                 IsVisible="{Binding TagsLoaded}" />
                         </StackPanel>
-                    </Border>
+                </Border>
 
-                    <Border Classes="section-card">
+                <Border Classes="section-card">
                         <StackPanel Spacing="18">
                             <Border Background="{DynamicResource SurfaceAltBrush}"
                                     BorderBrush="{DynamicResource BorderBrushColor}"
@@ -151,11 +154,9 @@
                                 </StackPanel>
                             </Button>
                         </StackPanel>
-                    </Border>
-                </StackPanel>
+                </Border>
 
-            </Border>
-
+            </StackPanel>
         </ScrollViewer>
 
     </Grid>

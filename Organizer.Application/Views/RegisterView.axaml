@@ -14,12 +14,19 @@
         </Style>
 
         <Style Selector="Border.section-card">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="Background" Value="#E6121824" />
+            <Setter Property="BorderBrush" Value="#3A50677D" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="22" />
             <Setter Property="Padding" Value="24" />
-            <Setter Property="Margin" Value="0 0 0 16" />
+            <Setter Property="BoxShadow" Value="0 18 50 #77000000" />
+        </Style>
+
+        <Style Selector="StackPanel.page-shell">
+            <Setter Property="Margin" Value="28" />
+            <Setter Property="Spacing" Value="16" />
+            <Setter Property="MaxWidth" Value="1040" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
 
         <Style Selector="Button.btn">
@@ -36,48 +43,43 @@
 
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+    <Grid Background="#0d1117"
+          VerticalAlignment="Stretch"
+          HorizontalAlignment="Stretch">
 
-        <!-- Header -->
-        <Border Grid.Row="0"
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrushColor}"
-                BorderThickness="0 0 0 1"
-                Padding="28 18">
-            <Grid ColumnDefinitions="*,Auto">
-                <StackPanel Grid.Column="0"
-                            Spacing="4">
-                    <TextBlock Text="Registrar"
-                               FontSize="22"
-                               FontWeight="Bold"
-                               Foreground="{DynamicResource TextPrimaryBrush}" />
-                    <TextBlock Text="Monte o card, organize a ordem das imagens e associe as tags antes de salvar."
-                               FontSize="13"
-                               Foreground="{DynamicResource TextMutedBrush}"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-                <Button Grid.Column="1"
-                        Classes="btn btn-danger"
-                        Width="40" Height="40"
-                        Padding="0"
-                        VerticalAlignment="Top"
-                        Command="{Binding CloseCommand}">
-                    <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
-                </Button>
-            </Grid>
-        </Border>
-
-        <!-- Conteúdo scrollável -->
-        <ScrollViewer Grid.Row="1"
-                      HorizontalScrollBarVisibility="Disabled"
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
 
-            <Border HorizontalAlignment="Stretch"
-                    Padding="28 24 28 40">
+            <StackPanel Classes="page-shell">
 
-                <StackPanel Spacing="0">
-                    <!-- Seção: Selecionar imagens -->
-                    <Border Classes="section-card">
+                <!-- Header -->
+                <Border Classes="section-card">
+                    <Grid ColumnDefinitions="*,Auto"
+                          ColumnSpacing="16">
+                        <StackPanel Grid.Column="0"
+                                    Spacing="4">
+                            <TextBlock Text="Registrar"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                            <TextBlock Text="Monte o card, organize a ordem das imagens e associe as tags antes de salvar."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Classes="btn btn-danger"
+                                Width="40" Height="40"
+                                Padding="0"
+                                VerticalAlignment="Top"
+                                Command="{Binding CloseCommand}">
+                            <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Seção: Selecionar imagens -->
+                <Border Classes="section-card">
 
                         <StackPanel Spacing="16">
 
@@ -153,10 +155,10 @@
 
                         </StackPanel>
 
-                    </Border>
+                </Border>
 
-                    <!-- Seção: Descrição -->
-                    <Border Classes="section-card">
+                <!-- Seção: Descrição -->
+                <Border Classes="section-card">
 
                         <StackPanel Spacing="12">
 
@@ -174,10 +176,10 @@
 
                         </StackPanel>
 
-                    </Border>
+                </Border>
 
-                    <!-- Seção: Tags -->
-                    <Border Classes="section-card">
+                <!-- Seção: Tags -->
+                <Border Classes="section-card">
 
                         <StackPanel Spacing="12">
 
@@ -199,10 +201,10 @@
 
                         </StackPanel>
 
-                    </Border>
+                </Border>
 
-                    <!-- Seção: Submit -->
-                    <Border Classes="section-card">
+                <!-- Seção: Submit -->
+                <Border Classes="section-card">
 
                         <StackPanel Spacing="18">
 
@@ -276,11 +278,9 @@
 
                         </StackPanel>
 
-                    </Border>
+                </Border>
 
-                </StackPanel>
-
-            </Border>
+            </StackPanel>
 
         </ScrollViewer>
 

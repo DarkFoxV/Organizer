@@ -2,7 +2,6 @@
 using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Organize.Organizer.Core.Interfaces;
-using Organize.Organizer.Infrastructure.Data;
 using Organizer.Application;
 using Organizer.Application.Services;
 using Organizer.Application.ViewModels;
@@ -26,12 +25,6 @@ internal class Program
         // ─────────────────────────────
 
         services.AddSingleton<AppDbContextFactory>();
-
-        services.AddTransient<AppDbContext>(sp =>
-        {
-            var factory = sp.GetRequiredService<AppDbContextFactory>();
-            return factory.Create();
-        });
 
         // ─────────────────────────────
         // SERVICES
@@ -74,14 +67,15 @@ internal class Program
 
         // ─────────────────────────────
 
-        Services = services.BuildServiceProvider();
+        using var serviceProvider = services.BuildServiceProvider();
+
+        Services = serviceProvider;
         App.Services = Services;
 
-        using (var scope = Services.CreateScope())
+        var dbFactory = Services.GetRequiredService<AppDbContextFactory>();
+        using (var lease = dbFactory.CreateLeaseAsync().GetAwaiter().GetResult())
         {
-            using var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            db.Database.EnsureCreated();
+            lease.Context.Database.EnsureCreated();
         }
 
         BuildAvaloniaApp()

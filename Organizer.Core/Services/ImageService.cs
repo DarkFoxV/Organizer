@@ -7,6 +7,7 @@ using Avalonia.Media.Imaging;
 using Microsoft.EntityFrameworkCore;
 using Organize.Organizer.Core;
 using Organize.Organizer.Core.Interfaces;
+using Organize.Organizer.Infrastructure.Data;
 using Organizer.Application.ViewModels.Components;
 
 namespace Organizer.Application.Services;
@@ -23,7 +24,8 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
         string? mimeType = null,
         string? description = null)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
         var thumbnail = await Task.Run(() => CreateThumbnail(data));
         var cardExists = await db.Cards
@@ -98,10 +100,10 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
         int page,
         int pageSize)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
         var q = db.Cards
-            .AsNoTracking()
             .AsQueryable();
 
         if (tagIds.Count > 0)
@@ -172,10 +174,10 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
 
     public async Task<List<int>> GetIdsByCardAsync(int cardId)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
         return await db.Images
-            .AsNoTracking()
             .Where(i => i.CardId == cardId)
             .OrderBy(i => i.Position)
             .Select(i => i.Id)
@@ -184,10 +186,10 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
 
     public async Task<List<GroupImageSummary>> GetGroupImageSummariesAsync(int cardId)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
         return await db.Images
-            .AsNoTracking()
             .Where(i => i.CardId == cardId)
             .OrderBy(i => i.Position)
             .Select(i => new GroupImageSummary
@@ -204,21 +206,44 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
 
     public async Task<Image?> GetByIdAsync(int id)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
         return await db.Images
-            .AsNoTracking()
-            .Include(i => i.ImageTags)
-            .ThenInclude(it => it.Tag)
-            .FirstOrDefaultAsync(i => i.Id == id);
+            .Where(i => i.Id == id)
+            .Select(i => new Image
+            {
+                Id = i.Id,
+                CardId = i.CardId,
+                Position = i.Position,
+                Filename = i.Filename,
+                MimeType = i.MimeType,
+                Description = i.Description,
+                CreatedAt = i.CreatedAt,
+                Thumbnail = i.Thumbnail,
+                ImageTags = i.ImageTags
+                    .Select(it => new ImageTag
+                    {
+                        ImageId = it.ImageId,
+                        TagId = it.TagId,
+                        Tag = new Tag
+                        {
+                            Id = it.Tag.Id,
+                            Name = it.Tag.Name,
+                            Color = it.Tag.Color
+                        }
+                    })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task<byte[]?> GetDataAsync(int id)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
         return await db.Images
-            .AsNoTracking()
             .Where(i => i.Id == id)
             .Select(i => i.Data)
             .FirstOrDefaultAsync();
@@ -226,64 +251,96 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
 
     public async Task<List<Image>> GetByCardAsync(int cardId)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
         return await db.Images
-            .AsNoTracking()
             .Where(i => i.CardId == cardId)
             .OrderBy(i => i.Position)
+            .Select(i => new Image
+            {
+                Id = i.Id,
+                CardId = i.CardId,
+                Position = i.Position,
+                Filename = i.Filename,
+                MimeType = i.MimeType,
+                Description = i.Description,
+                CreatedAt = i.CreatedAt,
+                Thumbnail = i.Thumbnail
+            })
             .ToListAsync();
     }
 
     public async Task<Image> UpdateDescriptionAsync(int imageId, string? description)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
-        var image = await db.Images
-                        .FirstOrDefaultAsync(i => i.Id == imageId)
+        var image = await GetImageSummaryAsync(db, imageId)
                     ?? throw new KeyNotFoundException("Image not found.");
 
+        var updated = await db.Images
+            .Where(i => i.Id == imageId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(i => i.Description, description));
+
+        if (updated == 0)
+            throw new KeyNotFoundException("Image not found.");
+
         image.Description = description;
-
-        await db.SaveChangesAsync();
-
         return image;
     }
 
     public async Task<Image> MoveAsync(int imageId, int newPosition)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
-        var image = await db.Images
-                        .FirstOrDefaultAsync(i => i.Id == imageId)
+        await using var transaction = await db.Database.BeginTransactionAsync();
+
+        var image = await GetImageSummaryAsync(db, imageId)
                     ?? throw new KeyNotFoundException("Image not found.");
 
-        var images = await db.Images
+        var imagePositions = await db.Images
             .Where(i => i.CardId == image.CardId)
             .OrderBy(i => i.Position)
+            .Select(i => new ImagePosition(i.Id, i.Position))
             .ToListAsync();
 
-        if (newPosition < 0 || newPosition >= images.Count)
+        if (newPosition < 0 || newPosition >= imagePositions.Count)
             throw new ArgumentOutOfRangeException(nameof(newPosition));
 
-        images.Remove(image);
+        var moving = imagePositions.First(i => i.Id == imageId);
+        imagePositions.Remove(moving);
+        imagePositions.Insert(newPosition, moving);
 
-        images.Insert(newPosition, image);
+        await db.Images
+            .Where(i => i.CardId == image.CardId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(i => i.Position, i => -i.Position - 1));
 
-        for (var i = 0; i < images.Count; i++)
-            images[i].Position = i;
+        for (var i = 0; i < imagePositions.Count; i++)
+        {
+            var id = imagePositions[i].Id;
+            var position = i;
 
-        await db.SaveChangesAsync();
+            await db.Images
+                .Where(image => image.Id == id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(image => image.Position, position));
+        }
 
+        await transaction.CommitAsync();
+
+        image.Position = newPosition;
         return image;
     }
 
     public async Task<Image> MoveToCardAsync(int imageId, int targetCardId)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
-        var image = await db.Images
-                        .FirstOrDefaultAsync(i => i.Id == imageId)
+        await using var transaction = await db.Database.BeginTransactionAsync();
+
+        var image = await GetImageSummaryAsync(db, imageId)
                     ?? throw new KeyNotFoundException("Image not found.");
 
         var cardExists = await db.Cards
@@ -295,17 +352,26 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
         var nextPosition = await db.Images
             .CountAsync(i => i.CardId == targetCardId);
 
+        var updated = await db.Images
+            .Where(i => i.Id == imageId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(i => i.CardId, targetCardId)
+                .SetProperty(i => i.Position, nextPosition));
+
+        if (updated == 0)
+            throw new KeyNotFoundException("Image not found.");
+
+        await transaction.CommitAsync();
+
         image.CardId = targetCardId;
         image.Position = nextPosition;
-
-        await db.SaveChangesAsync();
-
         return image;
     }
 
     public async Task AddTagAsync(int imageId, int tagId)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
         var exists = await db.ImageTags
             .AnyAsync(it => it.ImageId == imageId && it.TagId == tagId);
@@ -327,33 +393,43 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
 
     public async Task RemoveTagAsync(int imageId, int tagId)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
-        var imageTag = await db.ImageTags
-            .FirstOrDefaultAsync(it =>
-                it.ImageId == imageId &&
-                it.TagId == tagId);
-
-        if (imageTag is null)
-            return;
-
-        db.ImageTags.Remove(imageTag);
-
-        await db.SaveChangesAsync();
-        db.ChangeTracker.Clear();
+        await db.ImageTags
+            .Where(it => it.ImageId == imageId && it.TagId == tagId)
+            .ExecuteDeleteAsync();
     }
 
     public async Task DeleteAsync(int imageId)
     {
-        await using var db = dbFactory.Create();
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
 
-        var image = await db.Images
-                        .FirstOrDefaultAsync(i => i.Id == imageId)
-                    ?? throw new KeyNotFoundException("Image not found.");
+        var deleted = await db.Images
+            .Where(i => i.Id == imageId)
+            .ExecuteDeleteAsync();
 
-        db.Images.Remove(image);
-
-        await db.SaveChangesAsync();
-        db.ChangeTracker.Clear();
+        if (deleted == 0)
+            throw new KeyNotFoundException("Image not found.");
     }
+
+    private static Task<Image?> GetImageSummaryAsync(AppDbContext db, int imageId)
+    {
+        return db.Images
+            .Where(i => i.Id == imageId)
+            .Select(i => new Image
+            {
+                Id = i.Id,
+                CardId = i.CardId,
+                Position = i.Position,
+                Filename = i.Filename,
+                MimeType = i.MimeType,
+                Description = i.Description,
+                CreatedAt = i.CreatedAt
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    private sealed record ImagePosition(int Id, int Position);
 }

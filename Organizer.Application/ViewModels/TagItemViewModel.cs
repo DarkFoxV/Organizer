@@ -19,8 +19,7 @@ public partial class TagItemViewModel : ObservableObject
 
     public int Id { get; init; }
     public string Name { get; init; } = string.Empty;
-
-    // Cores baseadas no estado e na cor da tag (igual ao Rust)
+    
     public string BackgroundColor => IsSelected ? SelectedBackground : DimBackground;
     public string ForegroundColor => IsSelected ? "#ffffff" : DimForeground;
 

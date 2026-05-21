@@ -32,7 +32,6 @@ public partial class TagSelectorViewModel : ObservableObject
     {
         _tagService = tagService;
         ShowAddButton = showAddButton;
-        Console.WriteLine($"ShowAddButton = {ShowAddButton}");
     }
 
     // Carrega tags do banco e monta os ViewModels

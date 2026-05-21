@@ -7,7 +7,6 @@ using Organize.Organizer.Core;
 using Organize.Organizer.Core.Enums;
 using Organize.Organizer.Core.Helpers;
 using Organize.Organizer.Core.Interfaces;
-using Organize.Organizer.Infrastructure.Data;
 
 namespace Organizer.Application.Services;
 

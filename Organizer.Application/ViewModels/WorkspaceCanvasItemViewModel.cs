@@ -15,20 +15,16 @@ public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposabl
 
     [ObservableProperty] private double _y;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ContainerX))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ContainerX))]
     private double _displayX;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ContainerY))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ContainerY))]
     private double _displayY;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ContainerWidth), nameof(ImageMargin))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ContainerWidth), nameof(ImageMargin))]
     private double _width;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ContainerHeight), nameof(ImageMargin))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ContainerHeight), nameof(ImageMargin))]
     private double _height;
 
     [ObservableProperty] private int _zIndex;

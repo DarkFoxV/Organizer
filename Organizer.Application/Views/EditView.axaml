@@ -78,82 +78,82 @@
                 </Border>
 
                 <Border Classes="section-card">
-                        <StackPanel Spacing="12">
-                            <TextBlock Classes="section-title"
-                                       Text="📝 Descrição" />
-                            <TextBlock Text="Atualize a descrição da imagem de capa. Isso impacta a busca textual."
-                                       FontSize="13"
-                                       Foreground="{DynamicResource TextMutedBrush}"
-                                       TextWrapping="Wrap" />
-                            <TextBox Classes="field"
-                                     Text="{Binding Description}"
-                                     PlaceholderText="Descreva a imagem..." />
-                        </StackPanel>
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="section-title"
+                                   Text="📝 Descrição" />
+                        <TextBlock Text="Atualize a descrição da imagem de capa. Isso impacta a busca textual."
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   TextWrapping="Wrap" />
+                        <TextBox Classes="field"
+                                 Text="{Binding Description}"
+                                 PlaceholderText="Descreva a imagem..." />
+                    </StackPanel>
                 </Border>
 
                 <Border Classes="section-card">
-                        <StackPanel Spacing="12">
-                            <TextBlock Classes="section-title"
-                                       Text="🏷 Tags" />
-                            <TextBlock Text="Selecione as tags associadas à imagem de capa."
-                                       FontSize="13"
-                                       Foreground="{DynamicResource TextMutedBrush}"
-                                       TextWrapping="Wrap" />
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="section-title"
+                                   Text="🏷 Tags" />
+                        <TextBlock Text="Selecione as tags associadas à imagem de capa."
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   TextWrapping="Wrap" />
 
-                            <TextBlock IsVisible="{Binding !TagsLoaded}"
-                                       Text="Carregando tags..."
+                        <TextBlock IsVisible="{Binding !TagsLoaded}"
+                                   Text="Carregando tags..."
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+
+                        <components:TagSelector
+                            x:Name="TagSelectorControl"
+                            IsVisible="{Binding TagsLoaded}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="section-card">
+                    <StackPanel Spacing="18">
+                        <Border Background="{DynamicResource SurfaceAltBrush}"
+                                BorderBrush="{DynamicResource BorderBrushColor}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="14 12">
+                            <TextBlock Text="{Binding StatusText}"
                                        FontSize="13"
                                        Foreground="{DynamicResource TextMutedBrush}" />
+                        </Border>
 
-                            <components:TagSelector
-                                x:Name="TagSelectorControl"
-                                IsVisible="{Binding TagsLoaded}" />
-                        </StackPanel>
-                </Border>
+                        <Border
+                            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Background="#2d1515"
+                            BorderBrush="{DynamicResource DangerBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12 10">
+                            <TextBlock Text="{Binding ErrorMessage}"
+                                       FontSize="13"
+                                       Foreground="#f87171"
+                                       TextWrapping="Wrap" />
+                        </Border>
 
-                <Border Classes="section-card">
-                        <StackPanel Spacing="18">
-                            <Border Background="{DynamicResource SurfaceAltBrush}"
-                                    BorderBrush="{DynamicResource BorderBrushColor}"
-                                    BorderThickness="1"
-                                    CornerRadius="10"
-                                    Padding="14 12">
-                                <TextBlock Text="{Binding StatusText}"
-                                           FontSize="13"
-                                           Foreground="{DynamicResource TextMutedBrush}" />
-                            </Border>
-
-                            <Border
-                                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                Background="#2d1515"
-                                BorderBrush="{DynamicResource DangerBrush}"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="12 10">
-                                <TextBlock Text="{Binding ErrorMessage}"
-                                           FontSize="13"
-                                           Foreground="#f87171"
-                                           TextWrapping="Wrap" />
-                            </Border>
-
-                            <Button Classes="btn btn-success"
-                                    IsEnabled="{Binding IsReady}"
-                                    Command="{Binding SubmitCommand}"
-                                    HorizontalAlignment="Left"
-                                    MinWidth="180">
-                                <StackPanel Orientation="Horizontal"
-                                            Spacing="10">
-                                    <TextBlock Text="💾"
-                                               VerticalAlignment="Center" />
-                                    <TextBlock IsVisible="{Binding !IsSubmitting}"
-                                               Text="Salvar alterações"
-                                               VerticalAlignment="Center" />
-                                    <TextBlock IsVisible="{Binding IsSubmitting}"
-                                               Text="Salvando..."
-                                               VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
+                        <Button Classes="btn btn-success"
+                                IsEnabled="{Binding IsReady}"
+                                Command="{Binding SubmitCommand}"
+                                HorizontalAlignment="Left"
+                                MinWidth="180">
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="10">
+                                <TextBlock Text="💾"
+                                           VerticalAlignment="Center" />
+                                <TextBlock IsVisible="{Binding !IsSubmitting}"
+                                           Text="Salvar alterações"
+                                           VerticalAlignment="Center" />
+                                <TextBlock IsVisible="{Binding IsSubmitting}"
+                                           Text="Salvando..."
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </Border>
 
             </StackPanel>

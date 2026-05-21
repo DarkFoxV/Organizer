@@ -7,7 +7,8 @@ namespace Organizer.Application.ViewModels;
 
 public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposable
 {
-    public const double SelectionChromePadding = 16;
+    public const double SelectionChromePadding = 28;
+    public const double SelectionBorderThickness = 12;
 
     [ObservableProperty] private Bitmap? _bitmap;
 
@@ -46,6 +47,10 @@ public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposabl
     public double ContainerHeight => Height + SelectionChromePadding * 2;
 
     public Avalonia.Thickness ImageMargin => new(SelectionChromePadding);
+
+    public Avalonia.Thickness SelectionBorderThicknessValue => new(SelectionBorderThickness);
+
+    public Avalonia.Thickness SelectionBorderMargin => new(SelectionChromePadding - SelectionBorderThickness / 2);
 
     public event Action<WorkspaceCanvasItemViewModel>? RemoveRequested;
 

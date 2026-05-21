@@ -64,8 +64,8 @@
 
             <Border IsVisible="{Binding IsSelected}"
                     BorderBrush="#60a5fa"
-                    BorderThickness="12"
-                    Margin="{Binding ImageMargin}"
+                    BorderThickness="{Binding SelectionBorderThicknessValue}"
+                    Margin="{Binding SelectionBorderMargin}"
                     IsHitTestVisible="False" />
 
             <Button Classes="canvas-remove"

@@ -50,8 +50,12 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             if (Items.Count == 0)
                 return MinimumBoardWidth;
 
-            var maxRight = Items.Max(item => item.X + item.Width);
-            return Math.Max(MinimumBoardWidth, maxRight - BoardStartX + CanvasPadding);
+            var minX = Math.Min(0, Items.Min(item => item.X) - CanvasPadding);
+            var maxRight = Math.Max(
+                MinimumBoardWidth,
+                Items.Max(item => item.X + item.Width) + CanvasPadding);
+
+            return maxRight - minX;
         }
     }
 
@@ -62,8 +66,12 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             if (Items.Count == 0)
                 return MinimumBoardHeight;
 
-            var maxBottom = Items.Max(item => item.Y + item.Height);
-            return Math.Max(MinimumBoardHeight, maxBottom - BoardStartY + CanvasPadding);
+            var minY = Math.Min(0, Items.Min(item => item.Y) - CanvasPadding);
+            var maxBottom = Math.Max(
+                MinimumBoardHeight,
+                Items.Max(item => item.Y + item.Height) + CanvasPadding);
+
+            return maxBottom - minY;
         }
     }
 

@@ -3,34 +3,58 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Organizer.Application.ViewModels.Components;
 using Organize.Organizer.Core.Enums;
 using Organize.Organizer.Core.Interfaces;
+using Organizer.Application.Services;
 using Organizer.Core.Helpers;
 
 namespace Organizer.Application.ViewModels;
 
 public partial class SearchViewModel : ObservableObject
 {
-    private const int PageSize = 20;
     private readonly ICardService _cardService;
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
+    private readonly AppPreferencesService _preferencesService;
     private int _loadVersion;
 
     [ObservableProperty] private bool _isEmpty;
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _tagsLoaded;
+    [ObservableProperty] private bool _isDeleteConfirmationVisible;
+    [ObservableProperty] private CardItemViewModel? _pendingDeleteCard;
 
     // ── Componentes ───────────────────────────────────────────────────────────
     public SearchBarViewModel SearchBar { get; } = new();
     public PaginationViewModel Pagination { get; } = new();
     public ImagePreviewViewModel Preview { get; } = new();
-    public GroupCopyPickerViewModel CopyPicker { get; } = new();
+    public GroupCopyPickerViewModel CopyPicker { get; }
     public TagSelectorViewModel TagSelector { get; }
 
     // ── Estado ────────────────────────────────────────────────────────────────
     public ObservableCollection<CardItemViewModel> Cards { get; } = [];
+
+    public string DeleteConfirmationTitle => PendingDeleteCard?.IsGroup == true
+        ? _preferencesService.T("Loc.Search.DeleteGroupTitle")
+        : _preferencesService.T("Loc.Search.DeleteImageTitle");
+
+    public string DeleteConfirmationMessage
+    {
+        get
+        {
+            if (PendingDeleteCard is null)
+                return string.Empty;
+
+            return PendingDeleteCard.IsGroup
+                ? _preferencesService.T(
+                    "Loc.Search.DeleteGroupMessage",
+                    PendingDeleteCard.Filename,
+                    PendingDeleteCard.ImageCount)
+                : _preferencesService.T("Loc.Search.DeleteImageMessage", PendingDeleteCard.Filename);
+        }
+    }
 
     // ── Evento de navegação ───────────────────────────────────────────────────
     public event Action? RegisterRequested;
@@ -40,18 +64,22 @@ public partial class SearchViewModel : ObservableObject
     public SearchViewModel(
         ICardService cardService,
         IImageService imageService,
-        ITagService tagService)
+        ITagService tagService,
+        AppPreferencesService preferencesService)
     {
         _cardService = cardService;
         _imageService = imageService;
         _tagService = tagService;
+        _preferencesService = preferencesService;
 
-        TagSelector = new TagSelectorViewModel(_tagService, showAddButton: false);
+        CopyPicker = new GroupCopyPickerViewModel(_preferencesService);
+        TagSelector = new TagSelectorViewModel(_tagService, _preferencesService, showAddButton: false);
 
         SearchBar.SearchRequested += OnSearch;
         SearchBar.RegisterRequested += OnRegister;
         Pagination.PageChanged += OnPageChanged;
         TagSelector.SelectionChanged += OnTagSelectionChanged;
+        _preferencesService.PreferencesChanged += OnPreferencesChanged;
 
         _ = LoadCardsAsync();
         _ = LoadTagsAsync();
@@ -88,6 +116,14 @@ public partial class SearchViewModel : ObservableObject
         _ = LoadCardsAsync(SearchBar.Query, page, SearchBar.SelectedSort);
 
     private void OnRegister() => RegisterRequested?.Invoke();
+
+    private void OnPreferencesChanged()
+    {
+        OnPropertyChanged(nameof(DeleteConfirmationTitle));
+        OnPropertyChanged(nameof(DeleteConfirmationMessage));
+        Pagination.CurrentPage = 0;
+        _ = LoadCardsAsync(SearchBar.Query, 0, SearchBar.SelectedSort);
+    }
 
     // ── Card actions ──────────────────────────────────────────────────────────
     private void SubscribeCard(CardItemViewModel card)
@@ -131,6 +167,44 @@ public partial class SearchViewModel : ObservableObject
     }
 
     private async void OnDeleteCard(CardItemViewModel card)
+    {
+        if (_preferencesService.Current.ConfirmDeletion)
+        {
+            PendingDeleteCard = card;
+            IsDeleteConfirmationVisible = true;
+            OnPropertyChanged(nameof(DeleteConfirmationTitle));
+            OnPropertyChanged(nameof(DeleteConfirmationMessage));
+            return;
+        }
+
+        await DeleteCardAsync(card);
+    }
+
+    [RelayCommand]
+    private async Task ConfirmDelete()
+    {
+        if (PendingDeleteCard is null)
+            return;
+
+        var card = PendingDeleteCard;
+        PendingDeleteCard = null;
+        IsDeleteConfirmationVisible = false;
+        OnPropertyChanged(nameof(DeleteConfirmationTitle));
+        OnPropertyChanged(nameof(DeleteConfirmationMessage));
+
+        await DeleteCardAsync(card);
+    }
+
+    [RelayCommand]
+    private void CancelDelete()
+    {
+        PendingDeleteCard = null;
+        IsDeleteConfirmationVisible = false;
+        OnPropertyChanged(nameof(DeleteConfirmationTitle));
+        OnPropertyChanged(nameof(DeleteConfirmationMessage));
+    }
+
+    private async Task DeleteCardAsync(CardItemViewModel card)
     {
         await _cardService.DeleteAsync(card.CardId);
 
@@ -179,13 +253,13 @@ public partial class SearchViewModel : ObservableObject
                     selectedTagIds,
                     sort,
                     page,
-                    PageSize);
+                    _preferencesService.Current.SearchItemsPerPage);
 
             if (loadVersion != _loadVersion)
                 return;
 
             Pagination.TotalPages =
-                (int)Math.Ceiling(total / (double)PageSize);
+                (int)Math.Ceiling(total / (double)_preferencesService.Current.SearchItemsPerPage);
 
             Pagination.CurrentPage = page;
 

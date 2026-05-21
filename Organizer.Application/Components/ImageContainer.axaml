@@ -40,7 +40,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
         </Style>
         <Style Selector="Border.image-card:pointerover">
-            <Setter Property="BorderBrush" Value="#3b82f6" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
             <Setter Property="BoxShadow" Value="0 16 36 #55000000" />
         </Style>
 

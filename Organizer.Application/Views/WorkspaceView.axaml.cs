@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Organizer.Application.Services;
 using Organizer.Application.ViewModels;
 
 namespace Organizer.Organizer.Application.Views;
@@ -88,6 +89,7 @@ public partial class WorkspaceView : UserControl
 
         _subscribedViewModel = vm;
         _subscribedViewModel.BoardOriginShifted += OnBoardOriginShifted;
+        _subscribedViewModel.WorkspacePreferencesChanged += OnWorkspacePreferencesChanged;
     }
 
     private void UnsubscribeFromViewModel()
@@ -96,6 +98,7 @@ public partial class WorkspaceView : UserControl
             return;
 
         _subscribedViewModel.BoardOriginShifted -= OnBoardOriginShifted;
+        _subscribedViewModel.WorkspacePreferencesChanged -= OnWorkspacePreferencesChanged;
         _subscribedViewModel = null;
     }
 
@@ -103,6 +106,11 @@ public partial class WorkspaceView : UserControl
     {
         _translateTransform.X += deltaX * _zoom;
         _translateTransform.Y += deltaY * _zoom;
+    }
+
+    private void OnWorkspacePreferencesChanged()
+    {
+        ApplyZoomKeepingViewportCenter(VM.InitialZoom);
     }
 
     private async void OnKeyDown(object? sender, KeyEventArgs e)
@@ -154,17 +162,7 @@ public partial class WorkspaceView : UserControl
         if (Math.Abs(newZoom - _zoom) < 0.0001)
             return;
 
-        var viewportCenter = new Point(Viewport.Bounds.Width / 2, Viewport.Bounds.Height / 2);
-        var boardX = (viewportCenter.X - _translateTransform.X) / _zoom;
-        var boardY = (viewportCenter.Y - _translateTransform.Y) / _zoom;
-
-        _zoom = newZoom;
-        _scaleTransform.ScaleX = newZoom;
-        _scaleTransform.ScaleY = newZoom;
-        _translateTransform.X = viewportCenter.X - boardX * newZoom;
-        _translateTransform.Y = viewportCenter.Y - boardY * newZoom;
-
-        UpdateZoomLabel();
+        ApplyZoomKeepingViewportCenter(newZoom);
         e.Handled = true;
     }
 
@@ -247,6 +245,7 @@ public partial class WorkspaceView : UserControl
         if (BoardRoot.Bounds.Width <= 0 || BoardRoot.Bounds.Height <= 0)
             return;
 
+        SetZoom(VM.InitialZoom);
         _translateTransform.X = (Viewport.Bounds.Width - BoardRoot.Bounds.Width * _zoom) / 2;
         _translateTransform.Y = (Viewport.Bounds.Height - BoardRoot.Bounds.Height * _zoom) / 2;
         _hasInitializedCamera = true;
@@ -258,16 +257,56 @@ public partial class WorkspaceView : UserControl
         _hasLastPointerPosition = true;
     }
 
-    private Point GetCurrentPasteAnchor()
+    private Point? GetCurrentPasteAnchor()
     {
-        if (!_hasLastPointerPosition)
-            return new Point(
-                BoardRoot.Bounds.Width / 2 + VM.BoardStartX,
-                BoardRoot.Bounds.Height / 2 + VM.BoardStartY);
+        if (VM.PasteMode == WorkspacePastePreference.Cascade)
+            return null;
 
+        if (VM.PasteMode == WorkspacePastePreference.Center)
+            return ViewportPointToWorldPoint(new Point(
+                Viewport.Bounds.Width / 2,
+                Viewport.Bounds.Height / 2));
+
+        if (!_hasLastPointerPosition)
+            return ViewportPointToWorldPoint(new Point(
+                Viewport.Bounds.Width / 2,
+                Viewport.Bounds.Height / 2));
+
+        return ViewportPointToWorldPoint(_lastPointerPositionInViewport);
+    }
+
+    private Point ViewportPointToWorldPoint(Point viewportPoint)
+    {
         return new Point(
-            (_lastPointerPositionInViewport.X - _translateTransform.X) / _zoom + VM.BoardStartX,
-            (_lastPointerPositionInViewport.Y - _translateTransform.Y) / _zoom + VM.BoardStartY);
+            (viewportPoint.X - _translateTransform.X) / _zoom + VM.BoardStartX,
+            (viewportPoint.Y - _translateTransform.Y) / _zoom + VM.BoardStartY);
+    }
+
+    private void ApplyZoomKeepingViewportCenter(double newZoom)
+    {
+        newZoom = Math.Clamp(newZoom, MinZoom, MaxZoom);
+
+        if (Viewport.Bounds.Width <= 0 || Viewport.Bounds.Height <= 0)
+        {
+            SetZoom(newZoom);
+            return;
+        }
+
+        var viewportCenter = new Point(Viewport.Bounds.Width / 2, Viewport.Bounds.Height / 2);
+        var boardX = (viewportCenter.X - _translateTransform.X) / _zoom;
+        var boardY = (viewportCenter.Y - _translateTransform.Y) / _zoom;
+
+        SetZoom(newZoom);
+        _translateTransform.X = viewportCenter.X - boardX * newZoom;
+        _translateTransform.Y = viewportCenter.Y - boardY * newZoom;
+    }
+
+    private void SetZoom(double zoom)
+    {
+        _zoom = Math.Clamp(zoom, MinZoom, MaxZoom);
+        _scaleTransform.ScaleX = _zoom;
+        _scaleTransform.ScaleY = _zoom;
+        UpdateZoomLabel();
     }
 
     private static WorkspaceCanvasItemViewModel? GetItemFromSource(Visual? visual)

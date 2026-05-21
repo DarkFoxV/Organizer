@@ -7,17 +7,17 @@
     <UserControl.Styles>
 
         <Style Selector="TextBox.search-input">
-            <Setter Property="Background" Value="#1c2230" />
-            <Setter Property="Foreground" Value="#e6edf3" />
-            <Setter Property="BorderBrush" Value="#2a3347" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12 10" />
             <Setter Property="FontSize" Value="15" />
-            <Setter Property="CaretBrush" Value="#3b82f6" />
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}" />
         </Style>
         <Style Selector="TextBox.search-input:focus">
-            <Setter Property="BorderBrush" Value="#3b82f6" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
         </Style>
         <Style Selector="TextBox.search-input /template/ Border#PART_BorderElement">
             <Setter Property="CornerRadius" Value="8" />
@@ -45,25 +45,25 @@
         </Style>
 
         <Style Selector="Button.btn-search">
-            <Setter Property="Background" Value="#3b82f6" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
             <Setter Property="Foreground" Value="#ffffff" />
         </Style>
         <Style Selector="Button.btn-search:pointerover">
-            <Setter Property="Background" Value="#1d4ed8" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryHoverBrush}" />
         </Style>
 
         <Style Selector="Button.btn-register">
-            <Setter Property="Background" Value="#16a34a" />
+            <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
             <Setter Property="Foreground" Value="#ffffff" />
         </Style>
         <Style Selector="Button.btn-register:pointerover">
-            <Setter Property="Background" Value="#15803d" />
+            <Setter Property="Background" Value="{DynamicResource SuccessHoverBrush}" />
         </Style>
 
         <Style Selector="ComboBox.sort-picker">
-            <Setter Property="Background" Value="#1c2230" />
-            <Setter Property="Foreground" Value="#e6edf3" />
-            <Setter Property="BorderBrush" Value="#2a3347" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12 0" />
@@ -71,7 +71,7 @@
             <Setter Property="FontSize" Value="14" />
         </Style>
         <Style Selector="ComboBox.sort-picker:focus">
-            <Setter Property="BorderBrush" Value="#3b82f6" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
         </Style>
 
     </UserControl.Styles>
@@ -82,7 +82,7 @@
         <TextBox Grid.Column="0"
                  Classes="search-input"
                  Text="{Binding Query}"
-                 PlaceholderText="Buscar por descrição, tag..." />
+                 PlaceholderText="{DynamicResource Loc.Search.Placeholder}" />
 
         <!-- Botão registrar -->
         <Button Grid.Column="1"
@@ -90,7 +90,7 @@
                 Command="{Binding RegisterCommand}">
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <TextBlock Text="+" VerticalAlignment="Center" FontSize="16" />
-                <TextBlock Text="Registrar" VerticalAlignment="Center" />
+                <TextBlock Text="{DynamicResource Loc.Search.Register}" VerticalAlignment="Center" />
             </StackPanel>
         </Button>
 

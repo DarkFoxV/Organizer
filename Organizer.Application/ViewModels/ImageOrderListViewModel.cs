@@ -4,15 +4,20 @@ using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Organizer.Application.Services;
 
 namespace Organizer.Application.ViewModels.Components;
 
-public partial class ImageOrderListViewModel : ObservableObject
+public partial class ImageOrderListViewModel : ObservableObject, System.IDisposable
 {
+    private readonly AppPreferencesService _preferencesService;
+
     [ObservableProperty] private bool _isEmpty = true;
 
-    public ImageOrderListViewModel()
+    public ImageOrderListViewModel(AppPreferencesService preferencesService)
     {
+        _preferencesService = preferencesService;
+        _preferencesService.PreferencesChanged += OnPreferencesChanged;
         Items.CollectionChanged += (_, _) =>
         {
             IsEmpty = Items.Count == 0;
@@ -22,7 +27,7 @@ public partial class ImageOrderListViewModel : ObservableObject
 
     public ObservableCollection<ImageOrderItemViewModel> Items { get; } = [];
 
-    public string CountLabel => $"Imagens selecionadas ({Items.Count})";
+    public string CountLabel => _preferencesService.T("Loc.ImageOrder.Count", Items.Count);
 
     public async Task AddImageAsync(
         IStorageFile file)
@@ -90,4 +95,14 @@ public partial class ImageOrderListViewModel : ObservableObject
             ".bmp" => "image/bmp",
             _ => "application/octet-stream"
         };
+
+    private void OnPreferencesChanged()
+    {
+        OnPropertyChanged(nameof(CountLabel));
+    }
+
+    public void Dispose()
+    {
+        _preferencesService.PreferencesChanged -= OnPreferencesChanged;
+    }
 }

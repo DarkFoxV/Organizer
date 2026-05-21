@@ -7,12 +7,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Organize.Organizer.Core.Enums;
 using Organize.Organizer.Core.Interfaces;
+using Organizer.Application.Services;
 
 namespace Organizer.Application.ViewModels.Components;
 
 public partial class TagSelectorViewModel : ObservableObject
 {
     private readonly ITagService _tagService;
+    private readonly AppPreferencesService? _preferencesService;
 
     public ObservableCollection<TagItemViewModel> Tags { get; } = [];
 
@@ -29,8 +31,17 @@ public partial class TagSelectorViewModel : ObservableObject
     public event Action? SelectionChanged;
 
     public TagSelectorViewModel(ITagService tagService, bool showAddButton = true)
+        : this(tagService, null, showAddButton)
+    {
+    }
+
+    public TagSelectorViewModel(
+        ITagService tagService,
+        AppPreferencesService? preferencesService,
+        bool showAddButton = true)
     {
         _tagService = tagService;
+        _preferencesService = preferencesService;
         ShowAddButton = showAddButton;
     }
 
@@ -47,24 +58,39 @@ public partial class TagSelectorViewModel : ObservableObject
 
         foreach (var tag in tags)
         {
-            var vm = new TagItemViewModel
-            {
-                Id = tag.Id,
-                Name = tag.Name,
-                Color = (TagColor)(int)tag.Color,
-                IsSelected = selectedTagIds.Contains(tag.Id)
-            };
+            var vm = CreateTagItemViewModel(
+                tag.Id,
+                tag.Name);
+            vm.Color = (TagColor)(int)tag.Color;
+            vm.IsSelected = selectedTagIds.Contains(tag.Id);
 
-            vm.Toggled += _ =>
-            {
-                OnPropertyChanged(nameof(SelectedTags));
-                SelectionChanged?.Invoke();
-            };
+            vm.Toggled += OnTagToggled;
 
             Tags.Add(vm);
         }
 
         OnPropertyChanged(nameof(SelectedTags));
+    }
+
+    private TagItemViewModel CreateTagItemViewModel(int id, string name)
+    {
+        return _preferencesService is null
+            ? new TagItemViewModel
+            {
+                Id = id,
+                Name = name
+            }
+            : new TagItemViewModel(_preferencesService)
+            {
+                Id = id,
+                Name = name
+            };
+    }
+
+    private void OnTagToggled(TagItemViewModel _)
+    {
+        OnPropertyChanged(nameof(SelectedTags));
+        SelectionChanged?.Invoke();
     }
 
     public void SetSelectedTagIds(IEnumerable<int> tagIds)
@@ -103,17 +129,11 @@ public partial class TagSelectorViewModel : ObservableObject
                 NewTagName.Trim(),
                 TagColor.Blue);
 
-            var vm = new TagItemViewModel
-            {
-                Id = tag.Id,
-                Name = tag.Name,
-                Color = TagColor.Blue,
-            };
-            vm.Toggled += _ =>
-            {
-                OnPropertyChanged(nameof(SelectedTags));
-                SelectionChanged?.Invoke();
-            };
+            var vm = CreateTagItemViewModel(
+                tag.Id,
+                tag.Name);
+            vm.Color = TagColor.Blue;
+            vm.Toggled += OnTagToggled;
             Tags.Add(vm);
         }
         catch (Exception ex)

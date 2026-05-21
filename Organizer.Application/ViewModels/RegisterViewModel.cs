@@ -25,10 +25,11 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
     private readonly IClipboardService _clipboardService;
+    private readonly AppPreferencesService _preferencesService;
 
     // ── Componentes ───────────────────────────────────────────────────────────
     public TagSelectorViewModel TagSelector { get; }
-    public ImageOrderListViewModel ImageOrder { get; } = new();
+    public ImageOrderListViewModel ImageOrder { get; }
 
     // ── Estado ────────────────────────────────────────────────────────────────
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady))]
@@ -51,7 +52,9 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         && !IsPickingImages
         && (ImageOrder.Items.Count <= 1 || !string.IsNullOrWhiteSpace(Description));
 
-    public string StatusText => IsReady ? "✓ Pronto para salvar" : "Preencha todos os campos";
+    public string StatusText => IsReady
+        ? _preferencesService.T("Loc.Register.Ready")
+        : _preferencesService.T("Loc.Register.FillFields");
     public bool StatusIsReady => IsReady;
 
     // ── Eventos ───────────────────────────────────────────────────────────────
@@ -64,14 +67,18 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         ICardService cardService,
         IImageService imageService,
         ITagService tagService,
-        IClipboardService clipboardService)
+        IClipboardService clipboardService,
+        AppPreferencesService preferencesService)
     {
         _cardService = cardService;
         _imageService = imageService;
         _tagService = tagService;
         _clipboardService = clipboardService;
+        _preferencesService = preferencesService;
+        _preferencesService.PreferencesChanged += NotifyReady;
 
-        TagSelector = new TagSelectorViewModel(_tagService, showAddButton: true);
+        ImageOrder = new ImageOrderListViewModel(_preferencesService);
+        TagSelector = new TagSelectorViewModel(_tagService, _preferencesService, showAddButton: true);
 
         ImageOrder.Items.CollectionChanged += OnImagesChanged;
 
@@ -266,6 +273,8 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
         TagSelector.SelectionChanged -= NotifyReady;
         ImageOrder.Items.CollectionChanged -= OnImagesChanged;
+        ImageOrder.Dispose();
+        _preferencesService.PreferencesChanged -= NotifyReady;
 
         Description = string.Empty;
         ErrorMessage = null;

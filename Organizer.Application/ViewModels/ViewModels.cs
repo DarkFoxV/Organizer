@@ -18,6 +18,6 @@ public partial class ManageTagsViewModel : ObservableObject
 {
 }
 
-public class PreferencesViewModel : ObservableObject
+public partial class PreferencesViewModel : ObservableObject
 {
 }

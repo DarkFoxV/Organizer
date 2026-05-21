@@ -14,8 +14,8 @@
         </Style>
 
         <Style Selector="Border.section-card">
-            <Setter Property="Background" Value="#E6121824" />
-            <Setter Property="BorderBrush" Value="#3A50677D" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="22" />
             <Setter Property="Padding" Value="24" />
@@ -43,7 +43,7 @@
 
     </UserControl.Styles>
 
-    <Grid Background="#0d1117"
+    <Grid Background="{DynamicResource AppBackgroundBrush}"
           VerticalAlignment="Stretch"
           HorizontalAlignment="Stretch">
 
@@ -80,28 +80,28 @@
                 <Border Classes="section-card">
                     <StackPanel Spacing="12">
                         <TextBlock Classes="section-title"
-                                   Text="📝 Descrição" />
-                        <TextBlock Text="Atualize a descrição da imagem de capa. Isso impacta a busca textual."
+                                   Text="{DynamicResource Loc.Register.Description}" />
+                        <TextBlock Text="{DynamicResource Loc.Edit.DescriptionHint}"
                                    FontSize="13"
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    TextWrapping="Wrap" />
                         <TextBox Classes="field"
                                  Text="{Binding Description}"
-                                 PlaceholderText="Descreva a imagem..." />
+                                 PlaceholderText="{DynamicResource Loc.Edit.DescriptionPlaceholder}" />
                     </StackPanel>
                 </Border>
 
                 <Border Classes="section-card">
                     <StackPanel Spacing="12">
                         <TextBlock Classes="section-title"
-                                   Text="🏷 Tags" />
-                        <TextBlock Text="Selecione as tags associadas à imagem de capa."
+                                   Text="{DynamicResource Loc.Register.Tags}" />
+                        <TextBlock Text="{DynamicResource Loc.Edit.TagsHint}"
                                    FontSize="13"
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    TextWrapping="Wrap" />
 
                         <TextBlock IsVisible="{Binding !TagsLoaded}"
-                                   Text="Carregando tags..."
+                                   Text="{DynamicResource Loc.Register.LoadingTags}"
                                    FontSize="13"
                                    Foreground="{DynamicResource TextMutedBrush}" />
 
@@ -125,14 +125,14 @@
 
                         <Border
                             IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                            Background="#2d1515"
+                            Background="{DynamicResource DangerSoftBrush}"
                             BorderBrush="{DynamicResource DangerBrush}"
                             BorderThickness="1"
                             CornerRadius="8"
                             Padding="12 10">
                             <TextBlock Text="{Binding ErrorMessage}"
                                        FontSize="13"
-                                       Foreground="#f87171"
+                                       Foreground="{DynamicResource DangerSoftTextBrush}"
                                        TextWrapping="Wrap" />
                         </Border>
 
@@ -146,10 +146,10 @@
                                 <TextBlock Text="💾"
                                            VerticalAlignment="Center" />
                                 <TextBlock IsVisible="{Binding !IsSubmitting}"
-                                           Text="Salvar alterações"
+                                           Text="{DynamicResource Loc.Edit.Save}"
                                            VerticalAlignment="Center" />
                                 <TextBlock IsVisible="{Binding IsSubmitting}"
-                                           Text="Salvando..."
+                                           Text="{DynamicResource Loc.Edit.Saving}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>

@@ -14,8 +14,8 @@
         </Style>
 
         <Style Selector="Border.section-card">
-            <Setter Property="Background" Value="#E6121824" />
-            <Setter Property="BorderBrush" Value="#3A50677D" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="22" />
             <Setter Property="Padding" Value="24" />
@@ -43,7 +43,7 @@
 
     </UserControl.Styles>
 
-    <Grid Background="#0d1117"
+    <Grid Background="{DynamicResource AppBackgroundBrush}"
           VerticalAlignment="Stretch"
           HorizontalAlignment="Stretch">
 
@@ -58,12 +58,12 @@
                           ColumnSpacing="16">
                         <StackPanel Grid.Column="0"
                                     Spacing="4">
-                            <TextBlock Text="Registrar"
+                            <TextBlock Text="{DynamicResource Loc.Register.Title}"
                                        FontSize="22"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource TextPrimaryBrush}" />
                             <TextBlock
-                                Text="Monte o card, organize a ordem das imagens e associe as tags antes de salvar."
+                                Text="{DynamicResource Loc.Register.Subtitle}"
                                 FontSize="13"
                                 Foreground="{DynamicResource TextMutedBrush}"
                                 TextWrapping="Wrap" />
@@ -89,9 +89,9 @@
                             <StackPanel Grid.Column="0"
                                         Spacing="4">
                                 <TextBlock Classes="section-title"
-                                           Text="Imagens" />
+                                           Text="{DynamicResource Loc.Register.Images}" />
                                 <TextBlock
-                                    Text="Selecione uma ou mais imagens. Se houver várias, você pode reorganizar abaixo."
+                                    Text="{DynamicResource Loc.Register.ImagesDescription}"
                                     FontSize="13"
                                     Foreground="{DynamicResource TextMutedBrush}"
                                     TextWrapping="Wrap" />
@@ -110,7 +110,7 @@
                                     <TextBlock Text="🖼"
                                                VerticalAlignment="Center" />
 
-                                    <TextBlock Text="Selecionar imagens"
+                                    <TextBlock Text="{DynamicResource Loc.Register.SelectImages}"
                                                VerticalAlignment="Center" />
 
                                 </StackPanel>
@@ -138,12 +138,12 @@
                                                FontSize="36"
                                                HorizontalAlignment="Center" />
 
-                                    <TextBlock Text="Nenhuma imagem selecionada"
+                                    <TextBlock Text="{DynamicResource Loc.Register.NoImages}"
                                                FontSize="14"
                                                Foreground="{DynamicResource TextMutedBrush}"
                                                HorizontalAlignment="Center" />
 
-                                    <TextBlock Text="Use o botão acima para começar a montar o card."
+                                    <TextBlock Text="{DynamicResource Loc.Register.NoImagesHint}"
                                                FontSize="12"
                                                Foreground="{DynamicResource TextSubtleBrush}"
                                                HorizontalAlignment="Center" />
@@ -164,16 +164,16 @@
                     <StackPanel Spacing="12">
 
                         <TextBlock Classes="section-title"
-                                   Text="📝 Descrição" />
+                                   Text="{DynamicResource Loc.Register.Description}" />
                         <TextBlock
-                            Text="Obrigatória para grupos de imagens. Em cards com uma única imagem, o título será o nome do arquivo."
+                            Text="{DynamicResource Loc.Register.DescriptionHint}"
                             FontSize="13"
                             Foreground="{DynamicResource TextMutedBrush}"
                             TextWrapping="Wrap" />
 
                         <TextBox Classes="field"
                                  Text="{Binding Description}"
-                                 PlaceholderText="Descreva a imagem ou grupo..." />
+                                 PlaceholderText="{DynamicResource Loc.Register.DescriptionPlaceholder}" />
 
                     </StackPanel>
 
@@ -185,14 +185,14 @@
                     <StackPanel Spacing="12">
 
                         <TextBlock Classes="section-title"
-                                   Text="🏷 Tags" />
-                        <TextBlock Text="Selecione as tags que serão associadas a todas as imagens deste registro."
+                                   Text="{DynamicResource Loc.Register.Tags}" />
+                        <TextBlock Text="{DynamicResource Loc.Register.TagsHint}"
                                    FontSize="13"
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    TextWrapping="Wrap" />
 
                         <TextBlock IsVisible="{Binding !TagsLoaded}"
-                                   Text="Carregando tags..."
+                                   Text="{DynamicResource Loc.Register.LoadingTags}"
                                    FontSize="13"
                                    Foreground="{DynamicResource TextMutedBrush}" />
 
@@ -219,13 +219,13 @@
 
                                 <TextBlock IsVisible="{Binding StatusIsReady}"
                                            Text="✓"
-                                           Foreground="#4ade80"
+                                           Foreground="{DynamicResource SuccessTextBrush}"
                                            FontSize="14"
                                            VerticalAlignment="Center" />
 
                                 <TextBlock IsVisible="{Binding !StatusIsReady}"
                                            Text="⚠"
-                                           Foreground="#fb923c"
+                                           Foreground="{DynamicResource WarningTextBrush}"
                                            FontSize="14"
                                            VerticalAlignment="Center" />
 
@@ -240,7 +240,7 @@
                         <!-- Erro -->
                         <Border
                             IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                            Background="#2d1515"
+                            Background="{DynamicResource DangerSoftBrush}"
                             BorderBrush="{DynamicResource DangerBrush}"
                             BorderThickness="1"
                             CornerRadius="8"
@@ -248,7 +248,7 @@
 
                             <TextBlock Text="{Binding ErrorMessage}"
                                        FontSize="13"
-                                       Foreground="#f87171"
+                                       Foreground="{DynamicResource DangerSoftTextBrush}"
                                        TextWrapping="Wrap" />
 
                         </Border>
@@ -266,11 +266,11 @@
                                            VerticalAlignment="Center" />
 
                                 <TextBlock IsVisible="{Binding !IsSubmitting}"
-                                           Text="Salvar"
+                                           Text="{DynamicResource Loc.Register.Save}"
                                            VerticalAlignment="Center" />
 
                                 <TextBlock IsVisible="{Binding IsSubmitting}"
-                                           Text="Salvando..."
+                                           Text="{DynamicResource Loc.Register.Saving}"
                                            VerticalAlignment="Center" />
 
                             </StackPanel>

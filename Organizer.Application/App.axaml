@@ -4,9 +4,13 @@
              RequestedThemeVariant="Default">
 
     <Application.Resources>
+        <SolidColorBrush x:Key="AppBackgroundBrush">#0d1117</SolidColorBrush>
         <SolidColorBrush x:Key="SurfaceBrush">#161b22</SolidColorBrush>
         <SolidColorBrush x:Key="SurfaceAltBrush">#1c2230</SolidColorBrush>
+        <SolidColorBrush x:Key="SurfaceSoftBrush">#E6121824</SolidColorBrush>
+        <SolidColorBrush x:Key="SurfaceSoftAltBrush">#99161d2a</SolidColorBrush>
         <SolidColorBrush x:Key="BorderBrushColor">#2a3347</SolidColorBrush>
+        <SolidColorBrush x:Key="FloatingBorderBrush">#3A50677D</SolidColorBrush>
         <SolidColorBrush x:Key="TextPrimaryBrush">#e6edf3</SolidColorBrush>
         <SolidColorBrush x:Key="TextMutedBrush">#8b949e</SolidColorBrush>
         <SolidColorBrush x:Key="TextSubtleBrush">#484f58</SolidColorBrush>
@@ -16,6 +20,17 @@
         <SolidColorBrush x:Key="SuccessHoverBrush">#15803d</SolidColorBrush>
         <SolidColorBrush x:Key="DangerBrush">#dc2626</SolidColorBrush>
         <SolidColorBrush x:Key="DangerHoverBrush">#b91c1c</SolidColorBrush>
+        <SolidColorBrush x:Key="DangerSoftBrush">#2d1515</SolidColorBrush>
+        <SolidColorBrush x:Key="DangerSoftTextBrush">#f87171</SolidColorBrush>
+        <SolidColorBrush x:Key="WarningTextBrush">#fb923c</SolidColorBrush>
+        <SolidColorBrush x:Key="SuccessTextBrush">#4ade80</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentSoftBrush">#263b82f6</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentSoftTextBrush">#60a5fa</SolidColorBrush>
+        <SolidColorBrush x:Key="WorkspaceViewportBrush">#0a101a</SolidColorBrush>
+        <SolidColorBrush x:Key="WorkspaceBoardBrush">#0d1420</SolidColorBrush>
+        <SolidColorBrush x:Key="WorkspaceBoardBorderBrush">#1f2c3e</SolidColorBrush>
+        <SolidColorBrush x:Key="OverlayBrush">#99000000</SolidColorBrush>
+        <SolidColorBrush x:Key="OverlayCardBrush">#f0121824</SolidColorBrush>
     </Application.Resources>
 
     <Application.Styles>

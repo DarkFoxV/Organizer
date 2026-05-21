@@ -22,7 +22,7 @@
         <Style Selector="Border.order-card.drop-target">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
             <Setter Property="BorderThickness" Value="2" />
-            <Setter Property="Background" Value="#0d1f3c" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
 
         <Style Selector="Button.remove-btn">
@@ -52,7 +52,7 @@
                        Foreground="{DynamicResource TextMutedBrush}"
                        VerticalAlignment="Center" />
             <TextBlock Grid.Column="1"
-                       Text="Arraste ⠿ para reordenar"
+                       Text="{DynamicResource Loc.ImageOrder.DragHint}"
                        FontSize="11"
                        Foreground="{DynamicResource TextSubtleBrush}"
                        VerticalAlignment="Center" />
@@ -82,7 +82,7 @@
                                     Width="64" Height="64"
                                     CornerRadius="6"
                                     ClipToBounds="True"
-                                    Background="#0d1117"
+                                    Background="{DynamicResource AppBackgroundBrush}"
                                     Margin="0 0 10 0">
                                 <Image Source="{Binding Thumbnail}"
                                        Stretch="UniformToFill" />
@@ -102,7 +102,7 @@
                                     Command="{Binding RemoveCommand}"
                                     ToolTip.Tip="Remover"
                                     Margin="8 0 0 0">
-                                <TextBlock Text="✕" FontSize="12" />
+                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="✕" FontSize="12" />
                             </Button>
 
                         </Grid>
@@ -120,7 +120,7 @@
                 IsVisible="{Binding IsEmpty}">
             <StackPanel HorizontalAlignment="Center" Spacing="8">
                 <TextBlock Text="🖼" FontSize="32" HorizontalAlignment="Center" />
-                <TextBlock Text="Nenhuma imagem selecionada"
+                <TextBlock Text="{DynamicResource Loc.ImageOrder.Empty}"
                            FontSize="13"
                            Foreground="{DynamicResource TextSubtleBrush}"
                            HorizontalAlignment="Center" />

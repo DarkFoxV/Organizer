@@ -32,17 +32,17 @@
         </Style>
 
         <Style Selector="Button.nav-btn:pointerover">
-            <Setter Property="Background" Value="#0d3b82f6" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
         <Style Selector="Button.nav-btn.selected">
-            <Setter Property="Background" Value="#263b82f6" />
-            <Setter Property="Foreground" Value="#60a5fa" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
         </Style>
 
         <Style Selector="Button.nav-btn.selected:pointerover">
-            <Setter Property="Background" Value="#303b82f6" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
 
     </UserControl.Styles>
@@ -63,7 +63,7 @@
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.Home}">
-                    <TextBlock Text="Home" FontSize="14" />
+                    <TextBlock Text="{DynamicResource Loc.Nav.Home}" FontSize="14" />
                 </Button>
 
                 <Button Classes="nav-btn"
@@ -71,7 +71,7 @@
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.Search}">
-                    <TextBlock Text="Buscar" FontSize="14" />
+                    <TextBlock Text="{DynamicResource Loc.Nav.Search}" FontSize="14" />
                 </Button>
 
                 <Button Classes="nav-btn"
@@ -79,7 +79,7 @@
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.Workspace}">
-                    <TextBlock Text="Workspace" FontSize="14" />
+                    <TextBlock Text="{DynamicResource Loc.Nav.Workspace}" FontSize="14" />
                 </Button>
 
                 <Button Classes="nav-btn"
@@ -87,7 +87,7 @@
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.ManageTags}">
-                    <TextBlock Text="Gerenciar Tags" FontSize="14" />
+                    <TextBlock Text="{DynamicResource Loc.Nav.ManageTags}" FontSize="14" />
                 </Button>
 
             </StackPanel>
@@ -99,7 +99,7 @@
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.Preferences}">
-                    <TextBlock Text="Configurações" FontSize="14" />
+                    <TextBlock Text="{DynamicResource Loc.Nav.Preferences}" FontSize="14" />
                 </Button>
             </StackPanel>
 

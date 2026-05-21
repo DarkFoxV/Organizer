@@ -4,10 +4,10 @@
              x:Class="Organizer.Application.Views.HomeView"
              x:DataType="vm:HomeViewModel">
 
-    <Grid>
-        <TextBlock Text="Home"
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
+        <TextBlock Text="{DynamicResource Loc.Nav.Home}"
                    FontSize="24"
-                   Foreground="#8b949e"
+                   Foreground="{DynamicResource TextMutedBrush}"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center" />
     </Grid>

@@ -26,7 +26,7 @@
             </Setter>
         </Style>
         <Style Selector="Button.modal-btn:pointerover">
-            <Setter Property="Background" Value="#263b82f6" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
         <Style Selector="Button.modal-btn:disabled">
             <Setter Property="Opacity" Value="0.25" />
@@ -56,7 +56,7 @@
             <Setter Property="FontSize" Value="20" />
         </Style>
         <Style Selector="Button.nav-btn:pointerover">
-            <Setter Property="Background" Value="#263b82f6" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
         <Style Selector="Button.nav-btn:disabled">
             <Setter Property="Opacity" Value="0.2" />
@@ -68,7 +68,7 @@
     <Grid IsVisible="{Binding IsVisible}">
 
         <!-- Fundo semitransparente -->
-        <Border Background="#CC000000" />
+        <Border Background="{DynamicResource OverlayBrush}" />
 
         <!-- Painel ocupa toda a area util do SearchView -->
         <Border Background="Transparent"
@@ -86,7 +86,7 @@
                       ColumnDefinitions="*,Auto"
                       Margin="0 0 0 16">
                     <Border Grid.Column="0"
-                            Background="#AA0B1018"
+                            Background="{DynamicResource SurfaceSoftBrush}"
                             CornerRadius="10"
                             Padding="14 10"
                             HorizontalAlignment="Left">
@@ -98,7 +98,7 @@
                     <Button Grid.Column="1"
                             Classes="close-btn"
                             Command="{Binding CloseCommand}">
-                        <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="✕" FontSize="16" FontWeight="Bold" />
                     </Button>
                 </Grid>
 
@@ -113,11 +113,11 @@
                             IsEnabled="{Binding CanGoPrevious}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
-                        <TextBlock Text="‹" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="‹" />
                     </Button>
                     <!-- ZoomBorder: scroll = zoom, drag = pan -->
                     <Border Grid.Column="1"
-                            Background="#220b1018"
+                            Background="{DynamicResource SurfaceSoftAltBrush}"
                             CornerRadius="12"
                             Padding="12">
                         <controls:ZoomBorder x:Name="ZoomArea"
@@ -137,7 +137,7 @@
                             IsEnabled="{Binding CanGoNext}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
-                        <TextBlock Text="›" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="›" />
                     </Button>
 
                 </Grid>

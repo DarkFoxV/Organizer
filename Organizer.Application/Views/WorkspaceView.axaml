@@ -9,14 +9,14 @@
              x:DataType="vm:WorkspaceViewModel">
 
     <Grid x:Name="Viewport"
-          Background="#0a101a"
+          Background="{Binding WorkspaceViewportBackground}"
           ClipToBounds="True"
           Focusable="True">
         <Border x:Name="BoardRoot"
                 Width="{Binding BoardWidth}"
                 Height="{Binding BoardHeight}"
-                Background="#0d1420"
-                BorderBrush="#1f2c3e"
+                Background="{Binding WorkspaceBoardBackground}"
+                BorderBrush="{Binding WorkspaceBoardBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="0"
                 HorizontalAlignment="Left"
@@ -48,14 +48,14 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Margin="18"
-                Background="#cc2d1515"
+                Background="{DynamicResource DangerSoftBrush}"
                 BorderBrush="{DynamicResource DangerBrush}"
                 BorderThickness="1"
                 CornerRadius="10"
                 Padding="12 10"
                 ZIndex="10">
             <TextBlock Text="{Binding ErrorMessage}"
-                       Foreground="#fca5a5"
+                       Foreground="{DynamicResource DangerSoftTextBrush}"
                        FontSize="13"
                        TextWrapping="Wrap" />
         </Border>
@@ -65,12 +65,12 @@
                     VerticalAlignment="Center"
                     Spacing="8"
                     IsHitTestVisible="False">
-            <TextBlock Text="Cole imagens com Ctrl+V"
+            <TextBlock Text="{DynamicResource Loc.Workspace.EmptyTitle}"
                        FontSize="22"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"
                        HorizontalAlignment="Center" />
-            <TextBlock Text="Use a roda do mouse para zoom e segure Space para navegar."
+            <TextBlock Text="{DynamicResource Loc.Workspace.EmptySubtitle}"
                        FontSize="13"
                        Foreground="{DynamicResource TextMutedBrush}"
                        HorizontalAlignment="Center" />
@@ -79,8 +79,8 @@
         <Border HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 Margin="18"
-                Background="#b30d1420"
-                BorderBrush="#233145"
+                Background="{DynamicResource SurfaceSoftBrush}"
+                BorderBrush="{DynamicResource FloatingBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="999"
                 Padding="10 6"

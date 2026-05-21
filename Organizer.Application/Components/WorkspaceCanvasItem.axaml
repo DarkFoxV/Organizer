@@ -20,7 +20,7 @@
             <Setter Property="Width" Value="30" />
             <Setter Property="Height" Value="30" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Background" Value="#d91f2937" />
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
             <Setter Property="Foreground" Value="#ffffff" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="999" />
@@ -31,14 +31,14 @@
         </Style>
 
         <Style Selector="Button.canvas-remove:pointerover">
-            <Setter Property="Background" Value="#e11d48" />
+            <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}" />
         </Style>
 
         <Style Selector="Border.resize-handle">
             <Setter Property="Width" Value="45" />
             <Setter Property="Height" Value="45" />
-            <Setter Property="Background" Value="#0d1420" />
-            <Setter Property="BorderBrush" Value="#ffffff" />
+            <Setter Property="Background" Value="{DynamicResource WorkspaceBoardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="BorderThickness" Value="2" />
             <Setter Property="CornerRadius" Value="999" />
         </Style>
@@ -63,7 +63,7 @@
                    VerticalAlignment="Top" />
 
             <Border IsVisible="{Binding IsSelected}"
-                    BorderBrush="#60a5fa"
+                    BorderBrush="{DynamicResource AccentSoftTextBrush}"
                     BorderThickness="{Binding SelectionBorderThicknessValue}"
                     Margin="{Binding SelectionBorderMargin}"
                     IsHitTestVisible="False" />

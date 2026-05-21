@@ -6,19 +6,27 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Organize.Organizer.Core;
+using Organizer.Application.Services;
 using Organizer.Core.Helpers;
 
 namespace Organizer.Application.ViewModels;
 
 public partial class GroupCopyPickerViewModel : ObservableObject
 {
+    private readonly AppPreferencesService _preferencesService;
     private Func<int, Task<byte[]?>>? _loadImageDataAsync;
 
     [ObservableProperty] private bool _isVisible;
 
-    [ObservableProperty] private string _title = "Copiar imagem do grupo";
+    public string Title => _preferencesService.T("Loc.CopyPicker.Title");
 
     public ObservableCollection<GroupCopyPickerItemViewModel> Items { get; } = [];
+
+    public GroupCopyPickerViewModel(AppPreferencesService preferencesService)
+    {
+        _preferencesService = preferencesService;
+        _preferencesService.PreferencesChanged += OnPreferencesChanged;
+    }
 
     public async Task OpenAsync(
         IEnumerable<GroupImageSummary> images,
@@ -57,8 +65,8 @@ public partial class GroupCopyPickerViewModel : ObservableObject
     }
 
     public string CountText => Items.Count == 1
-        ? "1 imagem disponivel"
-        : $"{Items.Count} imagens disponiveis";
+        ? _preferencesService.T("Loc.CopyPicker.CountOne")
+        : _preferencesService.T("Loc.CopyPicker.CountMany", Items.Count);
 
     [RelayCommand]
     private void Close()
@@ -74,6 +82,12 @@ public partial class GroupCopyPickerViewModel : ObservableObject
             item.Dispose();
 
         Items.Clear();
+        OnPropertyChanged(nameof(CountText));
+    }
+
+    private void OnPreferencesChanged()
+    {
+        OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(CountText));
     }
 }

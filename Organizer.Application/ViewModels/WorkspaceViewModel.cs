@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Input.Platform;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,6 +23,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private const double MinimumBoardHeight = 2500;
 
     private readonly IClipboardService _clipboardService;
+    private readonly AppPreferencesService _preferencesService;
     private WorkspaceCanvasItemViewModel? _selectedItem;
     private double _nextFallbackPasteX = CanvasPadding;
     private double _nextFallbackPasteY = CanvasPadding;
@@ -36,8 +38,22 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     [ObservableProperty] private double _boardStartY;
 
     public event Action<double, double>? BoardOriginShifted;
+    public event Action? WorkspacePreferencesChanged;
 
     public ObservableCollection<WorkspaceCanvasItemViewModel> Items { get; } = [];
+
+    public IBrush WorkspaceViewportBackground => BrushFromHex(GetWorkspacePalette().Viewport);
+
+    public IBrush WorkspaceBoardBackground => BrushFromHex(GetWorkspacePalette().Board);
+
+    public IBrush WorkspaceBoardBorderBrush => BrushFromHex(GetWorkspacePalette().Border);
+
+    public double InitialZoom => Math.Clamp(
+        _preferencesService.Current.WorkspaceDefaultZoomPercent / 100d,
+        0.1,
+        2.0);
+
+    public WorkspacePastePreference PasteMode => _preferencesService.Current.WorkspacePasteMode;
 
     public bool IsEmpty => Items.Count == 0;
 
@@ -75,9 +91,13 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         }
     }
 
-    public WorkspaceViewModel(IClipboardService clipboardService)
+    public WorkspaceViewModel(
+        IClipboardService clipboardService,
+        AppPreferencesService preferencesService)
     {
         _clipboardService = clipboardService;
+        _preferencesService = preferencesService;
+        _preferencesService.PreferencesChanged += OnPreferencesChanged;
         Items.CollectionChanged += OnItemsChanged;
     }
 
@@ -117,6 +137,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         Items.CollectionChanged -= OnItemsChanged;
+        _preferencesService.PreferencesChanged -= OnPreferencesChanged;
         ClearAll();
     }
 
@@ -317,4 +338,38 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             _nextFallbackPasteY = CanvasPadding;
         }
     }
+
+    private void OnPreferencesChanged()
+    {
+        OnPropertyChanged(nameof(WorkspaceViewportBackground));
+        OnPropertyChanged(nameof(WorkspaceBoardBackground));
+        OnPropertyChanged(nameof(WorkspaceBoardBorderBrush));
+        OnPropertyChanged(nameof(InitialZoom));
+        OnPropertyChanged(nameof(PasteMode));
+        WorkspacePreferencesChanged?.Invoke();
+    }
+
+    private (string Viewport, string Board, string Border) GetWorkspacePalette()
+    {
+        var light = _preferencesService.Current.Theme == AppThemePreference.Light;
+
+        if (light)
+        {
+            return _preferencesService.Current.WorkspaceBackground switch
+            {
+                WorkspaceBackgroundPreference.Neutral => ("#e5e7eb", "#f8fafc", "#cbd5e1"),
+                WorkspaceBackgroundPreference.Black => ("#171717", "#262626", "#525252"),
+                _ => ("#dbeafe", "#eff6ff", "#93c5fd")
+            };
+        }
+
+        return _preferencesService.Current.WorkspaceBackground switch
+        {
+            WorkspaceBackgroundPreference.Neutral => ("#111827", "#1f2937", "#374151"),
+            WorkspaceBackgroundPreference.Black => ("#000000", "#171717", "#404040"),
+            _ => ("#06152f", "#0b2142", "#1d4ed8")
+        };
+    }
+
+    private static IBrush BrushFromHex(string color) => new SolidColorBrush(Color.Parse(color));
 }

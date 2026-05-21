@@ -1,8 +1,267 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Organizer.Organizer.Application.Views.PreferencesView">
-    Welcome to Avalonia!
+             mc:Ignorable="d" d:DesignWidth="980" d:DesignHeight="680"
+             x:Class="Organizer.Organizer.Application.Views.PreferencesView"
+             x:DataType="vm:PreferencesViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.floating-panel">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="BoxShadow" Value="0 18 34 #66000000" />
+        </Style>
+
+        <Style Selector="Border.preference-row">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="14 12" />
+        </Style>
+
+        <Style Selector="ComboBox.preference-select">
+            <Setter Property="MinWidth" Value="190" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12 0" />
+        </Style>
+
+        <Style Selector="ComboBox.preference-select:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="TextBlock.row-title">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="TextBlock.row-description">
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <Grid Margin="28"
+                  RowDefinitions="Auto,*"
+                  RowSpacing="20">
+
+                <Grid ColumnDefinitions="*,Auto"
+                      ColumnSpacing="18">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="{DynamicResource Loc.Preferences.Title}"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   FontSize="28"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{DynamicResource Loc.Preferences.Subtitle}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   FontSize="13" />
+                    </StackPanel>
+
+                    <Border Grid.Column="1"
+                            Classes="floating-panel"
+                            Padding="14 10"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Ellipse Width="9"
+                                     Height="9"
+                                     Fill="{DynamicResource SuccessBrush}"
+                                     VerticalAlignment="Center" />
+                            <TextBlock Text="{DynamicResource Loc.Common.SaveAuto}"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="1.05*,1.05*"
+                      RowDefinitions="Auto,Auto,Auto"
+                      ColumnSpacing="18"
+                      RowSpacing="18">
+
+                    <Border Grid.Row="0"
+                            Grid.Column="0"
+                            Classes="floating-panel">
+                        <StackPanel Spacing="14">
+                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Appearance}" />
+
+                            <Border Classes="preference-row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.Theme}" />
+                                        <TextBlock Classes="row-description"
+                                                   Text="{DynamicResource Loc.Preferences.ThemeDescription}" />
+                                    </StackPanel>
+                                    <ComboBox Grid.Column="1"
+                                              Classes="preference-select"
+                                              ItemsSource="{Binding ThemeOptions}"
+                                              SelectedItem="{Binding SelectedTheme}" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="0"
+                            Grid.Column="1"
+                            Classes="floating-panel">
+                        <StackPanel Spacing="14">
+                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Search}" />
+
+                            <Border Classes="preference-row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.ItemsPerPage}" />
+                                        <TextBlock Classes="row-description"
+                                                   Text="{DynamicResource Loc.Preferences.ItemsPerPageDescription}" />
+                                    </StackPanel>
+                                    <ComboBox Grid.Column="1"
+                                              Classes="preference-select"
+                                              ItemsSource="{Binding ItemsPerPageOptions}"
+                                              SelectedItem="{Binding SelectedItemsPerPage}" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Grid.Column="0"
+                            Classes="floating-panel">
+                        <StackPanel Spacing="14">
+                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Language}" />
+
+                            <Border Classes="preference-row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.LanguageInterface}" />
+                                        <TextBlock Classes="row-description"
+                                                   Text="{DynamicResource Loc.Preferences.LanguageDescription}" />
+                                    </StackPanel>
+                                    <ComboBox Grid.Column="1"
+                                              Classes="preference-select"
+                                              ItemsSource="{Binding LanguageOptions}"
+                                              SelectedItem="{Binding SelectedLanguage}" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Grid.Column="1"
+                            Classes="floating-panel">
+                        <StackPanel Spacing="14">
+                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Security}" />
+
+                            <Border Classes="preference-row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.ConfirmDeletion}" />
+                                        <TextBlock Classes="row-description"
+                                                   Text="{DynamicResource Loc.Preferences.ConfirmDeletionDescription}" />
+                                    </StackPanel>
+                                    <ToggleSwitch Grid.Column="1"
+                                                  IsChecked="{Binding ConfirmDeletion}"
+                                                  VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="2"
+                            Grid.ColumnSpan="2"
+                            Classes="floating-panel">
+                        <StackPanel Spacing="14">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Workspace}" />
+                                    <TextBlock Classes="row-description"
+                                               Text="{DynamicResource Loc.Preferences.WorkspaceDescription}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding WorkspaceDefaultZoomPercent, StringFormat='{}{0:0}%'}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,*"
+                                  RowDefinitions="Auto,Auto"
+                                  ColumnSpacing="14"
+                                  RowSpacing="14">
+                                <Border Classes="preference-row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.PasteMode}" />
+                                            <TextBlock Classes="row-description"
+                                                       Text="{DynamicResource Loc.Preferences.PasteModeDescription}" />
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="1"
+                                                  Classes="preference-select"
+                                                  ItemsSource="{Binding WorkspacePasteOptions}"
+                                                  SelectedItem="{Binding SelectedWorkspacePasteMode}" />
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Column="1"
+                                        Classes="preference-row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.CanvasBackground}" />
+                                            <TextBlock Classes="row-description"
+                                                       Text="{DynamicResource Loc.Preferences.CanvasBackgroundDescription}" />
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="1"
+                                                  Classes="preference-select"
+                                                  ItemsSource="{Binding WorkspaceBackgroundOptions}"
+                                                  SelectedItem="{Binding SelectedWorkspaceBackground}" />
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Row="1"
+                                        Grid.ColumnSpan="2"
+                                        Classes="preference-row">
+                                    <Grid ColumnDefinitions="*,280" ColumnSpacing="22">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.InitialZoom}" />
+                                            <TextBlock Classes="row-description"
+                                                       Text="{DynamicResource Loc.Preferences.InitialZoomDescription}" />
+                                        </StackPanel>
+                                        <Slider Grid.Column="1"
+                                                Minimum="10"
+                                                Maximum="200"
+                                                TickFrequency="10"
+                                                IsSnapToTickEnabled="True"
+                                                Value="{Binding WorkspaceDefaultZoomPercent}" />
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

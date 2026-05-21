@@ -30,6 +30,7 @@ internal class Program
         // SERVICES
         // ─────────────────────────────
 
+        services.AddSingleton<AppPreferencesService>();
         services.AddTransient<ICardService, CardService>();
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<ITagService, TagService>();

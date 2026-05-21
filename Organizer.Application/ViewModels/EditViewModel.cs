@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Organize.Organizer.Core.Interfaces;
+using Organizer.Application.Services;
 using Organizer.Application.ViewModels.Components;
 
 namespace Organizer.Application.ViewModels;
@@ -12,6 +13,7 @@ public partial class EditViewModel : ObservableObject
 {
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
+    private readonly AppPreferencesService _preferencesService;
 
     private int _imageId;
     private int[] _initialTagIds = [];
@@ -22,7 +24,7 @@ public partial class EditViewModel : ObservableObject
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady))]
     private string _description = string.Empty;
 
-    [ObservableProperty] private string _title = "Editar";
+    [ObservableProperty] private string _title = string.Empty;
 
     [ObservableProperty] private string _subtitle = string.Empty;
 
@@ -36,29 +38,36 @@ public partial class EditViewModel : ObservableObject
     public bool IsReady => TagsLoaded && !IsSubmitting;
 
     public string StatusText =>
-        IsSubmitting ? "Salvando alterações..." : "Atualize a descrição e as tags da imagem de capa";
+        IsSubmitting
+            ? _preferencesService.T("Loc.Edit.SavingStatus")
+            : _preferencesService.T("Loc.Edit.Ready");
 
     public bool StatusIsReady => !IsSubmitting;
 
     public event Action? CloseRequested;
     public event Action? SubmitSuccess;
 
-    public EditViewModel(IImageService imageService, ITagService tagService)
+    public EditViewModel(
+        IImageService imageService,
+        ITagService tagService,
+        AppPreferencesService preferencesService)
     {
         _imageService = imageService;
         _tagService = tagService;
+        _preferencesService = preferencesService;
+        _preferencesService.PreferencesChanged += OnPreferencesChanged;
 
-        TagSelector = new TagSelectorViewModel(_tagService, showAddButton: false);
+        TagSelector = new TagSelectorViewModel(_tagService, _preferencesService, showAddButton: false);
         TagSelector.SelectionChanged += NotifyReady;
     }
 
     public async Task LoadAsync(CardItemViewModel card)
     {
         _imageId = card.Id;
-        Title = "Editar";
+        Title = _preferencesService.T("Loc.Edit.Title");
         Subtitle = card.IsGroup
-            ? $"{card.ImageCount} imagens no card • editando a capa"
-            : "Editando a imagem de capa";
+            ? _preferencesService.T("Loc.Edit.GroupSubtitle", card.ImageCount)
+            : _preferencesService.T("Loc.Edit.SingleSubtitle");
         ErrorMessage = null;
 
         var image = await _imageService.GetByIdAsync(card.Id)
@@ -122,4 +131,11 @@ public partial class EditViewModel : ObservableObject
 
     [RelayCommand]
     private void Close() => CloseRequested?.Invoke();
+
+    private void OnPreferencesChanged()
+    {
+        Title = _preferencesService.T("Loc.Edit.Title");
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(StatusIsReady));
+    }
 }

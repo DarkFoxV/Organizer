@@ -9,8 +9,8 @@
 
     <UserControl.Styles>
         <Style Selector="Border.floating-panel">
-            <Setter Property="Background" Value="#E6121824" />
-            <Setter Property="BorderBrush" Value="#3A50677D" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="22" />
             <Setter Property="BoxShadow" Value="0 18 50 #77000000" />
@@ -33,9 +33,29 @@
             <Setter Property="Padding" Value="10 0" />
             <Setter Property="MaxWidth" Value="760" />
         </Style>
+
+        <Style Selector="Button.confirm-action">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="MinWidth" Value="118" />
+            <Setter Property="Padding" Value="18 0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="Button.confirm-cancel">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.confirm-cancel:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        </Style>
     </UserControl.Styles>
 
-    <Grid Background="#0d1117">
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
 
         <Panel IsHitTestVisible="False">
             <Ellipse Width="520"
@@ -61,7 +81,7 @@
                         VerticalAlignment="Center"
                         Spacing="12">
                 <TextBlock Text="⏳" FontSize="32" HorizontalAlignment="Center" />
-                <TextBlock Text="Carregando..."
+                <TextBlock Text="{DynamicResource Loc.Common.Loading}"
                            FontSize="14"
                            Foreground="{DynamicResource TextMutedBrush}"
                            HorizontalAlignment="Center" />
@@ -73,11 +93,11 @@
                         Spacing="12"
                         Margin="0 76 0 0">
                 <TextBlock Text="🔍" FontSize="48" HorizontalAlignment="Center" />
-                <TextBlock Text="Nenhuma imagem encontrada"
+                <TextBlock Text="{DynamicResource Loc.Search.EmptyTitle}"
                            FontSize="16"
                            Foreground="{DynamicResource TextMutedBrush}"
                            HorizontalAlignment="Center" />
-                <TextBlock Text="Tente outros termos ou registre uma nova imagem"
+                <TextBlock Text="{DynamicResource Loc.Search.EmptySubtitle}"
                            FontSize="13"
                            Foreground="{DynamicResource TextSubtleBrush}"
                            HorizontalAlignment="Center" />
@@ -146,6 +166,60 @@
         <views:GroupCopyPickerModal
             ZIndex="100"
             DataContext="{Binding CopyPicker}" />
+
+        <Border ZIndex="140"
+                IsVisible="{Binding IsDeleteConfirmationVisible}"
+                Background="{DynamicResource OverlayBrush}">
+            <Grid HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+                <Border HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="430"
+                        Background="{DynamicResource OverlayCardBrush}"
+                        BorderBrush="{DynamicResource FloatingBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="22"
+                        BoxShadow="0 24 60 #99000000">
+                    <StackPanel Spacing="18">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{Binding DeleteConfirmationTitle}"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       FontSize="20"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding DeleteConfirmationMessage}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       FontSize="13"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <Border Background="{DynamicResource DangerSoftBrush}"
+                                BorderBrush="{DynamicResource DangerBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12 10">
+                            <TextBlock Text="{DynamicResource Loc.Search.DeleteWarning}"
+                                       Foreground="{DynamicResource DangerSoftTextBrush}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold" />
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    Spacing="10">
+                            <Button Classes="confirm-action confirm-cancel"
+                                    Command="{Binding CancelDeleteCommand}">
+                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{DynamicResource Loc.Common.Cancel}" />
+                            </Button>
+                            <Button Classes="confirm-action btn btn-danger"
+                                    Command="{Binding ConfirmDeleteCommand}">
+                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{DynamicResource Loc.Common.Delete}" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
 
     </Grid>
 

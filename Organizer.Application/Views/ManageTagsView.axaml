@@ -8,23 +8,23 @@
     <UserControl.Styles>
 
         <Style Selector="TextBox.field">
-            <Setter Property="Background" Value="#1c2230" />
-            <Setter Property="Foreground" Value="#e6edf3" />
-            <Setter Property="BorderBrush" Value="#2a3347" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12 8" />
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="CaretBrush" Value="#3b82f6" />
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}" />
         </Style>
         <Style Selector="TextBox.field:focus">
-            <Setter Property="BorderBrush" Value="#3b82f6" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
         </Style>
 
         <Style Selector="ComboBox.color-picker">
-            <Setter Property="Background" Value="#1c2230" />
-            <Setter Property="Foreground" Value="#e6edf3" />
-            <Setter Property="BorderBrush" Value="#2a3347" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12 0" />
@@ -41,40 +41,40 @@
         </Style>
 
         <Style Selector="Button.btn-ghost">
-            <Setter Property="Background" Value="#1c2230" />
-            <Setter Property="Foreground" Value="#8b949e" />
-            <Setter Property="BorderBrush" Value="#2a3347" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Button.btn-ghost:pointerover">
-            <Setter Property="Background" Value="#263b82f6" />
-            <Setter Property="Foreground" Value="#60a5fa" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
         </Style>
 
         <Style Selector="Border.floating-panel">
-            <Setter Property="Background" Value="#E6121824" />
-            <Setter Property="BorderBrush" Value="#3A50677D" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="22" />
             <Setter Property="BoxShadow" Value="0 18 50 #77000000" />
         </Style>
 
         <Style Selector="Border.tag-card">
-            <Setter Property="Background" Value="#D9141A25" />
-            <Setter Property="BorderBrush" Value="#2f3f52" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="18" />
             <Setter Property="Padding" Value="18 14" />
             <Setter Property="BoxShadow" Value="0 10 28 #44000000" />
         </Style>
         <Style Selector="Border.tag-card:pointerover">
-            <Setter Property="BorderBrush" Value="#3b82f6" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
             <Setter Property="BoxShadow" Value="0 16 36 #5A000000" />
         </Style>
 
     </UserControl.Styles>
 
-    <Grid Background="#0d1117">
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
 
         <Panel IsHitTestVisible="False">
             <Ellipse Width="560"
@@ -105,13 +105,13 @@
                 <Border Classes="floating-panel"
                         Padding="24 20">
                     <StackPanel Spacing="5">
-                        <TextBlock Text="Gerenciar Tags"
+                        <TextBlock Text="{DynamicResource Loc.Tags.ManageTitle}"
                                    FontSize="22"
                                    FontWeight="Bold"
-                                   Foreground="#e6edf3" />
-                        <TextBlock Text="Crie, edite ou remova as tags da sua coleção"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="{DynamicResource Loc.Tags.ManageSubtitle}"
                                    FontSize="13"
-                                   Foreground="#8b949e" />
+                                   Foreground="{DynamicResource TextMutedBrush}" />
                     </StackPanel>
                 </Border>
 
@@ -120,16 +120,16 @@
                         Padding="22 18">
                     <StackPanel Spacing="14">
 
-                        <TextBlock Text="Nova tag"
+                        <TextBlock Text="{DynamicResource Loc.Tags.New}"
                                    FontSize="14"
                                    FontWeight="SemiBold"
-                                   Foreground="#e6edf3" />
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
 
                         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                             <TextBox Grid.Column="0"
                                      Classes="field"
                                      Text="{Binding NewTagName}"
-                                     PlaceholderText="Nome da tag..." />
+                                     PlaceholderText="{DynamicResource Loc.Tags.NamePlaceholder}" />
 
                             <ComboBox Grid.Column="1"
                                       Classes="color-picker"
@@ -141,7 +141,7 @@
                                     Command="{Binding CreateTagCommand}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" />
-                                    <TextBlock Text="Criar" VerticalAlignment="Center" />
+                                    <TextBlock Text="{DynamicResource Loc.Tags.Create}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -153,15 +153,15 @@
                 <Border Classes="floating-panel"
                         Padding="18 12">
                     <Grid ColumnDefinitions="*,130,200" ColumnSpacing="20">
-                        <TextBlock Grid.Column="0" Text="Nome"
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Loc.Tags.ColumnName}"
                                    FontSize="12" FontWeight="SemiBold"
-                                   Foreground="#6b7280" />
-                        <TextBlock Grid.Column="1" Text="Cor"
+                                   Foreground="{DynamicResource TextSubtleBrush}" />
+                        <TextBlock Grid.Column="1" Text="{DynamicResource Loc.Tags.ColumnColor}"
                                    FontSize="12" FontWeight="SemiBold"
-                                   Foreground="#6b7280" />
-                        <TextBlock Grid.Column="2" Text="Ações"
+                                   Foreground="{DynamicResource TextSubtleBrush}" />
+                        <TextBlock Grid.Column="2" Text="{DynamicResource Loc.Tags.ColumnActions}"
                                    FontSize="12" FontWeight="SemiBold"
-                                   Foreground="#6b7280" />
+                                   Foreground="{DynamicResource TextSubtleBrush}" />
                     </Grid>
                 </Border>
 
@@ -184,7 +184,7 @@
                                                     Background="{Binding ColorHex}"
                                                     VerticalAlignment="Center" />
                                             <TextBlock Text="{Binding Name}"
-                                                       FontSize="14" Foreground="#e6edf3"
+                                                       FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}"
                                                        VerticalAlignment="Center" />
                                         </StackPanel>
                                         <TextBox IsVisible="{Binding IsEditing}"
@@ -196,7 +196,7 @@
                                     <Panel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock IsVisible="{Binding IsNotEditing}"
                                                    Text="{Binding Color}"
-                                                   FontSize="13" Foreground="#8b949e"
+                                                   FontSize="13" Foreground="{DynamicResource TextMutedBrush}"
                                                    VerticalAlignment="Center" />
                                         <ComboBox IsVisible="{Binding IsEditing}"
                                                   Classes="color-picker"
@@ -210,22 +210,22 @@
                                                     Orientation="Horizontal" Spacing="8">
                                             <Button Classes="btn btn-primary"
                                                     Command="{Binding StartEditCommand}">
-                                                <TextBlock Text="✏ Editar" />
+                                                <TextBlock Text="{DynamicResource Loc.Tags.Edit}" />
                                             </Button>
                                             <Button Classes="btn btn-danger"
                                                     Command="{Binding DeleteCommand}">
-                                                <TextBlock Text="🗑 Deletar" />
+                                                <TextBlock Text="{DynamicResource Loc.Tags.Delete}" />
                                             </Button>
                                         </StackPanel>
                                         <StackPanel IsVisible="{Binding IsEditing}"
                                                     Orientation="Horizontal" Spacing="8">
                                             <Button Classes="btn btn-success"
                                                     Command="{Binding SaveCommand}">
-                                                <TextBlock Text="✓ Salvar" />
+                                                <TextBlock Text="{DynamicResource Loc.Tags.Save}" />
                                             </Button>
                                             <Button Classes="btn btn-ghost"
                                                     Command="{Binding CancelEditCommand}">
-                                                <TextBlock Text="✕ Cancelar" />
+                                                <TextBlock Text="{DynamicResource Loc.Tags.Cancel}" />
                                             </Button>
                                         </StackPanel>
                                     </Panel>

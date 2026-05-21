@@ -33,6 +33,7 @@ public partial class WorkspaceCanvasItem : UserControl
     private Point _startOrigin;
     private Size _startSize;
     private Canvas? _canvas;
+    private WorkspaceViewModel? _workspaceViewModel;
 
     public WorkspaceCanvasItem()
     {
@@ -50,10 +51,14 @@ public partial class WorkspaceCanvasItem : UserControl
         if (IsActionButton(source))
             return;
 
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            return;
+
         _canvas = this.FindAncestorOfType<Canvas>();
         if (_canvas is null)
             return;
 
+        _workspaceViewModel = FindWorkspaceViewModel();
         _isPointerDown = true;
         _activeHandle = GetResizeHandle(source);
         _isResizing = _activeHandle != ResizeHandleKind.None;
@@ -61,6 +66,7 @@ public partial class WorkspaceCanvasItem : UserControl
         _startPoint = GetCanvasPoint(e);
         _startOrigin = new Point(VM.X, VM.Y);
         _startSize = new Size(VM.Width, VM.Height);
+        _workspaceViewModel?.BeginMoveSelectedItems(VM);
         e.Pointer.Capture(InteractionLayer);
         e.Handled = true;
     }
@@ -96,8 +102,16 @@ public partial class WorkspaceCanvasItem : UserControl
             return;
         }
 
-        VM.X = _startOrigin.X + deltaX;
-        VM.Y = _startOrigin.Y + deltaY;
+        if (_workspaceViewModel is not null)
+        {
+            _workspaceViewModel.MoveSelectedItems(deltaX, deltaY);
+        }
+        else
+        {
+            VM.X = _startOrigin.X + deltaX;
+            VM.Y = _startOrigin.Y + deltaY;
+        }
+
         e.Handled = true;
     }
 
@@ -265,6 +279,8 @@ public partial class WorkspaceCanvasItem : UserControl
         _isResizing = false;
         _activeHandle = ResizeHandleKind.None;
         _canvas = null;
+        _workspaceViewModel?.EndMoveSelectedItems();
+        _workspaceViewModel = null;
     }
 
     private Point ToWorldPoint(Point canvasPoint)
@@ -275,5 +291,20 @@ public partial class WorkspaceCanvasItem : UserControl
         var offsetX = VM.X - VM.DisplayX;
         var offsetY = VM.Y - VM.DisplayY;
         return new Point(canvasPoint.X + offsetX, canvasPoint.Y + offsetY);
+    }
+
+    private WorkspaceViewModel? FindWorkspaceViewModel()
+    {
+        var visual = this.GetVisualParent();
+
+        while (visual is not null)
+        {
+            if (visual is StyledElement { DataContext: WorkspaceViewModel workspaceViewModel })
+                return workspaceViewModel;
+
+            visual = visual.GetVisualParent();
+        }
+
+        return null;
     }
 }

@@ -125,7 +125,7 @@ public partial class WorkspaceView : UserControl
 
         if (e.Key == Key.Delete)
         {
-            e.Handled = VM.RemoveSelectedItem();
+            e.Handled = VM.RemoveSelectedItems();
             return;
         }
 
@@ -178,9 +178,17 @@ public partial class WorkspaceView : UserControl
 
         var item = GetItemFromSource(e.Source as Visual);
         if (item is null)
+        {
             VM.ClearSelection();
-        else
+        }
+        else if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            VM.ToggleItemSelection(item);
+        }
+        else if (!item.IsSelected)
+        {
             VM.SelectItem(item);
+        }
     }
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)

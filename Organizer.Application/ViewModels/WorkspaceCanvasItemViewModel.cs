@@ -56,8 +56,9 @@ public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposabl
 
     public void Dispose()
     {
-        Bitmap?.Dispose();
+        var bitmap = Bitmap;
         Bitmap = null;
+        bitmap?.Dispose();
     }
 
     [RelayCommand]

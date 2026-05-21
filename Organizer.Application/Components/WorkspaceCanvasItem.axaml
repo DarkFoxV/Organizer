@@ -35,12 +35,13 @@
         </Style>
 
         <Style Selector="Border.resize-handle">
-            <Setter Property="Width" Value="45" />
-            <Setter Property="Height" Value="45" />
-            <Setter Property="Background" Value="{DynamicResource WorkspaceBoardBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Width" Value="56" />
+            <Setter Property="Height" Value="56" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="BorderThickness" Value="3" />
             <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="BoxShadow" Value="0 6 14 #66000000" />
         </Style>
     </UserControl.Styles>
 
@@ -86,53 +87,53 @@
                         Classes="resize-handle"
                         Grid.Row="0"
                         Grid.Column="0"
-                        Margin="-22.5 -22.5 0 0"
+                        Margin="-28 -28 0 0"
                         Cursor="TopLeftCorner" />
                 <Border x:Name="TopCenterHandle"
                         Classes="resize-handle"
                         Grid.Row="0"
                         Grid.Column="1"
                         HorizontalAlignment="Center"
-                        Margin="0 -22.5 0 0"
+                        Margin="0 -28 0 0"
                         Cursor="TopSide" />
                 <Border x:Name="TopRightHandle"
                         Classes="resize-handle"
                         Grid.Row="0"
                         Grid.Column="2"
-                        Margin="0 -22.5 -22.5 0"
+                        Margin="0 -28 -28 0"
                         Cursor="TopRightCorner" />
                 <Border x:Name="MiddleLeftHandle"
                         Classes="resize-handle"
                         Grid.Row="1"
                         Grid.Column="0"
                         VerticalAlignment="Center"
-                        Margin="-22.5 0 0 0"
+                        Margin="-28 0 0 0"
                         Cursor="LeftSide" />
                 <Border x:Name="MiddleRightHandle"
                         Classes="resize-handle"
                         Grid.Row="1"
                         Grid.Column="2"
                         VerticalAlignment="Center"
-                        Margin="0 0 -22.5 0"
+                        Margin="0 0 -28 0"
                         Cursor="RightSide" />
                 <Border x:Name="BottomLeftHandle"
                         Classes="resize-handle"
                         Grid.Row="2"
                         Grid.Column="0"
-                        Margin="-22.5 0 0 -22.5"
+                        Margin="-28 0 0 -28"
                         Cursor="BottomLeftCorner" />
                 <Border x:Name="BottomCenterHandle"
                         Classes="resize-handle"
                         Grid.Row="2"
                         Grid.Column="1"
                         HorizontalAlignment="Center"
-                        Margin="0 0 0 -22.5"
+                        Margin="0 0 0 -28"
                         Cursor="BottomSide" />
                 <Border x:Name="BottomRightHandle"
                         Classes="resize-handle"
                         Grid.Row="2"
                         Grid.Column="2"
-                        Margin="0 0 -22.5 -22.5"
+                        Margin="0 0 -28 -28"
                         Cursor="BottomRightCorner" />
             </Grid>
         </Grid>

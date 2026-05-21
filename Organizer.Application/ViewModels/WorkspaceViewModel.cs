@@ -1,14 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Input.Platform;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Organizer.Application.Services;
@@ -25,9 +28,11 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private readonly IClipboardService _clipboardService;
     private readonly AppPreferencesService _preferencesService;
     private WorkspaceCanvasItemViewModel? _selectedItem;
+    private readonly Dictionary<WorkspaceCanvasItemViewModel, Point> _moveStartPositions = [];
     private double _nextFallbackPasteX = CanvasPadding;
     private double _nextFallbackPasteY = CanvasPadding;
     private int _nextZIndex;
+    private static bool _isMemoryCompactionQueued;
 
     [ObservableProperty] private bool _isPasting;
 
@@ -144,6 +149,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ClearAll()
     {
+        var hadImages = Items.Count > 0;
+
         foreach (var item in Items.ToList())
         {
             item.RemoveRequested -= OnRemoveRequested;
@@ -153,44 +160,77 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
         Items.Clear();
         _selectedItem = null;
+        _moveStartPositions.Clear();
         _nextFallbackPasteX = CanvasPadding;
         _nextFallbackPasteY = CanvasPadding;
         _nextZIndex = 0;
         ErrorMessage = null;
         NotifyBoardStateChanged();
+
+        if (hadImages)
+            QueueLargeImageMemoryCompaction();
     }
 
     public void SelectItem(WorkspaceCanvasItemViewModel item)
     {
-        if (_selectedItem == item)
-        {
-            item.IsSelected = true;
-            return;
-        }
-
-        if (_selectedItem is not null)
-            _selectedItem.IsSelected = false;
+        foreach (var selectedItem in Items.Where(i => i != item && i.IsSelected))
+            selectedItem.IsSelected = false;
 
         _selectedItem = item;
         _selectedItem.IsSelected = true;
     }
 
+    public void ToggleItemSelection(WorkspaceCanvasItemViewModel item)
+    {
+        item.IsSelected = !item.IsSelected;
+        _selectedItem = item.IsSelected
+            ? item
+            : Items.LastOrDefault(i => i.IsSelected);
+    }
+
     public void ClearSelection()
     {
-        if (_selectedItem is null)
-            return;
+        foreach (var item in Items.Where(i => i.IsSelected))
+            item.IsSelected = false;
 
-        _selectedItem.IsSelected = false;
         _selectedItem = null;
     }
 
-    public bool RemoveSelectedItem()
+    public bool RemoveSelectedItems()
     {
-        if (_selectedItem is null)
+        var selectedItems = Items.Where(i => i.IsSelected).ToList();
+        if (selectedItems.Count == 0)
             return false;
 
-        OnRemoveRequested(_selectedItem);
+        foreach (var item in selectedItems)
+            OnRemoveRequested(item);
+
         return true;
+    }
+
+    public void BeginMoveSelectedItems(WorkspaceCanvasItemViewModel anchorItem)
+    {
+        if (!anchorItem.IsSelected)
+            SelectItem(anchorItem);
+
+        _moveStartPositions.Clear();
+
+        foreach (var item in Items.Where(i => i.IsSelected))
+            _moveStartPositions[item] = new Point(item.X, item.Y);
+    }
+
+    public void MoveSelectedItems(double deltaX, double deltaY)
+    {
+        foreach (var (item, startPosition) in _moveStartPositions)
+        {
+            item.X = startPosition.X + deltaX;
+            item.Y = startPosition.Y + deltaY;
+        }
+    }
+
+    public void EndMoveSelectedItems()
+    {
+        _moveStartPositions.Clear();
     }
 
     private void AddImage(ClipboardImageData image, Point? pasteAnchor, int pasteIndex)
@@ -231,10 +271,13 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         item.PropertyChanged -= OnItemPropertyChanged;
 
         if (_selectedItem == item)
-            _selectedItem = null;
+            _selectedItem = Items.LastOrDefault(i => i != item && i.IsSelected);
+
+        _moveStartPositions.Remove(item);
 
         Items.Remove(item);
         item.Dispose();
+        QueueLargeImageMemoryCompaction();
 
         if (Items.Count == 0)
         {
@@ -372,4 +415,21 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     }
 
     private static IBrush BrushFromHex(string color) => new SolidColorBrush(Color.Parse(color));
+
+    private static void QueueLargeImageMemoryCompaction()
+    {
+        if (_isMemoryCompactionQueued)
+            return;
+
+        _isMemoryCompactionQueued = true;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            _isMemoryCompactionQueued = false;
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+        }, DispatcherPriority.Background);
+    }
 }

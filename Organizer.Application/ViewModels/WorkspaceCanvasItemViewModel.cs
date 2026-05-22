@@ -1,7 +1,6 @@
 using System;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 
 namespace Organizer.Application.ViewModels;
 
@@ -16,23 +15,23 @@ public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposabl
 
     [ObservableProperty] private double _y;
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ContainerX))]
-    private double _displayX;
+    [ObservableProperty] private double _displayX;
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ContainerY))]
-    private double _displayY;
+    [ObservableProperty] private double _displayY;
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ContainerWidth), nameof(ImageMargin))]
-    private double _width;
+    [ObservableProperty] private double _width;
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ContainerHeight), nameof(ImageMargin))]
-    private double _height;
+    [ObservableProperty] private double _height;
 
     [ObservableProperty] private int _zIndex;
 
     [ObservableProperty] private bool _isSelected;
 
-    [ObservableProperty] private bool _isInViewport = true;
+    [ObservableProperty] private Bitmap? _thumbnailBitmap;
+
+    [ObservableProperty] private Bitmap? _halfBitmap;
+
+    [ObservableProperty] private Bitmap? _quarterBitmap;
 
     public string Label { get; init; } = string.Empty;
 
@@ -44,32 +43,22 @@ public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposabl
 
     public double OriginalHeight { get; init; }
 
-    public double ContainerX => DisplayX - SelectionChromePadding;
-
-    public double ContainerY => DisplayY - SelectionChromePadding;
-
-    public double ContainerWidth => Width + SelectionChromePadding * 2;
-
-    public double ContainerHeight => Height + SelectionChromePadding * 2;
-
-    public Avalonia.Thickness ImageMargin => new(SelectionChromePadding);
-
-    public Avalonia.Thickness SelectionBorderThicknessValue => new(SelectionBorderThickness);
-
-    public Avalonia.Thickness SelectionBorderMargin => new(SelectionChromePadding - SelectionBorderThickness / 2);
-
-    public event Action<WorkspaceCanvasItemViewModel>? RemoveRequested;
-
     public void Dispose()
     {
         var bitmap = Bitmap;
         Bitmap = null;
         bitmap?.Dispose();
-    }
 
-    [RelayCommand]
-    private void Remove()
-    {
-        RemoveRequested?.Invoke(this);
+        var thumb = ThumbnailBitmap;
+        ThumbnailBitmap = null;
+        thumb?.Dispose();
+
+        var half = HalfBitmap;
+        HalfBitmap = null;
+        half?.Dispose();
+
+        var quarter = QuarterBitmap;
+        QuarterBitmap = null;
+        quarter?.Dispose();
     }
 }

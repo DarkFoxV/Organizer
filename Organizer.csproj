@@ -56,10 +56,6 @@
         <Compile Update="Organizer.Application\Views\GroupCopyPickerModal.axaml.cs">
           <DependentUpon>GroupCopyPickerModal.axaml</DependentUpon>
         </Compile>
-        <Compile Update="Organizer.Application\Components\WorkspaceCanvasItem.axaml.cs">
-          <DependentUpon>WorkspaceCanvasItem.axaml</DependentUpon>
-          <SubType>Code</SubType>
-        </Compile>
     </ItemGroup>
 
     <ItemGroup>

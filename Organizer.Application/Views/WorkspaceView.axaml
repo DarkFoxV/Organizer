@@ -35,27 +35,11 @@
                 CornerRadius="0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top">
-            <ItemsControl ItemsSource="{Binding Items}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-
-                <ItemsControl.Styles>
-                    <Style Selector="ContentPresenter">
-                        <Setter Property="Canvas.Left" Value="{ReflectionBinding ContainerX}" />
-                        <Setter Property="Canvas.Top" Value="{ReflectionBinding ContainerY}" />
-                        <Setter Property="Panel.ZIndex" Value="{ReflectionBinding ZIndex}" />
-                    </Style>
-                </ItemsControl.Styles>
-
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="vm:WorkspaceCanvasItemViewModel">
-                        <controls:WorkspaceCanvasItem IsVisible="{Binding IsInViewport}" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <controls:WorkspaceCanvas x:Name="WorkspaceSurface"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Stretch"
+                                      Focusable="True"
+                                      Items="{Binding Items}" />
         </Border>
 
         <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"

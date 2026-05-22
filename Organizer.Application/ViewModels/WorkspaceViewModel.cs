@@ -22,21 +22,34 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 {
     private const double CanvasPadding = 200;
     private const double PasteOffsetStep = 48;
+    private const double BatchPasteGap = 36;
     private const double MinimumBoardWidth = 4000;
     private const double MinimumBoardHeight = 2500;
+    private const int ThumbnailMaxDimension = 400;
+    private const int HalfLodMinDimension = 1024;
+    private const int QuarterLodMinDimension = 2048;
 
     private readonly IClipboardService _clipboardService;
     private readonly AppPreferencesService _preferencesService;
     private readonly WorkspaceArchiveService _workspaceArchiveService;
     private WorkspaceCanvasItemViewModel? _selectedItem;
     private readonly Dictionary<WorkspaceCanvasItemViewModel, Point> _moveStartPositions = [];
-    private bool _isBatchMovingSelection;
+    private bool _isInteractiveItemUpdate;
+    private bool _hasPendingInteractiveItemChange;
     private double _boardWidth = MinimumBoardWidth;
     private double _boardHeight = MinimumBoardHeight;
     private double _nextFallbackPasteX = CanvasPadding;
     private double _nextFallbackPasteY = CanvasPadding;
     private int _nextZIndex;
     private static bool _isMemoryCompactionQueued;
+
+    private sealed record PendingWorkspaceImage(
+        Bitmap Bitmap,
+        string SourceName,
+        string MimeType,
+        byte[] ImageData,
+        double Width,
+        double Height);
 
     [ObservableProperty] private bool _isPasting;
 
@@ -106,8 +119,14 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
                 return false;
             }
 
-            for (var i = 0; i < images.Count; i++)
-                AddImage(images[i], pasteAnchor, i);
+            if (images.Count == 1)
+            {
+                AddImage(images[0], pasteAnchor, 0);
+            }
+            else
+            {
+                AddImageBatch(images, pasteAnchor);
+            }
 
             MarkDirty();
             return true;
@@ -195,7 +214,6 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
         foreach (var item in Items.ToList())
         {
-            item.RemoveRequested -= OnRemoveRequested;
             item.PropertyChanged -= OnItemPropertyChanged;
             item.Dispose();
         }
@@ -238,6 +256,16 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         _selectedItem = null;
     }
 
+    private void SelectItems(IReadOnlyList<WorkspaceCanvasItemViewModel> items)
+    {
+        ClearSelection();
+
+        foreach (var item in items)
+            item.IsSelected = true;
+
+        _selectedItem = items.LastOrDefault();
+    }
+
     public bool RemoveSelectedItems()
     {
         var selectedItems = Items.Where(i => i.IsSelected).ToList();
@@ -245,10 +273,18 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             return false;
 
         foreach (var item in selectedItems)
-            OnRemoveRequested(item);
+            RemoveItemCore(item);
 
         MarkDirty();
         return true;
+    }
+
+    public void RemoveItem(WorkspaceCanvasItemViewModel item)
+    {
+        if (!Items.Contains(item))
+            return;
+
+        RemoveItemCore(item);
     }
 
     public void BeginMoveSelectedItems(WorkspaceCanvasItemViewModel anchorItem)
@@ -267,7 +303,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         if (_moveStartPositions.Count == 0)
             return;
 
-        _isBatchMovingSelection = true;
+        _isInteractiveItemUpdate = true;
 
         try
         {
@@ -275,39 +311,140 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             {
                 item.X = startPosition.X + deltaX;
                 item.Y = startPosition.Y + deltaY;
+                UpdateDisplayPosition(item);
             }
         }
         finally
         {
-            _isBatchMovingSelection = false;
+            _isInteractiveItemUpdate = false;
         }
 
-        NotifyBoardStateChanged();
-        MarkDirty();
+        _hasPendingInteractiveItemChange = true;
     }
 
     public void EndMoveSelectedItems()
     {
         _moveStartPositions.Clear();
+        CommitInteractiveItemChanges();
+    }
+
+    public void ResizeItem(
+        WorkspaceCanvasItemViewModel item,
+        double x,
+        double y,
+        double width,
+        double height)
+    {
+        if (!Items.Contains(item))
+            return;
+
+        _isInteractiveItemUpdate = true;
+
+        try
+        {
+            item.X = x;
+            item.Y = y;
+            item.Width = width;
+            item.Height = height;
+            UpdateDisplayPosition(item);
+        }
+        finally
+        {
+            _isInteractiveItemUpdate = false;
+        }
+
+        _hasPendingInteractiveItemChange = true;
+    }
+
+    public void CommitInteractiveItemChanges()
+    {
+        if (!_hasPendingInteractiveItemChange)
+            return;
+
+        _hasPendingInteractiveItemChange = false;
+        NotifyBoardStateChanged();
+        MarkDirty();
     }
 
     private void AddImage(ClipboardImageData image, Point? pasteAnchor, int pasteIndex)
     {
         using var stream = new MemoryStream(image.Data, writable: false);
-        AddBitmap(new Bitmap(stream), image.Filename, image.MimeType, image.Data, pasteAnchor, pasteIndex);
+        var bitmap = new Bitmap(stream);
+
+        try
+        {
+            var position = GetPastePosition(bitmap.PixelSize.Width, bitmap.PixelSize.Height, pasteAnchor, pasteIndex);
+            AddBitmap(bitmap, image.Filename, image.MimeType, image.Data, position);
+        }
+        catch
+        {
+            bitmap.Dispose();
+            throw;
+        }
     }
 
-    private void AddBitmap(
+    private void AddImageBatch(IReadOnlyList<ClipboardImageData> images, Point? pasteAnchor)
+    {
+        var pendingImages = new List<PendingWorkspaceImage>(images.Count);
+        var addedViewModels = new List<WorkspaceCanvasItemViewModel>(images.Count);
+        var addedItems = 0;
+
+        try
+        {
+            foreach (var image in images)
+            {
+                using var stream = new MemoryStream(image.Data, writable: false);
+                var bitmap = new Bitmap(stream);
+                pendingImages.Add(new PendingWorkspaceImage(
+                    bitmap,
+                    image.Filename,
+                    image.MimeType,
+                    image.Data,
+                    bitmap.PixelSize.Width,
+                    bitmap.PixelSize.Height));
+            }
+
+            pendingImages.Sort(static (a, b) =>
+                (b.Width * b.Height).CompareTo(a.Width * a.Height));
+
+            var positions = GetBatchPastePositions(pendingImages, pasteAnchor);
+
+            for (var i = 0; i < pendingImages.Count; i++)
+            {
+                var pending = pendingImages[i];
+                var item = AddBitmap(
+                    pending.Bitmap,
+                    pending.SourceName,
+                    pending.MimeType,
+                    pending.ImageData,
+                    positions[i],
+                    selectItem: false,
+                    notifyBoard: false);
+                addedViewModels.Add(item);
+                addedItems++;
+            }
+
+            SelectItems(addedViewModels);
+            NotifyBoardStateChanged();
+        }
+        finally
+        {
+            for (var i = addedItems; i < pendingImages.Count; i++)
+                pendingImages[i].Bitmap.Dispose();
+        }
+    }
+
+    private WorkspaceCanvasItemViewModel AddBitmap(
         Bitmap bitmap,
         string sourceName,
         string mimeType,
         byte[] imageData,
-        Point? pasteAnchor,
-        int pasteIndex)
+        Point position,
+        bool selectItem = true,
+        bool notifyBoard = true)
     {
         var width = bitmap.PixelSize.Width;
         var height = bitmap.PixelSize.Height;
-        var position = GetPastePosition(width, height, pasteAnchor, pasteIndex);
 
         var item = new WorkspaceCanvasItemViewModel
         {
@@ -324,36 +461,55 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             ZIndex = _nextZIndex++
         };
 
-        item.RemoveRequested += OnRemoveRequested;
+        GenerateLods(item);
         item.PropertyChanged += OnItemPropertyChanged;
         Items.Add(item);
-        SelectItem(item);
-        NotifyBoardStateChanged();
+
+        if (selectItem)
+            SelectItem(item);
+
+        if (notifyBoard)
+            NotifyBoardStateChanged();
+
+        return item;
     }
 
     private void AddArchiveItem(WorkspaceArchiveItem archiveItem)
     {
         using var stream = new MemoryStream(archiveItem.ImageData, writable: false);
+        var bitmap = new Bitmap(stream);
+        WorkspaceCanvasItemViewModel? item = null;
 
-        var item = new WorkspaceCanvasItemViewModel
+        try
         {
-            Bitmap = new Bitmap(stream),
-            Label = archiveItem.Label,
-            MimeType = archiveItem.MimeType,
-            ImageData = archiveItem.ImageData,
-            OriginalWidth = archiveItem.OriginalWidth,
-            OriginalHeight = archiveItem.OriginalHeight,
-            Width = archiveItem.Width,
-            Height = archiveItem.Height,
-            X = archiveItem.X,
-            Y = archiveItem.Y,
-            ZIndex = archiveItem.ZIndex
-        };
+            item = new WorkspaceCanvasItemViewModel
+            {
+                Bitmap = bitmap,
+                Label = archiveItem.Label,
+                MimeType = archiveItem.MimeType,
+                ImageData = archiveItem.ImageData,
+                OriginalWidth = archiveItem.OriginalWidth,
+                OriginalHeight = archiveItem.OriginalHeight,
+                Width = archiveItem.Width,
+                Height = archiveItem.Height,
+                X = archiveItem.X,
+                Y = archiveItem.Y,
+                ZIndex = archiveItem.ZIndex
+            };
 
-        item.RemoveRequested += OnRemoveRequested;
-        item.PropertyChanged += OnItemPropertyChanged;
-        Items.Add(item);
-        _nextZIndex = Math.Max(_nextZIndex, item.ZIndex + 1);
+            GenerateLods(item);
+            item.PropertyChanged += OnItemPropertyChanged;
+            Items.Add(item);
+            _nextZIndex = Math.Max(_nextZIndex, item.ZIndex + 1);
+        }
+        catch
+        {
+            item?.Dispose();
+            if (item is null)
+                bitmap.Dispose();
+
+            throw;
+        }
     }
 
     private static WorkspaceArchiveItem ToArchiveItem(WorkspaceCanvasItemViewModel item)
@@ -385,9 +541,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         return stream.ToArray();
     }
 
-    private void OnRemoveRequested(WorkspaceCanvasItemViewModel item)
+    private void RemoveItemCore(WorkspaceCanvasItemViewModel item)
     {
-        item.RemoveRequested -= OnRemoveRequested;
         item.PropertyChanged -= OnItemPropertyChanged;
 
         if (_selectedItem == item)
@@ -432,7 +587,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             or nameof(WorkspaceCanvasItemViewModel.Width)
             or nameof(WorkspaceCanvasItemViewModel.Height))
         {
-            if (_isBatchMovingSelection)
+            if (_isInteractiveItemUpdate)
                 return;
 
             NotifyBoardStateChanged(sender as WorkspaceCanvasItemViewModel);
@@ -535,6 +690,60 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         return point;
     }
 
+    private Point[] GetBatchPastePositions(
+        IReadOnlyList<PendingWorkspaceImage> images,
+        Point? pasteAnchor)
+    {
+        var columns = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(images.Count)));
+        var rowMetrics = new List<(int Start, int Count, double Width, double Height)>();
+
+        for (var start = 0; start < images.Count; start += columns)
+        {
+            var count = Math.Min(columns, images.Count - start);
+            var rowWidth = 0d;
+            var rowHeight = 0d;
+
+            for (var i = start; i < start + count; i++)
+            {
+                rowWidth += images[i].Width;
+                rowHeight = Math.Max(rowHeight, images[i].Height);
+            }
+
+            rowWidth += BatchPasteGap * Math.Max(0, count - 1);
+            rowMetrics.Add((start, count, rowWidth, rowHeight));
+        }
+
+        var layoutWidth = rowMetrics.Max(row => row.Width);
+        var layoutHeight = rowMetrics.Sum(row => row.Height)
+            + BatchPasteGap * Math.Max(0, rowMetrics.Count - 1);
+
+        var topLeft = pasteAnchor is { } anchor
+            ? new Point(anchor.X - layoutWidth / 2, anchor.Y - layoutHeight / 2)
+            : new Point(_nextFallbackPasteX, _nextFallbackPasteY);
+
+        var positions = new Point[images.Count];
+        var y = topLeft.Y;
+
+        foreach (var row in rowMetrics)
+        {
+            var x = topLeft.X + (layoutWidth - row.Width) / 2;
+
+            for (var i = row.Start; i < row.Start + row.Count; i++)
+            {
+                var image = images[i];
+                positions[i] = new Point(x, y + (row.Height - image.Height) / 2);
+                x += image.Width + BatchPasteGap;
+            }
+
+            y += row.Height + BatchPasteGap;
+        }
+
+        if (pasteAnchor is null)
+            AdvanceFallbackPastePosition(layoutWidth, layoutHeight);
+
+        return positions;
+    }
+
     private void AdvanceFallbackPastePosition(double width, double height)
     {
         _nextFallbackPasteX += PasteOffsetStep;
@@ -580,6 +789,36 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             WorkspaceBackgroundPreference.Black => ("#000000", "#171717", "#404040"),
             _ => ("#06152f", "#0b2142", "#1d4ed8")
         };
+    }
+
+    private static void GenerateLods(WorkspaceCanvasItemViewModel item)
+    {
+        if (item.Bitmap is not { } bmp)
+            return;
+
+        var w = bmp.PixelSize.Width;
+        var h = bmp.PixelSize.Height;
+        var maxDimension = Math.Max(w, h);
+
+        if (maxDimension >= HalfLodMinDimension)
+            item.HalfBitmap = bmp.CreateScaledBitmap(
+                new PixelSize(Math.Max(1, w / 2), Math.Max(1, h / 2)),
+                BitmapInterpolationMode.LowQuality);
+
+        if (maxDimension >= QuarterLodMinDimension)
+            item.QuarterBitmap = bmp.CreateScaledBitmap(
+                new PixelSize(Math.Max(1, w / 4), Math.Max(1, h / 4)),
+                BitmapInterpolationMode.LowQuality);
+
+        if (w <= ThumbnailMaxDimension && h <= ThumbnailMaxDimension)
+            return;
+
+        var scale = Math.Min(
+            (double)ThumbnailMaxDimension / w,
+            (double)ThumbnailMaxDimension / h);
+
+        var thumbSize = new PixelSize((int)(w * scale), (int)(h * scale));
+        item.ThumbnailBitmap = bmp.CreateScaledBitmap(thumbSize, BitmapInterpolationMode.LowQuality);
     }
 
     private static IBrush BrushFromHex(string color) => new SolidColorBrush(Color.Parse(color));

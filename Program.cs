@@ -31,6 +31,7 @@ internal class Program
         // ─────────────────────────────
 
         services.AddSingleton<AppPreferencesService>();
+        services.AddSingleton<WorkspaceArchiveService>();
         services.AddTransient<ICardService, CardService>();
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<ITagService, TagService>();

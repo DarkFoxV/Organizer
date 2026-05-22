@@ -1,9 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
+using Organizer.Application.Views;
 using Avalonia.VisualTree;
 using Organizer.Application.Services;
 using Organizer.Application.ViewModels;
@@ -12,9 +19,16 @@ namespace Organizer.Organizer.Application.Views;
 
 public partial class WorkspaceView : UserControl
 {
+    private static readonly FilePickerFileType WorkspaceZipFileType = new("Organizer workspace")
+    {
+        Patterns = ["*.zip"],
+        MimeTypes = ["application/zip", "application/x-zip-compressed"]
+    };
+
     private const double ZoomFactor = 1.12;
     private const double MinZoom = 0.1;
     private const double MaxZoom = 5.0;
+    private const double ViewportCullPadding = 800;
 
     private TopLevel? _topLevel;
     private WorkspaceViewModel? _subscribedViewModel;
@@ -25,13 +39,21 @@ public partial class WorkspaceView : UserControl
     private Point _translateStart;
     private Point _lastPointerPositionInViewport;
     private bool _hasLastPointerPosition;
+    private bool _isVisibleItemsUpdateQueued;
     private double _zoom = 1.0;
+    private IStorageFile? _workspaceFile;
+    private bool _isSavingWorkspace;
     private readonly ScaleTransform _scaleTransform = new(1, 1);
     private readonly TranslateTransform _translateTransform = new();
+    private readonly DispatcherTimer _autosaveTimer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(700)
+    };
 
     public WorkspaceView()
     {
         InitializeComponent();
+        _autosaveTimer.Tick += OnAutosaveTimerTick;
 
         BoardRoot.RenderTransform = new TransformGroup
         {
@@ -90,6 +112,9 @@ public partial class WorkspaceView : UserControl
         _subscribedViewModel = vm;
         _subscribedViewModel.BoardOriginShifted += OnBoardOriginShifted;
         _subscribedViewModel.WorkspacePreferencesChanged += OnWorkspacePreferencesChanged;
+        _subscribedViewModel.WorkspaceChanged += OnWorkspaceChanged;
+        _subscribedViewModel.Items.CollectionChanged += OnWorkspaceItemsChanged;
+        QueueVisibleItemsUpdate();
     }
 
     private void UnsubscribeFromViewModel()
@@ -99,6 +124,8 @@ public partial class WorkspaceView : UserControl
 
         _subscribedViewModel.BoardOriginShifted -= OnBoardOriginShifted;
         _subscribedViewModel.WorkspacePreferencesChanged -= OnWorkspacePreferencesChanged;
+        _subscribedViewModel.WorkspaceChanged -= OnWorkspaceChanged;
+        _subscribedViewModel.Items.CollectionChanged -= OnWorkspaceItemsChanged;
         _subscribedViewModel = null;
     }
 
@@ -106,6 +133,7 @@ public partial class WorkspaceView : UserControl
     {
         _translateTransform.X += deltaX * _zoom;
         _translateTransform.Y += deltaY * _zoom;
+        QueueVisibleItemsUpdate();
     }
 
     private void OnWorkspacePreferencesChanged()
@@ -201,6 +229,7 @@ public partial class WorkspaceView : UserControl
         var current = e.GetPosition(Viewport);
         _translateTransform.X = _translateStart.X + (current.X - _panStart.X);
         _translateTransform.Y = _translateStart.Y + (current.Y - _panStart.Y);
+        QueueVisibleItemsUpdate();
         e.Handled = true;
     }
 
@@ -217,6 +246,118 @@ public partial class WorkspaceView : UserControl
         e.Handled = true;
     }
 
+    private async void OnOpenWorkspace(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel?.StorageProvider is null)
+            return;
+
+        if (VM.HasImages && topLevel is Window owner)
+        {
+            var canReplace = await ConfirmationDialog.ShowAsync(
+                owner,
+                "Abrir workspace",
+                "A workspace atual tem imagens. Abrir outro arquivo vai fechar a workspace atual.",
+                "Abrir",
+                "Cancelar",
+                isDanger: true);
+
+            if (!canReplace)
+                return;
+        }
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Abrir workspace",
+            AllowMultiple = false,
+            FileTypeFilter = [WorkspaceZipFileType]
+        });
+
+        var file = files.FirstOrDefault();
+        if (file is null)
+            return;
+
+        await using var stream = await file.OpenReadAsync();
+        if (await VM.LoadAsync(stream))
+            _workspaceFile = file;
+    }
+
+    private async void OnSaveWorkspace(object? sender, RoutedEventArgs e)
+    {
+        var storage = TopLevel.GetTopLevel(this)?.StorageProvider;
+        if (storage is null)
+            return;
+
+        var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Salvar workspace",
+            SuggestedFileName = "workspace.zip",
+            DefaultExtension = "zip",
+            FileTypeChoices = [WorkspaceZipFileType]
+        });
+
+        if (file is null)
+            return;
+
+        await using var stream = await file.OpenWriteAsync();
+        if (await VM.SaveAsync(stream))
+            _workspaceFile = file;
+    }
+
+    private async void OnCloseWorkspace(object? sender, RoutedEventArgs e)
+    {
+        if (!VM.HasImages)
+            return;
+
+        if (TopLevel.GetTopLevel(this) is not Window owner)
+            return;
+
+        var canClose = await ConfirmationDialog.ShowAsync(
+            owner,
+            "Fechar workspace",
+            "As imagens no canvas serao removidas. Salve a workspace antes se quiser manter esse layout.",
+            "Fechar",
+            "Cancelar",
+            isDanger: true);
+
+        if (canClose)
+        {
+            VM.CloseWorkspace();
+            _workspaceFile = null;
+            _autosaveTimer.Stop();
+        }
+    }
+
+    private void OnWorkspaceChanged()
+    {
+        QueueVisibleItemsUpdate();
+
+        if (_workspaceFile is null || _isSavingWorkspace || !VM.HasUnsavedChanges)
+            return;
+
+        _autosaveTimer.Stop();
+        _autosaveTimer.Start();
+    }
+
+    private async void OnAutosaveTimerTick(object? sender, EventArgs e)
+    {
+        _autosaveTimer.Stop();
+
+        if (_workspaceFile is null || _isSavingWorkspace || !VM.HasUnsavedChanges)
+            return;
+
+        try
+        {
+            _isSavingWorkspace = true;
+            await using var stream = await _workspaceFile.OpenWriteAsync();
+            await VM.SaveAsync(stream);
+        }
+        finally
+        {
+            _isSavingWorkspace = false;
+        }
+    }
+
     private void UpdateZoomLabel()
     {
         ZoomText.Text = $"{_zoom * 100:0}%";
@@ -225,13 +366,24 @@ public partial class WorkspaceView : UserControl
     private void OnViewportPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         if (e.Property == BoundsProperty)
+        {
             TryInitializeCamera();
+            QueueVisibleItemsUpdate();
+        }
     }
 
     private void OnBoardRootPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         if (e.Property == BoundsProperty)
+        {
             TryInitializeCamera();
+            QueueVisibleItemsUpdate();
+        }
+    }
+
+    private void OnWorkspaceItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        QueueVisibleItemsUpdate();
     }
 
     private void StartPanning(PointerPressedEventArgs e)
@@ -257,6 +409,7 @@ public partial class WorkspaceView : UserControl
         _translateTransform.X = (Viewport.Bounds.Width - BoardRoot.Bounds.Width * _zoom) / 2;
         _translateTransform.Y = (Viewport.Bounds.Height - BoardRoot.Bounds.Height * _zoom) / 2;
         _hasInitializedCamera = true;
+        QueueVisibleItemsUpdate();
     }
 
     private void UpdateLastPointerPosition(PointerEventArgs e)
@@ -315,6 +468,42 @@ public partial class WorkspaceView : UserControl
         _scaleTransform.ScaleX = _zoom;
         _scaleTransform.ScaleY = _zoom;
         UpdateZoomLabel();
+        QueueVisibleItemsUpdate();
+    }
+
+    private void QueueVisibleItemsUpdate()
+    {
+        if (_isVisibleItemsUpdateQueued)
+            return;
+
+        _isVisibleItemsUpdateQueued = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            _isVisibleItemsUpdateQueued = false;
+            UpdateVisibleItems();
+        }, DispatcherPriority.Render);
+    }
+
+    private void UpdateVisibleItems()
+    {
+        if (DataContext is not WorkspaceViewModel vm || Viewport.Bounds.Width <= 0 || Viewport.Bounds.Height <= 0)
+            return;
+
+        var viewportLeft = (-_translateTransform.X) / _zoom + vm.BoardStartX - ViewportCullPadding;
+        var viewportTop = (-_translateTransform.Y) / _zoom + vm.BoardStartY - ViewportCullPadding;
+        var viewportRight = (Viewport.Bounds.Width - _translateTransform.X) / _zoom + vm.BoardStartX + ViewportCullPadding;
+        var viewportBottom = (Viewport.Bounds.Height - _translateTransform.Y) / _zoom + vm.BoardStartY + ViewportCullPadding;
+
+        foreach (var item in vm.Items)
+        {
+            var isVisible = item.X + item.Width >= viewportLeft
+                && item.X <= viewportRight
+                && item.Y + item.Height >= viewportTop
+                && item.Y <= viewportBottom;
+
+            if (item.IsInViewport != isVisible)
+                item.IsInViewport = isVisible;
+        }
     }
 
     private static WorkspaceCanvasItemViewModel? GetItemFromSource(Visual? visual)

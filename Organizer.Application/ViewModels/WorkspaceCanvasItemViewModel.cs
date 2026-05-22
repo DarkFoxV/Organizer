@@ -32,7 +32,13 @@ public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposabl
 
     [ObservableProperty] private bool _isSelected;
 
+    [ObservableProperty] private bool _isInViewport = true;
+
     public string Label { get; init; } = string.Empty;
+
+    public string MimeType { get; init; } = "image/png";
+
+    public byte[] ImageData { get; init; } = [];
 
     public double OriginalWidth { get; init; }
 

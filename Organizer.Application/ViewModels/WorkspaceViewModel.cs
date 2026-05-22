@@ -27,8 +27,12 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     private readonly IClipboardService _clipboardService;
     private readonly AppPreferencesService _preferencesService;
+    private readonly WorkspaceArchiveService _workspaceArchiveService;
     private WorkspaceCanvasItemViewModel? _selectedItem;
     private readonly Dictionary<WorkspaceCanvasItemViewModel, Point> _moveStartPositions = [];
+    private bool _isBatchMovingSelection;
+    private double _boardWidth = MinimumBoardWidth;
+    private double _boardHeight = MinimumBoardHeight;
     private double _nextFallbackPasteX = CanvasPadding;
     private double _nextFallbackPasteY = CanvasPadding;
     private int _nextZIndex;
@@ -42,8 +46,11 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] private double _boardStartY;
 
+    [ObservableProperty] private bool _hasUnsavedChanges;
+
     public event Action<double, double>? BoardOriginShifted;
     public event Action? WorkspacePreferencesChanged;
+    public event Action? WorkspaceChanged;
 
     public ObservableCollection<WorkspaceCanvasItemViewModel> Items { get; } = [];
 
@@ -62,46 +69,22 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     public bool IsEmpty => Items.Count == 0;
 
+    public bool HasImages => Items.Count > 0;
+
     public string CounterText => Items.Count == 1 ? "1 imagem no canvas" : $"{Items.Count} imagens no canvas";
 
-    public double BoardWidth
-    {
-        get
-        {
-            if (Items.Count == 0)
-                return MinimumBoardWidth;
+    public double BoardWidth => _boardWidth;
 
-            var minX = Math.Min(0, Items.Min(item => item.X) - CanvasPadding);
-            var maxRight = Math.Max(
-                MinimumBoardWidth,
-                Items.Max(item => item.X + item.Width) + CanvasPadding);
-
-            return maxRight - minX;
-        }
-    }
-
-    public double BoardHeight
-    {
-        get
-        {
-            if (Items.Count == 0)
-                return MinimumBoardHeight;
-
-            var minY = Math.Min(0, Items.Min(item => item.Y) - CanvasPadding);
-            var maxBottom = Math.Max(
-                MinimumBoardHeight,
-                Items.Max(item => item.Y + item.Height) + CanvasPadding);
-
-            return maxBottom - minY;
-        }
-    }
+    public double BoardHeight => _boardHeight;
 
     public WorkspaceViewModel(
         IClipboardService clipboardService,
-        AppPreferencesService preferencesService)
+        AppPreferencesService preferencesService,
+        WorkspaceArchiveService workspaceArchiveService)
     {
         _clipboardService = clipboardService;
         _preferencesService = preferencesService;
+        _workspaceArchiveService = workspaceArchiveService;
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
         Items.CollectionChanged += OnItemsChanged;
     }
@@ -126,6 +109,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             for (var i = 0; i < images.Count; i++)
                 AddImage(images[i], pasteAnchor, i);
 
+            MarkDirty();
             return true;
         }
         catch (Exception ex)
@@ -144,6 +128,64 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         Items.CollectionChanged -= OnItemsChanged;
         _preferencesService.PreferencesChanged -= OnPreferencesChanged;
         ClearAll();
+    }
+
+    public async Task<bool> SaveAsync(Stream output)
+    {
+        if (Items.Count == 0)
+        {
+            ErrorMessage = "Nao ha imagens no workspace para salvar.";
+            return false;
+        }
+
+        try
+        {
+            ErrorMessage = null;
+
+            var archiveItems = Items
+                .OrderBy(item => item.ZIndex)
+                .Select(ToArchiveItem)
+                .ToList();
+
+            await _workspaceArchiveService.SaveAsync(output, archiveItems);
+            HasUnsavedChanges = false;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao salvar workspace: {ex.Message}";
+            return false;
+        }
+    }
+
+    public async Task<bool> LoadAsync(Stream input)
+    {
+        try
+        {
+            ErrorMessage = null;
+            var archiveItems = await _workspaceArchiveService.LoadAsync(input);
+
+            ClearAll();
+
+            foreach (var item in archiveItems.OrderBy(item => item.ZIndex))
+                AddArchiveItem(item);
+
+            ClearSelection();
+            NotifyBoardStateChanged();
+            HasUnsavedChanges = false;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao abrir workspace: {ex.Message}";
+            return false;
+        }
+    }
+
+    public void CloseWorkspace()
+    {
+        ClearAll();
+        HasUnsavedChanges = false;
     }
 
     [RelayCommand]
@@ -205,6 +247,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         foreach (var item in selectedItems)
             OnRemoveRequested(item);
 
+        MarkDirty();
         return true;
     }
 
@@ -221,11 +264,26 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     public void MoveSelectedItems(double deltaX, double deltaY)
     {
-        foreach (var (item, startPosition) in _moveStartPositions)
+        if (_moveStartPositions.Count == 0)
+            return;
+
+        _isBatchMovingSelection = true;
+
+        try
         {
-            item.X = startPosition.X + deltaX;
-            item.Y = startPosition.Y + deltaY;
+            foreach (var (item, startPosition) in _moveStartPositions)
+            {
+                item.X = startPosition.X + deltaX;
+                item.Y = startPosition.Y + deltaY;
+            }
         }
+        finally
+        {
+            _isBatchMovingSelection = false;
+        }
+
+        NotifyBoardStateChanged();
+        MarkDirty();
     }
 
     public void EndMoveSelectedItems()
@@ -236,10 +294,16 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private void AddImage(ClipboardImageData image, Point? pasteAnchor, int pasteIndex)
     {
         using var stream = new MemoryStream(image.Data, writable: false);
-        AddBitmap(new Bitmap(stream), image.Filename, pasteAnchor, pasteIndex);
+        AddBitmap(new Bitmap(stream), image.Filename, image.MimeType, image.Data, pasteAnchor, pasteIndex);
     }
 
-    private void AddBitmap(Bitmap bitmap, string sourceName, Point? pasteAnchor, int pasteIndex)
+    private void AddBitmap(
+        Bitmap bitmap,
+        string sourceName,
+        string mimeType,
+        byte[] imageData,
+        Point? pasteAnchor,
+        int pasteIndex)
     {
         var width = bitmap.PixelSize.Width;
         var height = bitmap.PixelSize.Height;
@@ -249,6 +313,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         {
             Bitmap = bitmap,
             Label = sourceName,
+            MimeType = mimeType,
+            ImageData = imageData,
             OriginalWidth = width,
             OriginalHeight = height,
             Width = width,
@@ -263,6 +329,60 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         Items.Add(item);
         SelectItem(item);
         NotifyBoardStateChanged();
+    }
+
+    private void AddArchiveItem(WorkspaceArchiveItem archiveItem)
+    {
+        using var stream = new MemoryStream(archiveItem.ImageData, writable: false);
+
+        var item = new WorkspaceCanvasItemViewModel
+        {
+            Bitmap = new Bitmap(stream),
+            Label = archiveItem.Label,
+            MimeType = archiveItem.MimeType,
+            ImageData = archiveItem.ImageData,
+            OriginalWidth = archiveItem.OriginalWidth,
+            OriginalHeight = archiveItem.OriginalHeight,
+            Width = archiveItem.Width,
+            Height = archiveItem.Height,
+            X = archiveItem.X,
+            Y = archiveItem.Y,
+            ZIndex = archiveItem.ZIndex
+        };
+
+        item.RemoveRequested += OnRemoveRequested;
+        item.PropertyChanged += OnItemPropertyChanged;
+        Items.Add(item);
+        _nextZIndex = Math.Max(_nextZIndex, item.ZIndex + 1);
+    }
+
+    private static WorkspaceArchiveItem ToArchiveItem(WorkspaceCanvasItemViewModel item)
+    {
+        var imageData = item.ImageData.Length > 0
+            ? item.ImageData
+            : EncodeBitmap(item.Bitmap);
+
+        return new WorkspaceArchiveItem(
+            Label: item.Label,
+            MimeType: item.MimeType,
+            ImageData: imageData,
+            X: item.X,
+            Y: item.Y,
+            Width: item.Width,
+            Height: item.Height,
+            OriginalWidth: item.OriginalWidth,
+            OriginalHeight: item.OriginalHeight,
+            ZIndex: item.ZIndex);
+    }
+
+    private static byte[] EncodeBitmap(Bitmap? bitmap)
+    {
+        if (bitmap is null)
+            return [];
+
+        using var stream = new MemoryStream();
+        bitmap.Save(stream);
+        return stream.ToArray();
     }
 
     private void OnRemoveRequested(WorkspaceCanvasItemViewModel item)
@@ -287,11 +407,21 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         }
 
         NotifyBoardStateChanged();
+        MarkDirty();
+    }
+
+    private void MarkDirty()
+    {
+        if (Items.Count > 0)
+            HasUnsavedChanges = true;
+
+        WorkspaceChanged?.Invoke();
     }
 
     private void OnItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(HasImages));
         OnPropertyChanged(nameof(CounterText));
     }
 
@@ -302,18 +432,29 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             or nameof(WorkspaceCanvasItemViewModel.Width)
             or nameof(WorkspaceCanvasItemViewModel.Height))
         {
-            NotifyBoardStateChanged();
+            if (_isBatchMovingSelection)
+                return;
+
+            NotifyBoardStateChanged(sender as WorkspaceCanvasItemViewModel);
+            MarkDirty();
         }
     }
 
-    private void NotifyBoardStateChanged()
+    private void NotifyBoardStateChanged(WorkspaceCanvasItemViewModel? changedItem = null)
     {
-        UpdateBoardLayout();
-        OnPropertyChanged(nameof(BoardWidth));
-        OnPropertyChanged(nameof(BoardHeight));
+        var previousBoardWidth = _boardWidth;
+        var previousBoardHeight = _boardHeight;
+
+        UpdateBoardLayout(changedItem);
+
+        if (Math.Abs(_boardWidth - previousBoardWidth) >= 0.001)
+            OnPropertyChanged(nameof(BoardWidth));
+
+        if (Math.Abs(_boardHeight - previousBoardHeight) >= 0.001)
+            OnPropertyChanged(nameof(BoardHeight));
     }
 
-    private void UpdateBoardLayout()
+    private void UpdateBoardLayout(WorkspaceCanvasItemViewModel? changedItem = null)
     {
         var previousStartX = BoardStartX;
         var previousStartY = BoardStartY;
@@ -322,23 +463,50 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         {
             BoardStartX = 0;
             BoardStartY = 0;
+            _boardWidth = MinimumBoardWidth;
+            _boardHeight = MinimumBoardHeight;
             NotifyBoardOriginShifted(previousStartX, previousStartY);
             return;
         }
 
-        var minX = Items.Min(item => item.X);
-        var minY = Items.Min(item => item.Y);
-
-        BoardStartX = Math.Min(0, minX - CanvasPadding);
-        BoardStartY = Math.Min(0, minY - CanvasPadding);
+        var minX = double.PositiveInfinity;
+        var minY = double.PositiveInfinity;
+        var maxRight = double.NegativeInfinity;
+        var maxBottom = double.NegativeInfinity;
 
         foreach (var item in Items)
         {
-            item.DisplayX = item.X - BoardStartX;
-            item.DisplayY = item.Y - BoardStartY;
+            minX = Math.Min(minX, item.X);
+            minY = Math.Min(minY, item.Y);
+            maxRight = Math.Max(maxRight, item.X + item.Width);
+            maxBottom = Math.Max(maxBottom, item.Y + item.Height);
+        }
+
+        BoardStartX = Math.Min(0, minX - CanvasPadding);
+        BoardStartY = Math.Min(0, minY - CanvasPadding);
+        _boardWidth = Math.Max(MinimumBoardWidth, maxRight + CanvasPadding) - BoardStartX;
+        _boardHeight = Math.Max(MinimumBoardHeight, maxBottom + CanvasPadding) - BoardStartY;
+
+        var originChanged = Math.Abs(BoardStartX - previousStartX) >= 0.001
+            || Math.Abs(BoardStartY - previousStartY) >= 0.001;
+
+        if (originChanged || changedItem is null)
+        {
+            foreach (var item in Items)
+                UpdateDisplayPosition(item);
+        }
+        else
+        {
+            UpdateDisplayPosition(changedItem);
         }
 
         NotifyBoardOriginShifted(previousStartX, previousStartY);
+    }
+
+    private void UpdateDisplayPosition(WorkspaceCanvasItemViewModel item)
+    {
+        item.DisplayX = item.X - BoardStartX;
+        item.DisplayY = item.Y - BoardStartY;
     }
 
     private void NotifyBoardOriginShifted(double previousStartX, double previousStartY)

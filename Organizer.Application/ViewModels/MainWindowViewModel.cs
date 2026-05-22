@@ -20,6 +20,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     public NavbarViewModel Navbar { get; }
 
+    public bool HasUnsavedWorkspaceChanges => _workspaceViewModel.HasUnsavedChanges;
+
     // Guarda a SearchView pra reutilizar ao voltar
     private readonly SearchViewModel _searchViewModel;
 

@@ -12,6 +12,20 @@
           Background="{Binding WorkspaceViewportBackground}"
           ClipToBounds="True"
           Focusable="True">
+        <Grid.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Abrir"
+                          Click="OnOpenWorkspace" />
+                <MenuItem Header="Salvar"
+                          IsEnabled="{Binding HasImages}"
+                          Click="OnSaveWorkspace" />
+                <Separator />
+                <MenuItem Header="Fechar workspace"
+                          IsEnabled="{Binding HasImages}"
+                          Click="OnCloseWorkspace" />
+            </ContextMenu>
+        </Grid.ContextMenu>
+
         <Border x:Name="BoardRoot"
                 Width="{Binding BoardWidth}"
                 Height="{Binding BoardHeight}"
@@ -38,7 +52,7 @@
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="vm:WorkspaceCanvasItemViewModel">
-                        <controls:WorkspaceCanvasItem />
+                        <controls:WorkspaceCanvasItem IsVisible="{Binding IsInViewport}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

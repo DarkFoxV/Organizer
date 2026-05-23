@@ -31,7 +31,6 @@ public partial class WorkspaceView : UserControl
 
     private TopLevel? _topLevel;
     private WorkspaceViewModel? _subscribedViewModel;
-    private bool _isSpacePressed;
     private bool _isPanning;
     private bool _hasInitializedCamera;
     private Point _panStart;
@@ -82,7 +81,6 @@ public partial class WorkspaceView : UserControl
         {
             _topLevel = TopLevel.GetTopLevel(this);
             _topLevel?.AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
-            _topLevel?.AddHandler(KeyUpEvent, OnKeyUp, RoutingStrategies.Tunnel);
             SubscribeToViewModel();
             Viewport.Focus();
             UpdateZoomLabel();
@@ -98,7 +96,6 @@ public partial class WorkspaceView : UserControl
                 return;
 
             _topLevel.RemoveHandler(KeyDownEvent, OnKeyDown);
-            _topLevel.RemoveHandler(KeyUpEvent, OnKeyUp);
             UnsubscribeFromViewModel();
             Viewport.PropertyChanged -= OnViewportPropertyChanged;
             BoardRoot.PropertyChanged -= OnBoardRootPropertyChanged;
@@ -152,15 +149,6 @@ public partial class WorkspaceView : UserControl
 
     private async void OnKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Space)
-        {
-            _isSpacePressed = true;
-            Viewport.Cursor = new Cursor(StandardCursorType.SizeAll);
-            WorkspaceSurface.SetCameraPanMode(true);
-            e.Handled = true;
-            return;
-        }
-
         if (e.Key == Key.Delete)
         {
             e.Handled = VM.RemoveSelectedItems();
@@ -176,19 +164,6 @@ public partial class WorkspaceView : UserControl
 
         if (await VM.TryPasteImagesAsync(clipboard, GetCurrentPasteAnchor()))
             e.Handled = true;
-    }
-
-    private void OnKeyUp(object? sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Space)
-            return;
-
-        _isSpacePressed = false;
-        WorkspaceSurface.SetCameraPanMode(false);
-        if (!_isPanning)
-            Viewport.Cursor = Cursor.Default;
-
-        e.Handled = true;
     }
 
     private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
@@ -214,7 +189,7 @@ public partial class WorkspaceView : UserControl
     {
         UpdateLastPointerPosition(e);
 
-        if (_isSpacePressed && e.GetCurrentPoint(Viewport).Properties.IsLeftButtonPressed)
+        if (e.GetCurrentPoint(Viewport).Properties.IsMiddleButtonPressed)
         {
             StartPanning(e);
             return;
@@ -243,9 +218,8 @@ public partial class WorkspaceView : UserControl
 
         _isPanning = false;
         e.Pointer.Capture(null);
-        Viewport.Cursor = _isSpacePressed
-            ? new Cursor(StandardCursorType.SizeAll)
-            : Cursor.Default;
+        Viewport.Cursor = Cursor.Default;
+        WorkspaceSurface.SetCameraPanMode(false);
 
         WorkspaceSurface.SetUseLowResBitmaps(false);
         RenderOptions.SetBitmapInterpolationMode(BoardRoot, BitmapInterpolationMode.HighQuality);
@@ -411,6 +385,7 @@ public partial class WorkspaceView : UserControl
         _panStart = e.GetPosition(Viewport);
         _translateStart = new Point(_translateTransform.X, _translateTransform.Y);
         Viewport.Cursor = new Cursor(StandardCursorType.SizeAll);
+        WorkspaceSurface.SetCameraPanMode(true);
         e.Pointer.Capture(Viewport);
         e.Handled = true;
 

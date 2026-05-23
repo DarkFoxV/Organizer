@@ -53,7 +53,7 @@
   "Loc.Preferences.Background.Neutral": "Neutral",
   "Loc.Preferences.Background.Black": "Black",
   "Loc.Workspace.EmptyTitle": "Paste images with Ctrl+V",
-  "Loc.Workspace.EmptySubtitle": "Use the mouse wheel to zoom and hold Space to pan.",
+  "Loc.Workspace.EmptySubtitle": "Use the mouse wheel to zoom and hold the middle mouse button to pan.",
   "Loc.Register.Title": "Register",
   "Loc.Register.Subtitle": "Build the card, arrange images, and assign tags before saving.",
   "Loc.Register.Images": "Images",

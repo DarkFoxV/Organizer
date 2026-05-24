@@ -39,7 +39,6 @@ public partial class WorkspaceView : UserControl
     private bool _hasLastPointerPosition;
     private bool _isVisibleItemsUpdateQueued;
     private double _zoom = 1.0;
-    private IStorageFile? _workspaceFile;
     private bool _isSavingWorkspace;
     private readonly ScaleTransform _scaleTransform = new(1, 1);
     private readonly TranslateTransform _translateTransform = new();
@@ -155,14 +154,22 @@ public partial class WorkspaceView : UserControl
             return;
         }
 
-        if (e.Key != Key.V || !e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        if (!e.KeyModifiers.HasFlag(KeyModifiers.Control))
             return;
 
         var clipboard = _topLevel?.Clipboard ?? TopLevel.GetTopLevel(this)?.Clipboard;
         if (clipboard is null)
             return;
 
-        if (await VM.TryPasteImagesAsync(clipboard, GetCurrentPasteAnchor()))
+        if (e.Key == Key.C)
+        {
+            if (await VM.CopySelectedImageAsync(clipboard))
+                e.Handled = true;
+
+            return;
+        }
+
+        if (e.Key == Key.V && await VM.TryPasteImagesAsync(clipboard, GetCurrentPasteAnchor()))
             e.Handled = true;
     }
 
@@ -260,7 +267,7 @@ public partial class WorkspaceView : UserControl
 
         await using var stream = await file.OpenReadAsync();
         if (await VM.LoadAsync(stream))
-            _workspaceFile = file;
+            VM.SetWorkspaceFile(file);
     }
 
     private async void OnSaveWorkspace(object? sender, RoutedEventArgs e)
@@ -282,7 +289,7 @@ public partial class WorkspaceView : UserControl
 
         await using var stream = await file.OpenWriteAsync();
         if (await VM.SaveAsync(stream))
-            _workspaceFile = file;
+            VM.SetWorkspaceFile(file);
     }
 
     private async void OnCloseWorkspace(object? sender, RoutedEventArgs e)
@@ -304,7 +311,6 @@ public partial class WorkspaceView : UserControl
         if (canClose)
         {
             VM.CloseWorkspace();
-            _workspaceFile = null;
             _autosaveTimer.Stop();
         }
     }
@@ -313,7 +319,7 @@ public partial class WorkspaceView : UserControl
     {
         QueueVisibleItemsUpdate();
 
-        if (_workspaceFile is null || _isSavingWorkspace || !VM.HasUnsavedChanges)
+        if (!VM.HasWorkspaceFile || _isSavingWorkspace || !VM.HasUnsavedChanges)
             return;
 
         _autosaveTimer.Stop();
@@ -324,14 +330,13 @@ public partial class WorkspaceView : UserControl
     {
         _autosaveTimer.Stop();
 
-        if (_workspaceFile is null || _isSavingWorkspace || !VM.HasUnsavedChanges)
+        if (!VM.HasWorkspaceFile || _isSavingWorkspace || !VM.HasUnsavedChanges)
             return;
 
         try
         {
             _isSavingWorkspace = true;
-            await using var stream = await _workspaceFile.OpenWriteAsync();
-            await VM.SaveAsync(stream);
+            await VM.SaveToCurrentFileAsync();
         }
         finally
         {

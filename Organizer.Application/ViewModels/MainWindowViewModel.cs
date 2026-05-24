@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using Organizer.Organizer.App.Enums;
@@ -21,6 +22,8 @@ public partial class MainWindowViewModel : ObservableObject
     public NavbarViewModel Navbar { get; }
 
     public bool HasUnsavedWorkspaceChanges => _workspaceViewModel.HasUnsavedChanges;
+
+    public bool HasFileBackedWorkspace => _workspaceViewModel.HasWorkspaceFile;
 
     // Guarda a SearchView pra reutilizar ao voltar
     private readonly SearchViewModel _searchViewModel;
@@ -122,5 +125,10 @@ public partial class MainWindowViewModel : ObservableObject
         IsGlobalLoading = false;
         GlobalLoadingText = "Carregando, aguarde...";
         Navbar.IsNavigationEnabled = true;
+    }
+
+    public Task<bool> SaveWorkspaceToCurrentFileAsync()
+    {
+        return _workspaceViewModel.SaveToCurrentFileAsync();
     }
 }

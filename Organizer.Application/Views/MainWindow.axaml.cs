@@ -24,8 +24,32 @@ public partial class MainWindow : Window
         if (_closeConfirmed)
             return;
 
-        if (DataContext is not MainWindowViewModel { HasUnsavedWorkspaceChanges: true })
+        if (DataContext is not MainWindowViewModel vm)
             return;
+
+        if (!vm.HasUnsavedWorkspaceChanges)
+            return;
+
+        if (vm.HasFileBackedWorkspace)
+        {
+            e.Cancel = true;
+
+            if (await vm.SaveWorkspaceToCurrentFileAsync())
+            {
+                _closeConfirmed = true;
+                Close();
+                return;
+            }
+
+            await ConfirmationDialog.ShowAsync(
+                this,
+                "Salvar workspace",
+                "Nao foi possivel salvar automaticamente a workspace aberta. O app continuara aberto para voce salvar manualmente.",
+                "OK",
+                "Cancelar",
+                isDanger: true);
+            return;
+        }
 
         e.Cancel = true;
 

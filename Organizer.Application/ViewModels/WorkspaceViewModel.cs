@@ -11,6 +11,7 @@ using Avalonia;
 using Avalonia.Input.Platform;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -41,6 +42,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private double _nextFallbackPasteX = CanvasPadding;
     private double _nextFallbackPasteY = CanvasPadding;
     private int _nextZIndex;
+    private IStorageFile? _workspaceFile;
     private static bool _isMemoryCompactionQueued;
 
     private sealed record PendingWorkspaceImage(
@@ -83,6 +85,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     public bool IsEmpty => Items.Count == 0;
 
     public bool HasImages => Items.Count > 0;
+
+    public bool HasWorkspaceFile => _workspaceFile is not null;
 
     public string CounterText => Items.Count == 1 ? "1 imagem no canvas" : $"{Items.Count} imagens no canvas";
 
@@ -177,6 +181,41 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         }
     }
 
+    public async Task<bool> SaveToCurrentFileAsync()
+    {
+        if (_workspaceFile is null)
+        {
+            ErrorMessage = "Workspace atual nao tem arquivo de destino.";
+            return false;
+        }
+
+        try
+        {
+            await using var stream = await _workspaceFile.OpenWriteAsync();
+            return await SaveAsync(stream);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao salvar workspace: {ex.Message}";
+            return false;
+        }
+    }
+
+    public void SetWorkspaceFile(IStorageFile file)
+    {
+        _workspaceFile = file;
+        OnPropertyChanged(nameof(HasWorkspaceFile));
+    }
+
+    public void ClearWorkspaceFile()
+    {
+        if (_workspaceFile is null)
+            return;
+
+        _workspaceFile = null;
+        OnPropertyChanged(nameof(HasWorkspaceFile));
+    }
+
     public async Task<bool> LoadAsync(Stream input)
     {
         try
@@ -204,7 +243,32 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     public void CloseWorkspace()
     {
         ClearAll();
+        ClearWorkspaceFile();
         HasUnsavedChanges = false;
+    }
+
+    public async Task<bool> CopySelectedImageAsync(IClipboard clipboard)
+    {
+        var item = Items
+            .Where(i => i.IsSelected)
+            .OrderByDescending(i => i.ZIndex)
+            .FirstOrDefault();
+
+        if (item is null)
+            return false;
+
+        var imageData = item.ImageData.Length > 0
+            ? item.ImageData
+            : EncodeBitmap(item.Bitmap);
+
+        if (imageData.Length == 0)
+        {
+            ErrorMessage = "Imagem selecionada nao tem dados para copiar.";
+            return false;
+        }
+
+        ErrorMessage = null;
+        return await _clipboardService.SetImageAsync(clipboard, imageData, item.MimeType);
     }
 
     [RelayCommand]

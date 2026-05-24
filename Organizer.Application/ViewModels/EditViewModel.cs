@@ -9,7 +9,7 @@ using Organizer.Application.ViewModels.Components;
 
 namespace Organizer.Application.ViewModels;
 
-public partial class EditViewModel : ObservableObject
+public partial class EditViewModel : ObservableObject, IDisposable
 {
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
@@ -18,6 +18,7 @@ public partial class EditViewModel : ObservableObject
     private int _imageId;
     private int[] _initialTagIds = [];
     private string _initialDescription = string.Empty;
+    private bool _isDisposed;
 
     public TagSelectorViewModel TagSelector { get; }
 
@@ -137,5 +138,16 @@ public partial class EditViewModel : ObservableObject
         Title = _preferencesService.T("Loc.Edit.Title");
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusIsReady));
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _preferencesService.PreferencesChanged -= OnPreferencesChanged;
+        TagSelector.SelectionChanged -= NotifyReady;
+        TagSelector.Dispose();
     }
 }

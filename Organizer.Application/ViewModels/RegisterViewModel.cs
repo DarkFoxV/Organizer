@@ -272,6 +272,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         ImageOrder.Items.Clear();
 
         TagSelector.SelectionChanged -= NotifyReady;
+        TagSelector.Dispose();
         ImageOrder.Items.CollectionChanged -= OnImagesChanged;
         ImageOrder.Dispose();
         _preferencesService.PreferencesChanged -= NotifyReady;

@@ -157,6 +157,20 @@ public partial class WorkspaceView : UserControl
         if (!e.KeyModifiers.HasFlag(KeyModifiers.Control))
             return;
 
+        if (e.Key == Key.Z)
+        {
+            e.Handled = e.KeyModifiers.HasFlag(KeyModifiers.Shift)
+                ? VM.Redo()
+                : VM.Undo();
+            return;
+        }
+
+        if (e.Key == Key.Y)
+        {
+            e.Handled = VM.Redo();
+            return;
+        }
+
         var clipboard = _topLevel?.Clipboard ?? TopLevel.GetTopLevel(this)?.Clipboard;
         if (clipboard is null)
             return;

@@ -243,6 +243,10 @@ public sealed class AppPreferencesService
 
 public sealed class AppPreferences
 {
+    public const int MinWorkspaceHistoryLimit = 0;
+    public const int MaxWorkspaceHistoryLimit = 200;
+    public const int DefaultWorkspaceHistoryLimit = 100;
+
     public AppThemePreference Theme { get; set; } = AppThemePreference.System;
     public int SearchItemsPerPage { get; set; } = 20;
     public AppLanguagePreference Language { get; set; } = AppLanguagePreference.PortugueseBrazil;
@@ -250,6 +254,7 @@ public sealed class AppPreferences
     public WorkspacePastePreference WorkspacePasteMode { get; set; } = WorkspacePastePreference.Pointer;
     public WorkspaceBackgroundPreference WorkspaceBackground { get; set; } = WorkspaceBackgroundPreference.Dark;
     public int WorkspaceDefaultZoomPercent { get; set; } = 100;
+    public int WorkspaceHistoryLimit { get; set; } = DefaultWorkspaceHistoryLimit;
 }
 
 public enum AppThemePreference

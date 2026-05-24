@@ -208,7 +208,7 @@
                             </Grid>
 
                             <Grid ColumnDefinitions="*,*"
-                                  RowDefinitions="Auto,Auto"
+                                  RowDefinitions="Auto,Auto,Auto"
                                   ColumnSpacing="14"
                                   RowSpacing="14">
                                 <Border Classes="preference-row">
@@ -255,6 +255,31 @@
                                                 TickFrequency="10"
                                                 IsSnapToTickEnabled="True"
                                                 Value="{Binding WorkspaceDefaultZoomPercent}" />
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Row="2"
+                                        Grid.ColumnSpan="2"
+                                        Classes="preference-row">
+                                    <Grid ColumnDefinitions="*,70,280" ColumnSpacing="18">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.HistoryLimit}" />
+                                            <TextBlock Classes="row-description"
+                                                       Text="{DynamicResource Loc.Preferences.HistoryLimitDescription}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding WorkspaceHistoryLimit, StringFormat='{}{0:0}'}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                        <Slider Grid.Column="2"
+                                                Minimum="0"
+                                                Maximum="200"
+                                                TickFrequency="10"
+                                                IsSnapToTickEnabled="True"
+                                                Value="{Binding WorkspaceHistoryLimit}" />
                                     </Grid>
                                 </Border>
                             </Grid>

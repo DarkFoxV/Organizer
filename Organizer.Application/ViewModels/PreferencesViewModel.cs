@@ -1,10 +1,11 @@
+using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Organizer.Application.Services;
 
 namespace Organizer.Application.ViewModels;
 
-public partial class PreferencesViewModel : ObservableObject
+public partial class PreferencesViewModel : ObservableObject, IDisposable
 {
     private readonly AppPreferencesService _preferencesService;
     private bool _isRefreshingOptions;
@@ -31,6 +32,7 @@ public partial class PreferencesViewModel : ObservableObject
     [ObservableProperty] private PreferenceOption<WorkspacePastePreference>? _selectedWorkspacePasteMode;
     [ObservableProperty] private PreferenceOption<WorkspaceBackgroundPreference>? _selectedWorkspaceBackground;
     [ObservableProperty] private double _workspaceDefaultZoomPercent;
+    [ObservableProperty] private double _workspaceHistoryLimit;
 
     public PreferencesViewModel(AppPreferencesService preferencesService)
     {
@@ -82,6 +84,23 @@ public partial class PreferencesViewModel : ObservableObject
             _preferencesService.Update(preferences => preferences.WorkspaceDefaultZoomPercent = (int)value);
     }
 
+    partial void OnWorkspaceHistoryLimitChanged(double value)
+    {
+        if (!_isRefreshingOptions)
+        {
+            _preferencesService.Update(preferences =>
+                preferences.WorkspaceHistoryLimit = Math.Clamp(
+                    (int)value,
+                    AppPreferences.MinWorkspaceHistoryLimit,
+                    AppPreferences.MaxWorkspaceHistoryLimit));
+        }
+    }
+
+    public void Dispose()
+    {
+        _preferencesService.PreferencesChanged -= RefreshOptions;
+    }
+
     private void RefreshOptions()
     {
         _isRefreshingOptions = true;
@@ -117,6 +136,10 @@ public partial class PreferencesViewModel : ObservableObject
         SelectedWorkspacePasteMode = FindOption(WorkspacePasteOptions, preferences.WorkspacePasteMode);
         SelectedWorkspaceBackground = FindOption(WorkspaceBackgroundOptions, preferences.WorkspaceBackground);
         WorkspaceDefaultZoomPercent = preferences.WorkspaceDefaultZoomPercent;
+        WorkspaceHistoryLimit = Math.Clamp(
+            preferences.WorkspaceHistoryLimit,
+            AppPreferences.MinWorkspaceHistoryLimit,
+            AppPreferences.MaxWorkspaceHistoryLimit);
 
         _isRefreshingOptions = false;
     }

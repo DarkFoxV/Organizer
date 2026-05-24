@@ -11,7 +11,7 @@ using Organizer.Application.Services;
 
 namespace Organizer.Application.ViewModels.Components;
 
-public partial class TagSelectorViewModel : ObservableObject
+public partial class TagSelectorViewModel : ObservableObject, IDisposable
 {
     private readonly ITagService _tagService;
     private readonly AppPreferencesService? _preferencesService;
@@ -54,7 +54,7 @@ public partial class TagSelectorViewModel : ObservableObject
 
         var tags = await _tagService.GetAllAsync();
 
-        Tags.Clear();
+        ClearTags();
 
         foreach (var tag in tags)
         {
@@ -145,5 +145,22 @@ public partial class TagSelectorViewModel : ObservableObject
             ShowNewTagInput = false;
             NewTagName = string.Empty;
         }
+    }
+
+    public void Dispose()
+    {
+        ClearTags();
+        SelectionChanged = null;
+    }
+
+    private void ClearTags()
+    {
+        foreach (var tag in Tags)
+        {
+            tag.Toggled -= OnTagToggled;
+            tag.Dispose();
+        }
+
+        Tags.Clear();
     }
 }

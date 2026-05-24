@@ -6,7 +6,7 @@ using Organizer.Application.Services;
 
 namespace Organizer.Application.ViewModels.Components;
 
-public partial class TagItemViewModel : ObservableObject
+public partial class TagItemViewModel : ObservableObject, IDisposable
 {
     private readonly AppPreferencesService? _preferencesService;
 
@@ -153,5 +153,11 @@ public partial class TagItemViewModel : ObservableObject
         OnPropertyChanged(nameof(BackgroundColor));
         OnPropertyChanged(nameof(ForegroundColor));
         OnPropertyChanged(nameof(BorderColor));
+    }
+
+    public void Dispose()
+    {
+        if (_preferencesService is not null)
+            _preferencesService.PreferencesChanged -= OnPreferencesChanged;
     }
 }

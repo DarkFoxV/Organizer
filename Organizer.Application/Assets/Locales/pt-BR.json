@@ -40,6 +40,8 @@
   "Loc.Preferences.CanvasBackgroundDescription": "Escolhe o tom padrão da área de trabalho.",
   "Loc.Preferences.InitialZoom": "Zoom inicial",
   "Loc.Preferences.InitialZoomDescription": "Valor usado como referência ao abrir o workspace.",
+  "Loc.Preferences.HistoryLimit": "Histórico de undo",
+  "Loc.Preferences.HistoryLimitDescription": "Define quantas ações do workspace ficam disponíveis para desfazer/refazer. Use 0 para desativar.",
   "Loc.Preferences.Theme.System": "Seguir sistema",
   "Loc.Preferences.Theme.Dark": "Escuro",
   "Loc.Preferences.Theme.Light": "Claro",

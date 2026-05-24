@@ -33,10 +33,13 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private readonly IClipboardService _clipboardService;
     private readonly AppPreferencesService _preferencesService;
     private readonly WorkspaceArchiveService _workspaceArchiveService;
+    private readonly Stack<WorkspaceSnapshot> _undoStack = [];
+    private readonly Stack<WorkspaceSnapshot> _redoStack = [];
     private WorkspaceCanvasItemViewModel? _selectedItem;
     private readonly Dictionary<WorkspaceCanvasItemViewModel, Point> _moveStartPositions = [];
     private bool _isInteractiveItemUpdate;
     private bool _hasPendingInteractiveItemChange;
+    private WorkspaceSnapshot? _interactiveStartSnapshot;
     private double _boardWidth = MinimumBoardWidth;
     private double _boardHeight = MinimumBoardHeight;
     private double _nextFallbackPasteX = CanvasPadding;
@@ -52,6 +55,25 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         byte[] ImageData,
         double Width,
         double Height);
+
+    private sealed record WorkspaceSnapshot(
+        IReadOnlyList<WorkspaceSnapshotItem> Items,
+        double NextFallbackPasteX,
+        double NextFallbackPasteY,
+        int NextZIndex);
+
+    private sealed record WorkspaceSnapshotItem(
+        string Label,
+        string MimeType,
+        byte[] ImageData,
+        double X,
+        double Y,
+        double Width,
+        double Height,
+        double OriginalWidth,
+        double OriginalHeight,
+        int ZIndex,
+        bool IsSelected);
 
     [ObservableProperty] private bool _isPasting;
 
@@ -87,6 +109,15 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     public bool HasImages => Items.Count > 0;
 
     public bool HasWorkspaceFile => _workspaceFile is not null;
+
+    public bool CanUndo => _undoStack.Count > 0;
+
+    public bool CanRedo => _redoStack.Count > 0;
+
+    private int HistoryLimit => Math.Clamp(
+        _preferencesService.Current.WorkspaceHistoryLimit,
+        AppPreferences.MinWorkspaceHistoryLimit,
+        AppPreferences.MaxWorkspaceHistoryLimit);
 
     public string CounterText => Items.Count == 1 ? "1 imagem no canvas" : $"{Items.Count} imagens no canvas";
 
@@ -125,11 +156,15 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
             if (images.Count == 1)
             {
+                var undoSnapshot = CaptureWorkspaceSnapshot();
                 AddImage(images[0], pasteAnchor, 0);
+                PushUndoSnapshot(undoSnapshot);
             }
             else
             {
+                var undoSnapshot = CaptureWorkspaceSnapshot();
                 AddImageBatch(images, pasteAnchor);
+                PushUndoSnapshot(undoSnapshot);
             }
 
             MarkDirty();
@@ -150,7 +185,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     {
         Items.CollectionChanged -= OnItemsChanged;
         _preferencesService.PreferencesChanged -= OnPreferencesChanged;
-        ClearAll();
+        ClearAllCore();
     }
 
     public async Task<bool> SaveAsync(Stream output)
@@ -223,7 +258,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             ErrorMessage = null;
             var archiveItems = await _workspaceArchiveService.LoadAsync(input);
 
-            ClearAll();
+            ClearAllCore();
+            ClearHistory();
 
             foreach (var item in archiveItems.OrderBy(item => item.ZIndex))
                 AddArchiveItem(item);
@@ -242,7 +278,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     public void CloseWorkspace()
     {
-        ClearAll();
+        ClearAllCore();
+        ClearHistory();
         ClearWorkspaceFile();
         HasUnsavedChanges = false;
     }
@@ -274,6 +311,17 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ClearAll()
     {
+        if (Items.Count == 0)
+            return;
+
+        var undoSnapshot = CaptureWorkspaceSnapshot();
+        ClearAllCore();
+        PushUndoSnapshot(undoSnapshot);
+        MarkDirty();
+    }
+
+    private void ClearAllCore()
+    {
         var hadImages = Items.Count > 0;
 
         foreach (var item in Items.ToList())
@@ -293,6 +341,34 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
         if (hadImages)
             QueueLargeImageMemoryCompaction();
+    }
+
+    public bool Undo()
+    {
+        if (_undoStack.Count == 0)
+            return false;
+
+        var redoSnapshot = CaptureWorkspaceSnapshot();
+        var undoSnapshot = _undoStack.Pop();
+        RestoreWorkspaceSnapshot(undoSnapshot);
+        PushRedoSnapshot(redoSnapshot);
+        MarkDirty();
+        NotifyHistoryStateChanged();
+        return true;
+    }
+
+    public bool Redo()
+    {
+        if (_redoStack.Count == 0)
+            return false;
+
+        var undoSnapshot = CaptureWorkspaceSnapshot();
+        var redoSnapshot = _redoStack.Pop();
+        RestoreWorkspaceSnapshot(redoSnapshot);
+        PushUndoSnapshot(undoSnapshot, clearRedo: false);
+        MarkDirty();
+        NotifyHistoryStateChanged();
+        return true;
     }
 
     public void SelectItem(WorkspaceCanvasItemViewModel item)
@@ -336,9 +412,13 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         if (selectedItems.Count == 0)
             return false;
 
-        foreach (var item in selectedItems)
-            RemoveItemCore(item);
+        var undoSnapshot = CaptureWorkspaceSnapshot();
 
+        foreach (var item in selectedItems)
+            RemoveItemCore(item, notifyBoard: false, markDirty: false);
+
+        NotifyBoardStateChanged();
+        PushUndoSnapshot(undoSnapshot);
         MarkDirty();
         return true;
     }
@@ -348,7 +428,10 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         if (!Items.Contains(item))
             return;
 
-        RemoveItemCore(item);
+        var undoSnapshot = CaptureWorkspaceSnapshot();
+        RemoveItemCore(item, markDirty: false);
+        PushUndoSnapshot(undoSnapshot);
+        MarkDirty();
     }
 
     public void BeginMoveSelectedItems(WorkspaceCanvasItemViewModel anchorItem)
@@ -357,6 +440,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             SelectItem(anchorItem);
 
         _moveStartPositions.Clear();
+        _interactiveStartSnapshot = CaptureWorkspaceSnapshot();
 
         foreach (var item in Items.Where(i => i.IsSelected))
             _moveStartPositions[item] = new Point(item.X, item.Y);
@@ -402,6 +486,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         if (!Items.Contains(item))
             return;
 
+        _interactiveStartSnapshot ??= CaptureWorkspaceSnapshot();
         _isInteractiveItemUpdate = true;
 
         try
@@ -423,9 +508,21 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     public void CommitInteractiveItemChanges()
     {
         if (!_hasPendingInteractiveItemChange)
+        {
+            _interactiveStartSnapshot = null;
             return;
+        }
 
         _hasPendingInteractiveItemChange = false;
+        var undoSnapshot = _interactiveStartSnapshot;
+        _interactiveStartSnapshot = null;
+
+        if (undoSnapshot is not null && WorkspaceSnapshotsEqual(undoSnapshot, CaptureWorkspaceSnapshot()))
+            return;
+
+        if (undoSnapshot is not null)
+            PushUndoSnapshot(undoSnapshot);
+
         NotifyBoardStateChanged();
         MarkDirty();
     }
@@ -605,7 +702,206 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         return stream.ToArray();
     }
 
-    private void RemoveItemCore(WorkspaceCanvasItemViewModel item)
+    private WorkspaceSnapshot CaptureWorkspaceSnapshot()
+    {
+        return new WorkspaceSnapshot(
+            Items.Select(ToSnapshotItem).ToList(),
+            _nextFallbackPasteX,
+            _nextFallbackPasteY,
+            _nextZIndex);
+    }
+
+    private static WorkspaceSnapshotItem ToSnapshotItem(WorkspaceCanvasItemViewModel item)
+    {
+        var imageData = item.ImageData.Length > 0
+            ? item.ImageData
+            : EncodeBitmap(item.Bitmap);
+
+        return new WorkspaceSnapshotItem(
+            Label: item.Label,
+            MimeType: item.MimeType,
+            ImageData: imageData,
+            X: item.X,
+            Y: item.Y,
+            Width: item.Width,
+            Height: item.Height,
+            OriginalWidth: item.OriginalWidth,
+            OriginalHeight: item.OriginalHeight,
+            ZIndex: item.ZIndex,
+            IsSelected: item.IsSelected);
+    }
+
+    private void RestoreWorkspaceSnapshot(WorkspaceSnapshot snapshot)
+    {
+        ClearAllCore();
+
+        _nextFallbackPasteX = snapshot.NextFallbackPasteX;
+        _nextFallbackPasteY = snapshot.NextFallbackPasteY;
+        _nextZIndex = snapshot.NextZIndex;
+
+        foreach (var snapshotItem in snapshot.Items)
+            AddSnapshotItem(snapshotItem);
+
+        _selectedItem = Items.LastOrDefault(item => item.IsSelected);
+        NotifyBoardStateChanged();
+    }
+
+    private void AddSnapshotItem(WorkspaceSnapshotItem snapshotItem)
+    {
+        if (snapshotItem.ImageData.Length == 0)
+            throw new InvalidDataException("Workspace history item has no image data.");
+
+        using var stream = new MemoryStream(snapshotItem.ImageData, writable: false);
+        var bitmap = new Bitmap(stream);
+        WorkspaceCanvasItemViewModel? item = null;
+
+        try
+        {
+            item = new WorkspaceCanvasItemViewModel
+            {
+                Bitmap = bitmap,
+                Label = snapshotItem.Label,
+                MimeType = snapshotItem.MimeType,
+                ImageData = snapshotItem.ImageData,
+                OriginalWidth = snapshotItem.OriginalWidth,
+                OriginalHeight = snapshotItem.OriginalHeight,
+                Width = snapshotItem.Width,
+                Height = snapshotItem.Height,
+                X = snapshotItem.X,
+                Y = snapshotItem.Y,
+                ZIndex = snapshotItem.ZIndex,
+                IsSelected = snapshotItem.IsSelected
+            };
+
+            GenerateLods(item);
+            item.PropertyChanged += OnItemPropertyChanged;
+            Items.Add(item);
+        }
+        catch
+        {
+            item?.Dispose();
+            if (item is null)
+                bitmap.Dispose();
+
+            throw;
+        }
+    }
+
+    private void PushUndoSnapshot(WorkspaceSnapshot snapshot, bool clearRedo = true)
+    {
+        var historyLimit = HistoryLimit;
+        if (historyLimit == 0)
+        {
+            ClearHistory();
+            return;
+        }
+
+        _undoStack.Push(snapshot);
+        TrimHistory(_undoStack, historyLimit);
+
+        if (clearRedo)
+        {
+            var hadRedoSnapshots = _redoStack.Count > 0;
+            _redoStack.Clear();
+
+            if (hadRedoSnapshots)
+                QueueLargeImageMemoryCompaction();
+        }
+
+        NotifyHistoryStateChanged();
+    }
+
+    private void PushRedoSnapshot(WorkspaceSnapshot snapshot)
+    {
+        var historyLimit = HistoryLimit;
+        if (historyLimit == 0)
+        {
+            ClearHistory();
+            return;
+        }
+
+        _redoStack.Push(snapshot);
+        TrimHistory(_redoStack, historyLimit);
+        NotifyHistoryStateChanged();
+    }
+
+    private static void TrimHistory(Stack<WorkspaceSnapshot> stack, int historyLimit)
+    {
+        if (stack.Count <= historyLimit)
+            return;
+
+        var entries = stack
+            .Take(historyLimit)
+            .Reverse()
+            .ToList();
+
+        stack.Clear();
+
+        foreach (var entry in entries)
+            stack.Push(entry);
+    }
+
+    private void ClearHistory()
+    {
+        var hadSnapshots = _undoStack.Count > 0 || _redoStack.Count > 0;
+        _undoStack.Clear();
+        _redoStack.Clear();
+        _interactiveStartSnapshot = null;
+        NotifyHistoryStateChanged();
+
+        if (hadSnapshots)
+            QueueLargeImageMemoryCompaction();
+    }
+
+    private void NotifyHistoryStateChanged()
+    {
+        OnPropertyChanged(nameof(CanUndo));
+        OnPropertyChanged(nameof(CanRedo));
+    }
+
+    private static bool WorkspaceSnapshotsEqual(WorkspaceSnapshot left, WorkspaceSnapshot right)
+    {
+        if (left.NextZIndex != right.NextZIndex
+            || !DoubleEquals(left.NextFallbackPasteX, right.NextFallbackPasteX)
+            || !DoubleEquals(left.NextFallbackPasteY, right.NextFallbackPasteY)
+            || left.Items.Count != right.Items.Count)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < left.Items.Count; i++)
+        {
+            if (!WorkspaceSnapshotItemsEqual(left.Items[i], right.Items[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool WorkspaceSnapshotItemsEqual(WorkspaceSnapshotItem left, WorkspaceSnapshotItem right)
+    {
+        return left.Label == right.Label
+            && left.MimeType == right.MimeType
+            && (ReferenceEquals(left.ImageData, right.ImageData) || left.ImageData.SequenceEqual(right.ImageData))
+            && DoubleEquals(left.X, right.X)
+            && DoubleEquals(left.Y, right.Y)
+            && DoubleEquals(left.Width, right.Width)
+            && DoubleEquals(left.Height, right.Height)
+            && DoubleEquals(left.OriginalWidth, right.OriginalWidth)
+            && DoubleEquals(left.OriginalHeight, right.OriginalHeight)
+            && left.ZIndex == right.ZIndex
+            && left.IsSelected == right.IsSelected;
+    }
+
+    private static bool DoubleEquals(double left, double right)
+    {
+        return Math.Abs(left - right) < 0.001;
+    }
+
+    private void RemoveItemCore(
+        WorkspaceCanvasItemViewModel item,
+        bool notifyBoard = true,
+        bool markDirty = true)
     {
         item.PropertyChanged -= OnItemPropertyChanged;
 
@@ -625,14 +921,16 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             _nextZIndex = 0;
         }
 
-        NotifyBoardStateChanged();
-        MarkDirty();
+        if (notifyBoard)
+            NotifyBoardStateChanged();
+
+        if (markDirty)
+            MarkDirty();
     }
 
     private void MarkDirty()
     {
-        if (Items.Count > 0)
-            HasUnsavedChanges = true;
+        HasUnsavedChanges = true;
 
         WorkspaceChanged?.Invoke();
     }
@@ -825,6 +1123,26 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     private void OnPreferencesChanged()
     {
+        var historyLimit = HistoryLimit;
+        var undoCount = _undoStack.Count;
+        var redoCount = _redoStack.Count;
+
+        if (historyLimit == 0)
+        {
+            ClearHistory();
+        }
+        else
+        {
+            TrimHistory(_undoStack, historyLimit);
+            TrimHistory(_redoStack, historyLimit);
+
+            if (_undoStack.Count != undoCount || _redoStack.Count != redoCount)
+            {
+                NotifyHistoryStateChanged();
+                QueueLargeImageMemoryCompaction();
+            }
+        }
+
         OnPropertyChanged(nameof(WorkspaceViewportBackground));
         OnPropertyChanged(nameof(WorkspaceBoardBackground));
         OnPropertyChanged(nameof(WorkspaceBoardBorderBrush));

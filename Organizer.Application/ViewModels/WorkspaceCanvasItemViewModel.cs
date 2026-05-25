@@ -1,4 +1,5 @@
 using System;
+using Avalonia;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -42,6 +43,8 @@ public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposabl
     public double OriginalWidth { get; init; }
 
     public double OriginalHeight { get; init; }
+
+    public Rect Bounds => new(X, Y, Width, Height);
 
     public void Dispose()
     {

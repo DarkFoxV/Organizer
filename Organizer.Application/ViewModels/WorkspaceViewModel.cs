@@ -396,6 +396,27 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         _selectedItem = null;
     }
 
+    public void SelectItemsInBounds(Rect bounds, bool additive)
+    {
+        var selectedItem = _selectedItem;
+
+        foreach (var item in Items)
+        {
+            if (Intersects(item.Bounds, bounds))
+            {
+                item.IsSelected = true;
+                selectedItem = item;
+            }
+            else if (!additive)
+            {
+                item.IsSelected = false;
+            }
+        }
+
+        _selectedItem = Items.LastOrDefault(i => i.IsSelected && ReferenceEquals(i, selectedItem))
+            ?? Items.LastOrDefault(i => i.IsSelected);
+    }
+
     private void SelectItems(IReadOnlyList<WorkspaceCanvasItemViewModel> items)
     {
         ClearSelection();
@@ -891,6 +912,14 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             && DoubleEquals(left.OriginalHeight, right.OriginalHeight)
             && left.ZIndex == right.ZIndex
             && left.IsSelected == right.IsSelected;
+    }
+
+    private static bool Intersects(Rect a, Rect b)
+    {
+        return a.Right >= b.Left
+            && a.Left <= b.Right
+            && a.Bottom >= b.Top
+            && a.Top <= b.Bottom;
     }
 
     private static bool DoubleEquals(double left, double right)

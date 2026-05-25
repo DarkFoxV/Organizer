@@ -22,6 +22,8 @@ public class WorkspaceCanvas : Control, ICustomHitTest
     private static readonly IBrush RemoveBrush = new SolidColorBrush(Color.Parse("#dc2626"));
     private static readonly IBrush RemoveGlyphBrush = Brushes.White;
     private static readonly IBrush HandleBrush = new SolidColorBrush(Color.Parse("#2563eb"));
+    private static readonly IBrush BoxSelectionFillBrush = new SolidColorBrush(Color.FromArgb(45, 96, 165, 250));
+    private static readonly Pen BoxSelectionPen = new(new SolidColorBrush(Color.Parse("#60a5fa")), 2);
     private static readonly Pen SelectionPen = new(SelectionBrush, WorkspaceCanvasItemViewModel.SelectionBorderThickness);
     private static readonly Pen HandlePen = new(new SolidColorBrush(Color.Parse("#bfdbfe")), 3);
 
@@ -33,8 +35,13 @@ public class WorkspaceCanvas : Control, ICustomHitTest
     private bool _isCameraPanMode;
     private bool _isPointerDownOnItem;
     private bool _isDraggingItem;
+    private bool _isPointerDownOnBoxSelection;
+    private bool _isBoxSelecting;
+    private bool _isBoxSelectionAdditive;
     private Point _itemStartPoint;
     private Point _itemStartOrigin;
+    private Point _boxSelectionStartPoint;
+    private Point _boxSelectionCurrentPoint;
     private Size _itemStartSize;
     private double _interactionDeltaX;
     private double _interactionDeltaY;
@@ -156,6 +163,9 @@ public class WorkspaceCanvas : Control, ICustomHitTest
             if (item.IsSelected)
                 DrawSelection(context, itemRect);
         }
+
+        if (_isBoxSelecting)
+            DrawBoxSelection(context, WorldRectToCanvasRect(GetBoxSelectionWorldRect()));
     }
 
     private IEnumerable<WorkspaceCanvasItemViewModel> GetOrderedItems()
@@ -190,6 +200,11 @@ public class WorkspaceCanvas : Control, ICustomHitTest
         context.DrawRectangle(null, SelectionPen, itemRect);
         DrawRemoveButton(context, itemRect);
         DrawResizeHandles(context, itemRect);
+    }
+
+    private static void DrawBoxSelection(DrawingContext context, Rect selectionRect)
+    {
+        context.DrawRectangle(BoxSelectionFillBrush, BoxSelectionPen, selectionRect);
     }
 
     private static void DrawRemoveButton(DrawingContext context, Rect itemRect)
@@ -261,7 +276,7 @@ public class WorkspaceCanvas : Control, ICustomHitTest
 
         if (hit.Item is null)
         {
-            vm.ClearSelection();
+            StartBoxSelection(e);
             e.Handled = true;
             return;
         }
@@ -293,12 +308,27 @@ public class WorkspaceCanvas : Control, ICustomHitTest
             return;
         }
 
+        if (_isPointerDownOnBoxSelection)
+        {
+            UpdateBoxSelection(e);
+            e.Handled = true;
+            return;
+        }
+
         UpdateWorkspaceCursor(e.GetPosition(this));
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+
+        if (_isPointerDownOnBoxSelection)
+        {
+            EndBoxSelection(e.KeyModifiers);
+            e.Pointer.Capture(null);
+            e.Handled = true;
+            return;
+        }
 
         if (!_isPointerDownOnItem)
             return;
@@ -312,9 +342,82 @@ public class WorkspaceCanvas : Control, ICustomHitTest
     {
         base.OnPointerCaptureLost(e);
         EndItemInteraction();
+        CancelBoxSelection();
     }
 
     private WorkspaceViewModel? WorkspaceViewModel => DataContext as WorkspaceViewModel;
+
+    private void StartBoxSelection(PointerPressedEventArgs e)
+    {
+        _boxSelectionStartPoint = CanvasPointToWorldPoint(e.GetPosition(this));
+        _boxSelectionCurrentPoint = _boxSelectionStartPoint;
+        _isPointerDownOnBoxSelection = true;
+        _isBoxSelecting = false;
+        _isBoxSelectionAdditive = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+
+        e.Pointer.Capture(this);
+        e.Handled = true;
+    }
+
+    private void UpdateBoxSelection(PointerEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            EndBoxSelection(e.KeyModifiers);
+            e.Pointer.Capture(null);
+            return;
+        }
+
+        _boxSelectionCurrentPoint = CanvasPointToWorldPoint(e.GetPosition(this));
+
+        if (!_isBoxSelecting)
+        {
+            var deltaX = _boxSelectionCurrentPoint.X - _boxSelectionStartPoint.X;
+            var deltaY = _boxSelectionCurrentPoint.Y - _boxSelectionStartPoint.Y;
+
+            if (Math.Abs(deltaX) < DragThreshold && Math.Abs(deltaY) < DragThreshold)
+                return;
+
+            _isBoxSelecting = true;
+        }
+
+        InvalidateVisual();
+    }
+
+    private void EndBoxSelection(KeyModifiers keyModifiers)
+    {
+        if (!_isPointerDownOnBoxSelection)
+            return;
+
+        var vm = WorkspaceViewModel;
+        if (vm is not null)
+        {
+            if (_isBoxSelecting)
+                vm.SelectItemsInBounds(GetBoxSelectionWorldRect(), _isBoxSelectionAdditive || keyModifiers.HasFlag(KeyModifiers.Shift));
+            else
+                vm.ClearSelection();
+        }
+
+        _isPointerDownOnBoxSelection = false;
+        _isBoxSelecting = false;
+        _isBoxSelectionAdditive = false;
+        _boxSelectionStartPoint = default;
+        _boxSelectionCurrentPoint = default;
+        InvalidateVisual();
+    }
+
+    private void CancelBoxSelection()
+    {
+        if (!_isPointerDownOnBoxSelection)
+            return;
+
+        _isPointerDownOnBoxSelection = false;
+        _isBoxSelecting = false;
+        _isBoxSelectionAdditive = false;
+        _boxSelectionStartPoint = default;
+        _boxSelectionCurrentPoint = default;
+        InvalidateVisual();
+    }
 
     private void StartItemInteraction(
         WorkspaceViewModel vm,
@@ -597,6 +700,16 @@ public class WorkspaceCanvas : Control, ICustomHitTest
             worldRect.Y - vm.BoardStartY,
             worldRect.Width,
             worldRect.Height);
+    }
+
+    private Rect GetBoxSelectionWorldRect()
+    {
+        var left = Math.Min(_boxSelectionStartPoint.X, _boxSelectionCurrentPoint.X);
+        var top = Math.Min(_boxSelectionStartPoint.Y, _boxSelectionCurrentPoint.Y);
+        var right = Math.Max(_boxSelectionStartPoint.X, _boxSelectionCurrentPoint.X);
+        var bottom = Math.Max(_boxSelectionStartPoint.Y, _boxSelectionCurrentPoint.Y);
+
+        return new Rect(left, top, right - left, bottom - top);
     }
 
     private static Rect GetWorldItemRect(WorkspaceCanvasItemViewModel item)

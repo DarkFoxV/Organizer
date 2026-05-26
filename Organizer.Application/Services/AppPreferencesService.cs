@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 
 namespace Organizer.Application.Services;
@@ -28,6 +29,7 @@ public sealed class AppPreferencesService
     }
 
     public event Action? PreferencesChanged;
+    public event Action? RecentWorkspacesChanged;
 
     public AppPreferences Current => _preferences;
 
@@ -43,6 +45,52 @@ public sealed class AppPreferencesService
     public string T(string key, params object[] args)
     {
         return Translate(key, args);
+    }
+
+    public void RememberRecentWorkspace(IStorageFile file)
+    {
+        var localPath = file.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(localPath))
+            return;
+
+        var fullPath = Path.GetFullPath(localPath);
+        _preferences.RecentWorkspaces.RemoveAll(workspace =>
+            string.Equals(workspace.LocalPath, fullPath, StringComparison.OrdinalIgnoreCase));
+
+        _preferences.RecentWorkspaces.Insert(0, new RecentWorkspacePreference
+        {
+            Name = string.IsNullOrWhiteSpace(file.Name)
+                ? Path.GetFileNameWithoutExtension(fullPath)
+                : file.Name,
+            LocalPath = fullPath,
+            LastUsedAt = DateTimeOffset.Now
+        });
+
+        if (_preferences.RecentWorkspaces.Count > AppPreferences.MaxRecentWorkspaces)
+        {
+            _preferences.RecentWorkspaces.RemoveRange(
+                AppPreferences.MaxRecentWorkspaces,
+                _preferences.RecentWorkspaces.Count - AppPreferences.MaxRecentWorkspaces);
+        }
+
+        Save();
+        RecentWorkspacesChanged?.Invoke();
+    }
+
+    public void ForgetRecentWorkspace(string localPath)
+    {
+        if (string.IsNullOrWhiteSpace(localPath))
+            return;
+
+        var fullPath = Path.GetFullPath(localPath);
+        var removed = _preferences.RecentWorkspaces.RemoveAll(workspace =>
+            string.Equals(workspace.LocalPath, fullPath, StringComparison.OrdinalIgnoreCase));
+
+        if (removed == 0)
+            return;
+
+        Save();
+        RecentWorkspacesChanged?.Invoke();
     }
 
     public static string Translate(string key, params object[] args)
@@ -67,7 +115,9 @@ public sealed class AppPreferencesService
                 return new AppPreferences();
 
             var json = File.ReadAllText(_settingsPath);
-            return JsonSerializer.Deserialize<AppPreferences>(json) ?? new AppPreferences();
+            var preferences = JsonSerializer.Deserialize<AppPreferences>(json) ?? new AppPreferences();
+            preferences.RecentWorkspaces ??= [];
+            return preferences;
         }
         catch
         {
@@ -251,6 +301,7 @@ public sealed class AppPreferences
     public const int MinWorkspaceHistoryLimit = 0;
     public const int MaxWorkspaceHistoryLimit = 200;
     public const int DefaultWorkspaceHistoryLimit = 100;
+    public const int MaxRecentWorkspaces = 5;
 
     public AppThemePreference Theme { get; set; } = AppThemePreference.System;
     public int SearchItemsPerPage { get; set; } = 20;
@@ -260,6 +311,14 @@ public sealed class AppPreferences
     public WorkspaceBackgroundPreference WorkspaceBackground { get; set; } = WorkspaceBackgroundPreference.Dark;
     public int WorkspaceDefaultZoomPercent { get; set; } = 100;
     public int WorkspaceHistoryLimit { get; set; } = DefaultWorkspaceHistoryLimit;
+    public List<RecentWorkspacePreference> RecentWorkspaces { get; set; } = [];
+}
+
+public sealed class RecentWorkspacePreference
+{
+    public string Name { get; set; } = string.Empty;
+    public string LocalPath { get; set; } = string.Empty;
+    public DateTimeOffset? LastUsedAt { get; set; }
 }
 
 public enum AppThemePreference

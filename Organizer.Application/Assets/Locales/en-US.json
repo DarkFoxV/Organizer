@@ -60,6 +60,7 @@
   "Loc.Preferences.Background.Black": "Black",
   "Loc.Workspace.EmptyTitle": "Paste images with Ctrl+V",
   "Loc.Workspace.EmptySubtitle": "Use the mouse wheel to zoom and hold the middle mouse button to pan.",
+  "Loc.Workspace.RecentTitle": "Recent workspaces",
   "Loc.Workspace.SaveTitle": "Save workspace",
   "Loc.Workspace.SaveErrorTitle": "Save workspace",
   "Loc.Workspace.SaveErrorMessage": "The open workspace could not be saved automatically. The app will stay open so you can save it manually.",

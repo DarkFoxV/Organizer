@@ -249,19 +249,8 @@ public partial class WorkspaceView : UserControl
         if (topLevel?.StorageProvider is null)
             return;
 
-        if (VM.HasImages && topLevel is Window owner)
-        {
-            var canReplace = await ConfirmationDialog.ShowAsync(
-                owner,
-                "Abrir workspace",
-                "A workspace atual tem imagens. Abrir outro arquivo vai fechar a workspace atual.",
-                "Abrir",
-                "Cancelar",
-                isDanger: true);
-
-            if (!canReplace)
-                return;
-        }
+        if (!await ConfirmReplaceWorkspaceAsync(topLevel))
+            return;
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
@@ -274,9 +263,67 @@ public partial class WorkspaceView : UserControl
         if (file is null)
             return;
 
-        await using var stream = await file.OpenReadAsync();
-        if (await VM.LoadAsync(stream))
+        await LoadWorkspaceFileAsync(file);
+    }
+
+    private async void OnOpenRecentWorkspace(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.DataContext is not RecentWorkspaceItemViewModel workspace)
+            return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel?.StorageProvider is null)
+            return;
+
+        if (!await ConfirmReplaceWorkspaceAsync(topLevel))
+            return;
+
+        var file = await topLevel.StorageProvider.TryGetFileFromPathAsync(workspace.LocalPath);
+        if (file is null)
+        {
+            VM.ForgetRecentWorkspace(workspace.LocalPath);
+            VM.ErrorMessage = "Workspace recente nao foi encontrada.";
+            return;
+        }
+
+        await LoadWorkspaceFileAsync(file);
+    }
+
+    private async Task<bool> ConfirmReplaceWorkspaceAsync(TopLevel topLevel)
+    {
+        if (!VM.HasUnsavedChanges || topLevel is not Window owner)
+            return true;
+
+        return await ConfirmationDialog.ShowAsync(
+            owner,
+            "Abrir workspace",
+            "A workspace atual tem imagens. Abrir outro arquivo vai fechar a workspace atual.",
+            "Abrir",
+            "Cancelar",
+            isDanger: true);
+    }
+
+    private async Task LoadWorkspaceFileAsync(IStorageFile file)
+    {
+        var loaded = false;
+
+        try
+        {
+            await using var stream = await file.OpenReadAsync();
+            loaded = await VM.LoadAsync(stream);
+        }
+        catch (Exception ex)
+        {
+            VM.ErrorMessage = $"Erro ao abrir workspace: {ex.Message}";
+        }
+
+        if (loaded)
+        {
             VM.SetWorkspaceFile(file);
+            return;
+        }
+
+        file.Dispose();
     }
 
     private async void OnSaveWorkspace(object? sender, RoutedEventArgs e)
@@ -297,6 +344,13 @@ public partial class WorkspaceView : UserControl
     {
         if (!VM.HasImages || _isClosingWorkspace)
             return;
+
+        if (!VM.HasUnsavedChanges)
+        {
+            VM.CloseWorkspace();
+            _autosaveTimer.Stop();
+            return;
+        }
 
         if (TopLevel.GetTopLevel(this) is not Window owner)
             return;

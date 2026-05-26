@@ -91,6 +91,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<WorkspaceCanvasItemViewModel> Items { get; } = [];
 
+    public ObservableCollection<RecentWorkspaceItemViewModel> RecentWorkspaces { get; } = [];
+
     public IBrush WorkspaceViewportBackground => BrushFromHex(GetWorkspacePalette().Viewport);
 
     public IBrush WorkspaceBoardBackground => BrushFromHex(GetWorkspacePalette().Board);
@@ -107,6 +109,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     public bool IsEmpty => Items.Count == 0;
 
     public bool HasImages => Items.Count > 0;
+
+    public bool ShowRecentWorkspaces => IsEmpty && !HasWorkspaceFile && RecentWorkspaces.Count > 0;
 
     public bool HasWorkspaceFile => _workspaceFile is not null;
 
@@ -134,7 +138,9 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         _preferencesService = preferencesService;
         _workspaceArchiveService = workspaceArchiveService;
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
+        _preferencesService.RecentWorkspacesChanged += OnRecentWorkspacesChanged;
         Items.CollectionChanged += OnItemsChanged;
+        RefreshRecentWorkspaces();
     }
 
     public async Task<bool> TryPasteImagesAsync(IClipboard clipboard, Point? pasteAnchor)
@@ -185,7 +191,9 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     {
         Items.CollectionChanged -= OnItemsChanged;
         _preferencesService.PreferencesChanged -= OnPreferencesChanged;
+        _preferencesService.RecentWorkspacesChanged -= OnRecentWorkspacesChanged;
         ClearAllCore();
+        ClearWorkspaceFile();
     }
 
     public async Task<bool> SaveAsync(Stream output)
@@ -234,6 +242,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     private async Task<bool> SaveToFileCoreAsync(IStorageFile file, bool rememberFile)
     {
+        var rememberedFile = false;
+
         try
         {
             await using var stream = await file.OpenWriteAsync();
@@ -241,7 +251,10 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
                 return false;
 
             if (rememberFile)
+            {
                 SetWorkspaceFile(file);
+                rememberedFile = true;
+            }
 
             return true;
         }
@@ -250,12 +263,29 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             ErrorMessage = $"Erro ao salvar workspace: {ex.Message}";
             return false;
         }
+        finally
+        {
+            if (rememberFile && !rememberedFile && !ReferenceEquals(_workspaceFile, file))
+                file.Dispose();
+        }
     }
 
     public void SetWorkspaceFile(IStorageFile file)
     {
+        var previousFile = _workspaceFile;
         _workspaceFile = file;
+        _preferencesService.RememberRecentWorkspace(file);
+
+        if (!ReferenceEquals(previousFile, file))
+            previousFile?.Dispose();
+
         OnPropertyChanged(nameof(HasWorkspaceFile));
+        OnPropertyChanged(nameof(ShowRecentWorkspaces));
+    }
+
+    public void ForgetRecentWorkspace(string localPath)
+    {
+        _preferencesService.ForgetRecentWorkspace(localPath);
     }
 
     public void ClearWorkspaceFile()
@@ -263,8 +293,12 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         if (_workspaceFile is null)
             return;
 
+        var file = _workspaceFile;
         _workspaceFile = null;
+        file.Dispose();
+
         OnPropertyChanged(nameof(HasWorkspaceFile));
+        OnPropertyChanged(nameof(ShowRecentWorkspaces));
     }
 
     public async Task<bool> LoadAsync(Stream input)
@@ -984,7 +1018,34 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(HasImages));
+        OnPropertyChanged(nameof(ShowRecentWorkspaces));
         OnPropertyChanged(nameof(CounterText));
+    }
+
+    private void OnRecentWorkspacesChanged()
+    {
+        RefreshRecentWorkspaces();
+    }
+
+    private void RefreshRecentWorkspaces()
+    {
+        RecentWorkspaces.Clear();
+
+        foreach (var workspace in _preferencesService.Current.RecentWorkspaces
+                     .Where(workspace => !string.IsNullOrWhiteSpace(workspace.LocalPath))
+                     .Take(AppPreferences.MaxRecentWorkspaces))
+        {
+            var name = string.IsNullOrWhiteSpace(workspace.Name)
+                ? Path.GetFileNameWithoutExtension(workspace.LocalPath)
+                : workspace.Name;
+
+            RecentWorkspaces.Add(new RecentWorkspaceItemViewModel(
+                name,
+                workspace.LocalPath,
+                workspace.LastUsedAt));
+        }
+
+        OnPropertyChanged(nameof(ShowRecentWorkspaces));
     }
 
     private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)

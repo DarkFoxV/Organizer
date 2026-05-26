@@ -8,6 +8,32 @@
              x:Class="Organizer.Organizer.Application.Views.WorkspaceView"
              x:DataType="vm:WorkspaceViewModel">
 
+    <UserControl.Styles>
+        <Style Selector="Button.recent-workspace-button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="10 8" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="Center"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.recent-workspace-button:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
+        </Style>
+    </UserControl.Styles>
+
     <Grid x:Name="Viewport"
           Background="{Binding WorkspaceViewportBackground}"
           ClipToBounds="True"
@@ -56,6 +82,53 @@
                        Foreground="{DynamicResource DangerSoftTextBrush}"
                        FontSize="13"
                        TextWrapping="Wrap" />
+        </Border>
+
+        <Border IsVisible="{Binding ShowRecentWorkspaces}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Width="360"
+                MaxWidth="520"
+                Margin="24 0 24 64"
+                Background="{DynamicResource SurfaceSoftBrush}"
+                BorderBrush="{DynamicResource FloatingBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14"
+                ZIndex="5">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{DynamicResource Loc.Workspace.RecentTitle}"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimaryBrush}" />
+
+                <ScrollViewer MaxHeight="240"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding RecentWorkspaces}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RecentWorkspaceItemViewModel">
+                                <Button Classes="recent-workspace-button"
+                                        Click="OnOpenRecentWorkspace">
+                                    <Grid RowDefinitions="Auto,Auto">
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Row="1"
+                                                   Text="{Binding LastUsedText}"
+                                                   IsVisible="{Binding HasLastUsedText}"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
         </Border>
 
         <StackPanel IsVisible="{Binding IsEmpty}"

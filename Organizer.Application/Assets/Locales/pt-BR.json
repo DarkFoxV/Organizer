@@ -60,6 +60,7 @@
   "Loc.Preferences.Background.Black": "Preto",
   "Loc.Workspace.EmptyTitle": "Cole imagens com Ctrl+V",
   "Loc.Workspace.EmptySubtitle": "Use a roda do mouse para zoom e segure o botao do meio para navegar.",
+  "Loc.Workspace.RecentTitle": "Workspaces recentes",
   "Loc.Workspace.SaveTitle": "Salvar workspace",
   "Loc.Workspace.SaveErrorTitle": "Salvar workspace",
   "Loc.Workspace.SaveErrorMessage": "Nao foi possivel salvar automaticamente a workspace aberta. O app continuara aberto para voce salvar manualmente.",

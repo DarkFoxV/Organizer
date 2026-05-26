@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Specialized;
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -10,20 +10,14 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using Organizer.Application.Views;
-using Organizer.Application.Services;
-using Organizer.Application.ViewModels;
+using global::Organizer.Application.Views;
+using global::Organizer.Application.Services;
+using global::Organizer.Application.ViewModels;
 
 namespace Organizer.Organizer.Application.Views;
 
 public partial class WorkspaceView : UserControl
 {
-    private static readonly FilePickerFileType WorkspaceZipFileType = new("Organizer workspace")
-    {
-        Patterns = ["*.zip"],
-        MimeTypes = ["application/zip", "application/x-zip-compressed"]
-    };
-
     private const double ZoomFactor = 1.12;
     private const double MinZoom = 0.1;
     private const double MaxZoom = 5.0;
@@ -40,6 +34,7 @@ public partial class WorkspaceView : UserControl
     private bool _isVisibleItemsUpdateQueued;
     private double _zoom = 1.0;
     private bool _isSavingWorkspace;
+    private bool _isClosingWorkspace;
     private readonly ScaleTransform _scaleTransform = new(1, 1);
     private readonly TranslateTransform _translateTransform = new();
 
@@ -272,7 +267,7 @@ public partial class WorkspaceView : UserControl
         {
             Title = "Abrir workspace",
             AllowMultiple = false,
-            FileTypeFilter = [WorkspaceZipFileType]
+            FileTypeFilter = [WorkspaceFilePicker.ZipFileType]
         });
 
         var file = files.FirstOrDefault();
@@ -290,43 +285,67 @@ public partial class WorkspaceView : UserControl
         if (storage is null)
             return;
 
-        var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = "Salvar workspace",
-            SuggestedFileName = "workspace.zip",
-            DefaultExtension = "zip",
-            FileTypeChoices = [WorkspaceZipFileType]
-        });
+        var file = await storage.SaveFilePickerAsync(WorkspaceFilePicker.CreateSaveOptions());
 
         if (file is null)
             return;
 
-        await using var stream = await file.OpenWriteAsync();
-        if (await VM.SaveAsync(stream))
-            VM.SetWorkspaceFile(file);
+        await VM.SaveToFileAsync(file);
     }
 
     private async void OnCloseWorkspace(object? sender, RoutedEventArgs e)
     {
-        if (!VM.HasImages)
+        if (!VM.HasImages || _isClosingWorkspace)
             return;
 
         if (TopLevel.GetTopLevel(this) is not Window owner)
             return;
 
-        var canClose = await ConfirmationDialog.ShowAsync(
-            owner,
-            "Fechar workspace",
-            "As imagens no canvas serao removidas. Salve a workspace antes se quiser manter esse layout.",
-            "Fechar",
-            "Cancelar",
-            isDanger: true);
-
-        if (canClose)
+        _isClosingWorkspace = true;
+        try
         {
+            var shouldSave = await ConfirmationDialog.ShowAsync(
+                owner,
+                AppPreferencesService.Translate("Loc.Workspace.CloseConfirmTitle"),
+                AppPreferencesService.Translate("Loc.Workspace.CloseConfirmMessage"),
+                AppPreferencesService.Translate("Loc.Common.Save"),
+                AppPreferencesService.Translate("Loc.Workspace.CloseWithoutSaving"),
+                isDanger: true);
+
+            if (shouldSave)
+            {
+                if (await SaveWorkspaceBeforeCloseAsync(owner))
+                {
+                    VM.CloseWorkspace();
+                    _autosaveTimer.Stop();
+                }
+
+                return;
+            }
+
             VM.CloseWorkspace();
             _autosaveTimer.Stop();
         }
+        finally
+        {
+            _isClosingWorkspace = false;
+        }
+    }
+
+    private async Task<bool> SaveWorkspaceBeforeCloseAsync(Window owner)
+    {
+        if (VM.HasWorkspaceFile)
+        {
+            return await VM.SaveToCurrentFileAsync();
+        }
+
+        var storage = owner.StorageProvider;
+        var file = await storage.SaveFilePickerAsync(WorkspaceFilePicker.CreateSaveOptions());
+
+        if (file is null)
+            return false;
+
+        return await VM.SaveToFileAsync(file);
     }
 
     private void OnWorkspaceChanged()

@@ -1,11 +1,14 @@
 namespace Organizer.Application.Views;
 
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using global::Organizer.Application.Services;
 using global::Organizer.Application.ViewModels;
 
 public partial class MainWindow : Window
 {
     private bool _closeConfirmed;
+    private bool _isClosing;
 
     public MainWindow()
     {
@@ -24,47 +27,74 @@ public partial class MainWindow : Window
         if (_closeConfirmed)
             return;
 
+        if (_isClosing)
+        {
+            e.Cancel = true;
+            return;
+        }
+
         if (DataContext is not MainWindowViewModel vm)
             return;
 
         if (!vm.HasUnsavedWorkspaceChanges)
             return;
 
-        if (vm.HasFileBackedWorkspace)
-        {
-            e.Cancel = true;
+        e.Cancel = true;
+        _isClosing = true;
 
-            if (await vm.SaveWorkspaceToCurrentFileAsync())
+        try
+        {
+            if (vm.HasFileBackedWorkspace)
             {
-                _closeConfirmed = true;
-                Close();
+                if (await vm.SaveWorkspaceToCurrentFileAsync())
+                {
+                    _closeConfirmed = true;
+                    Close();
+                    return;
+                }
+
+                var shouldSaveAs = await ConfirmationDialog.ShowAsync(
+                    this,
+                    AppPreferencesService.Translate("Loc.Workspace.SaveErrorTitle"),
+                    AppPreferencesService.Translate("Loc.Workspace.SaveErrorMessage"),
+                    AppPreferencesService.Translate("Loc.Common.Save"),
+                    AppPreferencesService.Translate("Loc.Common.Ok"),
+                    isDanger: true);
+
+                if (shouldSaveAs && await SaveWorkspaceBeforeCloseAsync(vm))
+                {
+                    _closeConfirmed = true;
+                    Close();
+                }
+
                 return;
             }
 
-            await ConfirmationDialog.ShowAsync(
+            var shouldSave = await ConfirmationDialog.ShowAsync(
                 this,
-                "Salvar workspace",
-                "Nao foi possivel salvar automaticamente a workspace aberta. O app continuara aberto para voce salvar manualmente.",
-                "OK",
-                "Cancelar",
+                AppPreferencesService.Translate("Loc.App.CloseConfirmTitle"),
+                AppPreferencesService.Translate("Loc.App.CloseConfirmMessage"),
+                AppPreferencesService.Translate("Loc.Common.Save"),
+                AppPreferencesService.Translate("Loc.Workspace.CloseWithoutSaving"),
                 isDanger: true);
-            return;
+
+            if (shouldSave && !await SaveWorkspaceBeforeCloseAsync(vm))
+                return;
+
+            _closeConfirmed = true;
+            Close();
         }
+        finally
+        {
+            if (!_closeConfirmed)
+                _isClosing = false;
+        }
+    }
 
-        e.Cancel = true;
+    private async Task<bool> SaveWorkspaceBeforeCloseAsync(MainWindowViewModel vm)
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(WorkspaceFilePicker.CreateSaveOptions());
 
-        var canClose = await ConfirmationDialog.ShowAsync(
-            this,
-            "Fechar Organizer",
-            "Existem imagens abertas no workspace. Fechar o app vai descartar esse canvas se ele nao foi salvo.",
-            "Fechar",
-            "Cancelar",
-            isDanger: true);
-
-        if (!canClose)
-            return;
-
-        _closeConfirmed = true;
-        Close();
+        return file is not null && await vm.SaveWorkspaceToFileAsync(file);
     }
 }

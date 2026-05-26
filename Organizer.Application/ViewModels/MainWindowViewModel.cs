@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using Organizer.Organizer.App.Enums;
@@ -146,5 +147,10 @@ public partial class MainWindowViewModel : ObservableObject
     public Task<bool> SaveWorkspaceToCurrentFileAsync()
     {
         return _workspaceViewModel.SaveToCurrentFileAsync();
+    }
+
+    public Task<bool> SaveWorkspaceToFileAsync(IStorageFile file)
+    {
+        return _workspaceViewModel.SaveToFileAsync(file);
     }
 }

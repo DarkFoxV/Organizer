@@ -42,6 +42,11 @@ public sealed class AppPreferencesService
 
     public string T(string key, params object[] args)
     {
+        return Translate(key, args);
+    }
+
+    public static string Translate(string key, params object[] args)
+    {
         var value = Avalonia.Application.Current?.Resources.TryGetResource(
             key,
             null,

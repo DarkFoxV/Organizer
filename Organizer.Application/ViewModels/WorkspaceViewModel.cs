@@ -224,10 +224,26 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             return false;
         }
 
+        return await SaveToFileCoreAsync(_workspaceFile, rememberFile: false);
+    }
+
+    public async Task<bool> SaveToFileAsync(IStorageFile file)
+    {
+        return await SaveToFileCoreAsync(file, rememberFile: true);
+    }
+
+    private async Task<bool> SaveToFileCoreAsync(IStorageFile file, bool rememberFile)
+    {
         try
         {
-            await using var stream = await _workspaceFile.OpenWriteAsync();
-            return await SaveAsync(stream);
+            await using var stream = await file.OpenWriteAsync();
+            if (!await SaveAsync(stream))
+                return false;
+
+            if (rememberFile)
+                SetWorkspaceFile(file);
+
+            return true;
         }
         catch (Exception ex)
         {

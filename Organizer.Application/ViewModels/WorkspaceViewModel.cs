@@ -27,12 +27,16 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private const double MinimumBoardWidth = 4000;
     private const double MinimumBoardHeight = 2500;
     private const int ThumbnailMaxDimension = 400;
+    private const int WorkspaceThumbnailWidth = 480;
+    private const int WorkspaceThumbnailHeight = 270;
+    private const double WorkspaceThumbnailPadding = 20;
     private const int HalfLodMinDimension = 1024;
     private const int QuarterLodMinDimension = 2048;
 
     private readonly IClipboardService _clipboardService;
     private readonly AppPreferencesService _preferencesService;
     private readonly WorkspaceArchiveService _workspaceArchiveService;
+    private readonly HomeWorkspaceCacheService _homeWorkspaceCacheService;
     private readonly Stack<WorkspaceSnapshot> _undoStack = [];
     private readonly Stack<WorkspaceSnapshot> _redoStack = [];
     private WorkspaceCanvasItemViewModel? _selectedItem;
@@ -46,6 +50,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private double _nextFallbackPasteY = CanvasPadding;
     private int _nextZIndex;
     private IStorageFile? _workspaceFile;
+    private byte[]? _workspaceThumbnailData;
     private static bool _isMemoryCompactionQueued;
 
     private sealed record PendingWorkspaceImage(
@@ -73,7 +78,9 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         double OriginalWidth,
         double OriginalHeight,
         int ZIndex,
-        bool IsSelected);
+        bool IsSelected,
+        bool IsMissingOrCorrupted,
+        string? ValidationMessage);
 
     [ObservableProperty] private bool _isPasting;
 
@@ -132,11 +139,13 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     public WorkspaceViewModel(
         IClipboardService clipboardService,
         AppPreferencesService preferencesService,
-        WorkspaceArchiveService workspaceArchiveService)
+        WorkspaceArchiveService workspaceArchiveService,
+        HomeWorkspaceCacheService homeWorkspaceCacheService)
     {
         _clipboardService = clipboardService;
         _preferencesService = preferencesService;
         _workspaceArchiveService = workspaceArchiveService;
+        _homeWorkspaceCacheService = homeWorkspaceCacheService;
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
         _preferencesService.RecentWorkspacesChanged += OnRecentWorkspacesChanged;
         Items.CollectionChanged += OnItemsChanged;
@@ -209,11 +218,18 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             ErrorMessage = null;
 
             var archiveItems = Items
+                .Where(item => !item.IsMissingOrCorrupted)
                 .OrderBy(item => item.ZIndex)
                 .Select(ToArchiveItem)
                 .ToList();
 
-            await _workspaceArchiveService.SaveAsync(output, archiveItems);
+            if (archiveItems.Count == 0)
+            {
+                ErrorMessage = "Nao ha imagens validas no workspace para salvar.";
+                return false;
+            }
+
+            await _workspaceArchiveService.SaveAsync(output, archiveItems, GetWorkspaceName(), _workspaceThumbnailData);
             HasUnsavedChanges = false;
             return true;
         }
@@ -243,19 +259,27 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private async Task<bool> SaveToFileCoreAsync(IStorageFile file, bool rememberFile)
     {
         var rememberedFile = false;
+        var localPath = file.TryGetLocalPath();
 
         try
         {
-            await using var stream = await file.OpenWriteAsync();
-            if (!await SaveAsync(stream))
-                return false;
+            if (!string.IsNullOrWhiteSpace(localPath))
+            {
+                if (!await SaveToPathAsync(localPath))
+                    return false;
+            }
+            else
+            {
+                await using var stream = await file.OpenWriteAsync();
+                if (!await SaveAsync(stream))
+                    return false;
+            }
 
             if (rememberFile)
             {
                 SetWorkspaceFile(file);
                 rememberedFile = true;
             }
-
             return true;
         }
         catch (Exception ex)
@@ -267,6 +291,112 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         {
             if (rememberFile && !rememberedFile && !ReferenceEquals(_workspaceFile, file))
                 file.Dispose();
+        }
+    }
+
+    public void SetWorkspaceThumbnail(byte[]? thumbnailData)
+    {
+        _workspaceThumbnailData = thumbnailData is { Length: > 0 } ? thumbnailData : null;
+    }
+
+    public byte[]? CreateWorkspaceThumbnail()
+    {
+        var visibleItems = Items
+            .Where(item => !item.IsMissingOrCorrupted && item.Bitmap is not null)
+            .OrderBy(item => item.ZIndex)
+            .ToList();
+
+        if (visibleItems.Count == 0)
+            return null;
+
+        var contentBounds = visibleItems
+            .Select(item => new Rect(item.X, item.Y, item.Width, item.Height))
+            .Aggregate(static (current, next) => current.Union(next));
+
+        if (contentBounds.Width <= 0 || contentBounds.Height <= 0)
+            return null;
+
+        var availableWidth = WorkspaceThumbnailWidth - (WorkspaceThumbnailPadding * 2);
+        var availableHeight = WorkspaceThumbnailHeight - (WorkspaceThumbnailPadding * 2);
+        var scale = Math.Min(availableWidth / contentBounds.Width, availableHeight / contentBounds.Height);
+
+        if (double.IsNaN(scale) || double.IsInfinity(scale) || scale <= 0)
+            return null;
+
+        var renderedWidth = contentBounds.Width * scale;
+        var renderedHeight = contentBounds.Height * scale;
+        var offsetX = (WorkspaceThumbnailWidth - renderedWidth) / 2;
+        var offsetY = (WorkspaceThumbnailHeight - renderedHeight) / 2;
+
+        using var target = new RenderTargetBitmap(
+            new PixelSize(WorkspaceThumbnailWidth, WorkspaceThumbnailHeight),
+            new Vector(96, 96));
+
+        using (var context = target.CreateDrawingContext())
+        {
+            context.DrawRectangle(
+                new SolidColorBrush(Color.Parse("#101821")),
+                null,
+                new Rect(0, 0, WorkspaceThumbnailWidth, WorkspaceThumbnailHeight));
+
+            foreach (var item in visibleItems)
+            {
+                if (item.Bitmap is null)
+                    continue;
+
+                var destination = new Rect(
+                    offsetX + ((item.X - contentBounds.X) * scale),
+                    offsetY + ((item.Y - contentBounds.Y) * scale),
+                    item.Width * scale,
+                    item.Height * scale);
+
+                context.DrawImage(item.Bitmap, destination);
+            }
+        }
+
+        using var stream = new MemoryStream();
+        target.Save(stream);
+        return stream.ToArray();
+    }
+
+    private async Task<bool> SaveToPathAsync(string path)
+    {
+        if (Items.Count == 0)
+        {
+            ErrorMessage = "Nao ha imagens no workspace para salvar.";
+            return false;
+        }
+
+        try
+        {
+            ErrorMessage = null;
+
+            var archiveItems = Items
+                .Where(item => !item.IsMissingOrCorrupted)
+                .OrderBy(item => item.ZIndex)
+                .Select(ToArchiveItem)
+                .ToList();
+
+            if (archiveItems.Count == 0)
+            {
+                ErrorMessage = "Nao ha imagens validas no workspace para salvar.";
+                return false;
+            }
+
+            await _workspaceArchiveService.SaveAtomicAsync(
+                path,
+                archiveItems,
+                Path.GetFileNameWithoutExtension(path),
+                _workspaceThumbnailData);
+
+            HasUnsavedChanges = false;
+            await _homeWorkspaceCacheService.RememberAsync(path);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao salvar workspace: {ex.Message}";
+            return false;
         }
     }
 
@@ -283,6 +413,13 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShowRecentWorkspaces));
     }
 
+    public async Task RememberWorkspaceFileAsync(IStorageFile file)
+    {
+        var localPath = file.TryGetLocalPath();
+        if (!string.IsNullOrWhiteSpace(localPath))
+            await _homeWorkspaceCacheService.RememberAsync(localPath);
+    }
+
     public void ForgetRecentWorkspace(string localPath)
     {
         _preferencesService.ForgetRecentWorkspace(localPath);
@@ -295,6 +432,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
         var file = _workspaceFile;
         _workspaceFile = null;
+        _workspaceThumbnailData = null;
         file.Dispose();
 
         OnPropertyChanged(nameof(HasWorkspaceFile));
@@ -306,6 +444,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         try
         {
             ErrorMessage = null;
+            _workspaceThumbnailData = null;
             var archiveItems = await _workspaceArchiveService.LoadAsync(input);
 
             ClearAllCore();
@@ -317,6 +456,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             ClearSelection();
             NotifyBoardStateChanged();
             HasUnsavedChanges = false;
+            if (archiveItems.Any(item => item.IsMissingOrCorrupted))
+                ErrorMessage = "Workspace aberto com imagens ausentes ou corrompidas.";
             return true;
         }
         catch (Exception ex)
@@ -708,6 +849,31 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     private void AddArchiveItem(WorkspaceArchiveItem archiveItem)
     {
+        if (archiveItem.IsMissingOrCorrupted)
+        {
+            var missingItem = new WorkspaceCanvasItemViewModel
+            {
+                Bitmap = null,
+                Label = archiveItem.Label,
+                MimeType = archiveItem.MimeType,
+                ImageData = [],
+                IsMissingOrCorrupted = true,
+                ValidationMessage = archiveItem.ValidationMessage,
+                OriginalWidth = archiveItem.OriginalWidth,
+                OriginalHeight = archiveItem.OriginalHeight,
+                Width = archiveItem.Width,
+                Height = archiveItem.Height,
+                X = archiveItem.X,
+                Y = archiveItem.Y,
+                ZIndex = archiveItem.ZIndex
+            };
+
+            missingItem.PropertyChanged += OnItemPropertyChanged;
+            Items.Add(missingItem);
+            _nextZIndex = Math.Max(_nextZIndex, missingItem.ZIndex + 1);
+            return;
+        }
+
         using var stream = new MemoryStream(archiveItem.ImageData, writable: false);
         var bitmap = new Bitmap(stream);
         WorkspaceCanvasItemViewModel? item = null;
@@ -720,6 +886,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
                 Label = archiveItem.Label,
                 MimeType = archiveItem.MimeType,
                 ImageData = archiveItem.ImageData,
+                IsMissingOrCorrupted = false,
                 OriginalWidth = archiveItem.OriginalWidth,
                 OriginalHeight = archiveItem.OriginalHeight,
                 Width = archiveItem.Width,
@@ -763,6 +930,14 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             ZIndex: item.ZIndex);
     }
 
+    private string GetWorkspaceName()
+    {
+        var localPath = _workspaceFile?.TryGetLocalPath();
+        return string.IsNullOrWhiteSpace(localPath)
+            ? "Workspace"
+            : Path.GetFileNameWithoutExtension(localPath);
+    }
+
     private static byte[] EncodeBitmap(Bitmap? bitmap)
     {
         if (bitmap is null)
@@ -799,7 +974,9 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             OriginalWidth: item.OriginalWidth,
             OriginalHeight: item.OriginalHeight,
             ZIndex: item.ZIndex,
-            IsSelected: item.IsSelected);
+            IsSelected: item.IsSelected,
+            IsMissingOrCorrupted: item.IsMissingOrCorrupted,
+            ValidationMessage: item.ValidationMessage);
     }
 
     private void RestoreWorkspaceSnapshot(WorkspaceSnapshot snapshot)
@@ -819,6 +996,31 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     private void AddSnapshotItem(WorkspaceSnapshotItem snapshotItem)
     {
+        if (snapshotItem.IsMissingOrCorrupted)
+        {
+            var missingItem = new WorkspaceCanvasItemViewModel
+            {
+                Bitmap = null,
+                Label = snapshotItem.Label,
+                MimeType = snapshotItem.MimeType,
+                ImageData = [],
+                IsMissingOrCorrupted = true,
+                ValidationMessage = snapshotItem.ValidationMessage,
+                OriginalWidth = snapshotItem.OriginalWidth,
+                OriginalHeight = snapshotItem.OriginalHeight,
+                Width = snapshotItem.Width,
+                Height = snapshotItem.Height,
+                X = snapshotItem.X,
+                Y = snapshotItem.Y,
+                ZIndex = snapshotItem.ZIndex,
+                IsSelected = snapshotItem.IsSelected
+            };
+
+            missingItem.PropertyChanged += OnItemPropertyChanged;
+            Items.Add(missingItem);
+            return;
+        }
+
         if (snapshotItem.ImageData.Length == 0)
             throw new InvalidDataException("Workspace history item has no image data.");
 
@@ -961,7 +1163,9 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             && DoubleEquals(left.OriginalWidth, right.OriginalWidth)
             && DoubleEquals(left.OriginalHeight, right.OriginalHeight)
             && left.ZIndex == right.ZIndex
-            && left.IsSelected == right.IsSelected;
+            && left.IsSelected == right.IsSelected
+            && left.IsMissingOrCorrupted == right.IsMissingOrCorrupted
+            && left.ValidationMessage == right.ValidationMessage;
     }
 
     private static bool Intersects(Rect a, Rect b)

@@ -5,9 +5,9 @@ namespace Organizer.Application.Views;
 
 internal static class WorkspaceFilePicker
 {
-    public static FilePickerFileType ZipFileType { get; } = new("Organizer workspace")
+    public static FilePickerFileType WorkspaceFileType { get; } = new("Organizer workspace")
     {
-        Patterns = ["*.zip"],
+        Patterns = ["*.owsp"],
         MimeTypes = ["application/zip", "application/x-zip-compressed"]
     };
 
@@ -16,9 +16,9 @@ internal static class WorkspaceFilePicker
         return new FilePickerSaveOptions
         {
             Title = AppPreferencesService.Translate("Loc.Workspace.SaveTitle"),
-            SuggestedFileName = "workspace.zip",
-            DefaultExtension = "zip",
-            FileTypeChoices = [ZipFileType]
+            SuggestedFileName = "workspace.owsp",
+            DefaultExtension = "owsp",
+            FileTypeChoices = [WorkspaceFileType]
         };
     }
 }

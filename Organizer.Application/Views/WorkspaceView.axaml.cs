@@ -256,7 +256,7 @@ public partial class WorkspaceView : UserControl
         {
             Title = "Abrir workspace",
             AllowMultiple = false,
-            FileTypeFilter = [WorkspaceFilePicker.ZipFileType]
+            FileTypeFilter = [WorkspaceFilePicker.WorkspaceFileType]
         });
 
         var file = files.FirstOrDefault();
@@ -320,6 +320,7 @@ public partial class WorkspaceView : UserControl
         if (loaded)
         {
             VM.SetWorkspaceFile(file);
+            await VM.RememberWorkspaceFileAsync(file);
             return;
         }
 
@@ -337,6 +338,7 @@ public partial class WorkspaceView : UserControl
         if (file is null)
             return;
 
+        VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
         await VM.SaveToFileAsync(file);
     }
 
@@ -390,6 +392,7 @@ public partial class WorkspaceView : UserControl
     {
         if (VM.HasWorkspaceFile)
         {
+            VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
             return await VM.SaveToCurrentFileAsync();
         }
 
@@ -399,6 +402,7 @@ public partial class WorkspaceView : UserControl
         if (file is null)
             return false;
 
+        VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
         return await VM.SaveToFileAsync(file);
     }
 
@@ -423,6 +427,7 @@ public partial class WorkspaceView : UserControl
         try
         {
             _isSavingWorkspace = true;
+            VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
             await VM.SaveToCurrentFileAsync();
         }
         finally

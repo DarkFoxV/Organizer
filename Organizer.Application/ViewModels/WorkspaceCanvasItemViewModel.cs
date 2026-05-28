@@ -40,6 +40,10 @@ public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposabl
 
     public byte[] ImageData { get; init; } = [];
 
+    public bool IsMissingOrCorrupted { get; init; }
+
+    public string? ValidationMessage { get; init; }
+
     public double OriginalWidth { get; init; }
 
     public double OriginalHeight { get; init; }

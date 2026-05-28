@@ -22,6 +22,9 @@ public class WorkspaceCanvas : Control, ICustomHitTest
     private static readonly IBrush RemoveBrush = new SolidColorBrush(Color.Parse("#dc2626"));
     private static readonly IBrush RemoveGlyphBrush = Brushes.White;
     private static readonly IBrush HandleBrush = new SolidColorBrush(Color.Parse("#2563eb"));
+    private static readonly IBrush MissingFillBrush = new SolidColorBrush(Color.FromArgb(210, 45, 21, 21));
+    private static readonly IBrush MissingTextBrush = new SolidColorBrush(Color.Parse("#fecaca"));
+    private static readonly Pen MissingBorderPen = new(new SolidColorBrush(Color.Parse("#ef4444")), 2);
     private static readonly IBrush BoxSelectionFillBrush = new SolidColorBrush(Color.FromArgb(45, 96, 165, 250));
     private static readonly Pen BoxSelectionPen = new(new SolidColorBrush(Color.Parse("#60a5fa")), 2);
     private static readonly Pen SelectionPen = new(SelectionBrush, WorkspaceCanvasItemViewModel.SelectionBorderThickness);
@@ -157,7 +160,9 @@ public class WorkspaceCanvas : Control, ICustomHitTest
             if (!Intersects(itemRect, viewportBounds))
                 continue;
 
-            if (GetBitmap(item) is { } bitmap)
+            if (item.IsMissingOrCorrupted)
+                DrawMissingItem(context, item, itemRect);
+            else if (GetBitmap(item) is { } bitmap)
                 context.DrawImage(bitmap, itemRect);
 
             if (item.IsSelected)
@@ -200,6 +205,44 @@ public class WorkspaceCanvas : Control, ICustomHitTest
         context.DrawRectangle(null, SelectionPen, itemRect);
         DrawRemoveButton(context, itemRect);
         DrawResizeHandles(context, itemRect);
+    }
+
+    private static void DrawMissingItem(
+        DrawingContext context,
+        WorkspaceCanvasItemViewModel item,
+        Rect itemRect)
+    {
+        context.DrawRectangle(MissingFillBrush, MissingBorderPen, itemRect, 8);
+
+        var label = string.IsNullOrWhiteSpace(item.Label)
+            ? "Imagem ausente"
+            : item.Label;
+
+        var title = new FormattedText(
+            "Imagem ausente/corrompida",
+            System.Globalization.CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight,
+            Typeface.Default,
+            18,
+            MissingTextBrush);
+
+        var subtitle = new FormattedText(
+            label,
+            System.Globalization.CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight,
+            Typeface.Default,
+            13,
+            MissingTextBrush)
+        {
+            MaxTextWidth = Math.Max(1, itemRect.Width - 32),
+            MaxLineCount = 1,
+            Trimming = TextTrimming.CharacterEllipsis
+        };
+
+        var textHeight = title.Height + subtitle.Height + 8;
+        var y = itemRect.Y + Math.Max(16, (itemRect.Height - textHeight) / 2);
+        context.DrawText(title, new Point(itemRect.X + 16, y));
+        context.DrawText(subtitle, new Point(itemRect.X + 16, y + title.Height + 8));
     }
 
     private static void DrawBoxSelection(DrawingContext context, Rect selectionRect)

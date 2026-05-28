@@ -32,6 +32,7 @@ internal class Program
 
         services.AddSingleton<AppPreferencesService>();
         services.AddSingleton<WorkspaceArchiveService>();
+        services.AddSingleton<HomeWorkspaceCacheService>();
         services.AddTransient<ICardService, CardService>();
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<ITagService, TagService>();
@@ -45,7 +46,7 @@ internal class Program
         services.AddSingleton<NavbarViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SearchViewModel>();
-        services.AddTransient<WorkspaceViewModel>();
+        services.AddSingleton<WorkspaceViewModel>();
         services.AddTransient<PreferencesViewModel>();
         services.AddTransient<ManageTagsViewModel>();
         services.AddTransient<RegisterViewModel>();

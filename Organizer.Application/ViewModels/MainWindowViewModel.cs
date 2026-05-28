@@ -13,6 +13,7 @@ public partial class MainWindowViewModel : ObservableObject
     private RegisterViewModel? _activeRegisterViewModel;
     private IServiceScope? _activeRegisterScope;
     private EditViewModel? _activeEditViewModel;
+    private HomeViewModel? _activeHomeViewModel;
     private readonly WorkspaceViewModel _workspaceViewModel;
 
     [ObservableProperty] private ObservableObject _currentView;
@@ -53,10 +54,21 @@ public partial class MainWindowViewModel : ObservableObject
 
         DetachRegister();
         DetachEdit();
+        DetachHome();
+
+        if (button == NavButton.Home)
+        {
+            var homeViewModel = _services.GetRequiredService<HomeViewModel>();
+            homeViewModel.WorkspaceOpened += GoToWorkspace;
+            homeViewModel.NewWorkspaceRequested += GoToWorkspace;
+            homeViewModel.ImportImagesRequested += GoToRegister;
+            _activeHomeViewModel = homeViewModel;
+            CurrentView = homeViewModel;
+            return;
+        }
 
         CurrentView = button switch
         {
-            NavButton.Home => _services.GetRequiredService<HomeViewModel>(),
             NavButton.Search => _searchViewModel,
             NavButton.Workspace => _workspaceViewModel,
             NavButton.ManageTags => _services.GetRequiredService<ManageTagsViewModel>(),
@@ -72,6 +84,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (IsGlobalLoading) return;
 
+        DetachHome();
         DetachRegister();
         DetachEdit();
 
@@ -108,6 +121,13 @@ public partial class MainWindowViewModel : ObservableObject
         _ = _searchViewModel.ReloadAsync();
     }
 
+    private void GoToWorkspace()
+    {
+        DetachHome();
+        Navbar.Selected = NavButton.Workspace;
+        CurrentView = _workspaceViewModel;
+    }
+
     private void OnRegisterBusyStateChanged(bool isBusy, string message)
     {
         IsGlobalLoading = isBusy;
@@ -142,6 +162,17 @@ public partial class MainWindowViewModel : ObservableObject
         _activeEditViewModel.SubmitSuccess -= GoBackToSearch;
         _activeEditViewModel.Dispose();
         _activeEditViewModel = null;
+    }
+
+    private void DetachHome()
+    {
+        if (_activeHomeViewModel is null) return;
+
+        _activeHomeViewModel.WorkspaceOpened -= GoToWorkspace;
+        _activeHomeViewModel.NewWorkspaceRequested -= GoToWorkspace;
+        _activeHomeViewModel.ImportImagesRequested -= GoToRegister;
+        _activeHomeViewModel.Dispose();
+        _activeHomeViewModel = null;
     }
 
     public Task<bool> SaveWorkspaceToCurrentFileAsync()

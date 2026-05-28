@@ -4,12 +4,223 @@
              x:Class="Organizer.Application.Views.HomeView"
              x:DataType="vm:HomeViewModel">
 
-    <Grid Background="{DynamicResource AppBackgroundBrush}">
-        <TextBlock Text="{DynamicResource Loc.Nav.Home}"
-                   FontSize="24"
-                   Foreground="{DynamicResource TextMutedBrush}"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center" />
-    </Grid>
+    <UserControl.Styles>
+        <Style Selector="Border.home-card">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="BoxShadow" Value="0 18 48 0 #66000000" />
+        </Style>
 
+        <Style Selector="Border.workspace-card">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.card-action">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Padding" Value="12 6" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.card-action-remove">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+        </Style>
+        <Style Selector="Button.card-action-remove:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="Foreground" Value="#ffffff" />
+        </Style>
+        <Style Selector="Button.card-action-delete">
+            <Setter Property="Background" Value="#3b1919" />
+            <Setter Property="Foreground" Value="#fecaca" />
+        </Style>
+        <Style Selector="Button.card-action-delete:pointerover">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="Foreground" Value="#ffffff" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
+        <Grid RowDefinitions="Auto,*,Auto,Auto"
+              Margin="40 30"
+              RowSpacing="26"
+              MaxWidth="1180"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch">
+
+                <Grid ColumnDefinitions="*,320">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{DynamicResource Loc.Home.Title}"
+                                   FontSize="34"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="{DynamicResource Loc.Home.Subtitle}"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                    </StackPanel>
+
+                    <TextBox Grid.Column="1"
+                             Classes="field"
+                             PlaceholderText="{DynamicResource Loc.Home.SearchPlaceholder}"
+                             Text="{Binding SearchText, Mode=TwoWay}"
+                             VerticalAlignment="Center"
+                             Padding="14 10" />
+                </Grid>
+
+                <Border Grid.Row="1"
+                        Classes="home-card"
+                        Padding="22"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="{DynamicResource Loc.Home.RecentTitle}"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+
+                        <ScrollViewer Grid.Row="1"
+                                      Margin="0 18 0 0"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding RecentWorkspaces}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel ItemWidth="270"
+                                                   ItemHeight="292" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:HomeWorkspaceItemViewModel">
+                                        <Border Classes="workspace-card"
+                                                Margin="0 0 16 16"
+                                                PointerReleased="OnWorkspaceCardClick">
+                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                    BorderBrush="{DynamicResource FloatingBorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="16"
+                                                    Padding="12">
+                                                <Grid RowDefinitions="150,Auto,Auto,Auto"
+                                                      RowSpacing="9">
+                                                    <Border Background="{DynamicResource SurfaceAltBrush}"
+                                                            CornerRadius="12"
+                                                            ClipToBounds="True">
+                                                        <Grid>
+                                                            <Image Source="{Binding Thumbnail}"
+                                                                   Stretch="UniformToFill"
+                                                                   IsVisible="{Binding HasThumbnail}" />
+                                                            <TextBlock Text="{DynamicResource Loc.Home.WorkspaceFallback}"
+                                                                       IsVisible="{Binding HasNoThumbnail}"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"
+                                                                       FontSize="22"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource TextSubtleBrush}" />
+                                                            <Border IsVisible="{Binding IsMissing}"
+                                                                    Background="{DynamicResource DangerSoftBrush}">
+                                                                <TextBlock Text="{DynamicResource Loc.Home.FileNotFound}"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center"
+                                                                           FontSize="13"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{DynamicResource DangerSoftTextBrush}" />
+                                                            </Border>
+                                                        </Grid>
+                                                    </Border>
+
+                                                    <TextBlock Grid.Row="1"
+                                                               Text="{Binding Name}"
+                                                               FontSize="15"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                                               TextTrimming="CharacterEllipsis" />
+
+                                                    <TextBlock Grid.Row="2"
+                                                               Text="{Binding StatusText}"
+                                                               FontSize="12"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                               TextTrimming="CharacterEllipsis" />
+
+                                                    <StackPanel Grid.Row="3"
+                                                                Orientation="Horizontal"
+                                                                Spacing="8">
+                                                        <Button Classes="card-action card-action-remove"
+                                                                Content="{DynamicResource Loc.Home.RemoveFromHome}"
+                                                                Click="OnRemoveFromHomeClick" />
+                                                        <Button Classes="card-action card-action-delete"
+                                                                Content="{DynamicResource Loc.Home.DeleteWorkspace}"
+                                                                Click="OnDeleteWorkspaceClick" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="2"
+                        Classes="home-card"
+                        Padding="22">
+                    <Grid ColumnDefinitions="*,Auto,Auto"
+                          ColumnSpacing="12">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Loc.Home.QuickActions}"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                            <TextBlock Text="{DynamicResource Loc.Home.QuickActionsSubtitle}"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                        </StackPanel>
+
+                        <Button Grid.Column="1"
+                                Classes="btn btn-primary"
+                                Content="{DynamicResource Loc.Home.NewWorkspace}"
+                                Padding="18 11"
+                                Click="OnNewWorkspaceClick" />
+                        <Button Grid.Column="2"
+                                Classes="btn"
+                                Background="{DynamicResource SurfaceAltBrush}"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                Content="{DynamicResource Loc.Home.ImportImages}"
+                                Padding="18 11"
+                                Click="OnImportImagesClick" />
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="3"
+                        Classes="home-card"
+                        Padding="18 14">
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="24">
+                        <TextBlock Text="{Binding ImageTotalText}"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                        <TextBlock Text="{Binding WorkspaceTotalText}"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                        <TextBlock Text="{Binding TagTotalText}"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                    </StackPanel>
+                </Border>
+        </Grid>
+
+        <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="24"
+                Background="{DynamicResource DangerSoftBrush}"
+                BorderBrush="{DynamicResource DangerBrush}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="12 10">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource DangerSoftTextBrush}"
+                       FontSize="13" />
+        </Border>
+    </Grid>
 </UserControl>

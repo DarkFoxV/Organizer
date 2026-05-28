@@ -85,7 +85,8 @@
                         <ScrollViewer Grid.Row="1"
                                       Margin="0 18 0 0"
                                       VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled">
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      HorizontalAlignment="Center">
                             <ItemsControl ItemsSource="{Binding RecentWorkspaces}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>

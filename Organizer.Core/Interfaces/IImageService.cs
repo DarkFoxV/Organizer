@@ -40,5 +40,9 @@ public interface IImageService
 
     Task RemoveTagAsync(int imageId, int tagId);
 
+    Task AddTagToCardImagesAsync(int cardId, int tagId);
+
+    Task RemoveTagFromCardImagesAsync(int cardId, int tagId);
+
     Task DeleteAsync(int imageId);
 }

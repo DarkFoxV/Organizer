@@ -16,6 +16,8 @@ public partial class EditViewModel : ObservableObject, IDisposable
     private readonly AppPreferencesService _preferencesService;
 
     private int _imageId;
+    private int _cardId;
+    private bool _isGroup;
     private int[] _initialTagIds = [];
     private string _initialDescription = string.Empty;
     private bool _isDisposed;
@@ -65,6 +67,8 @@ public partial class EditViewModel : ObservableObject, IDisposable
     public async Task LoadAsync(CardItemViewModel card)
     {
         _imageId = card.Id;
+        _cardId = card.CardId;
+        _isGroup = card.IsGroup;
         Title = _preferencesService.T("Loc.Edit.Title");
         Subtitle = card.IsGroup
             ? _preferencesService.T("Loc.Edit.GroupSubtitle", card.ImageCount)
@@ -111,10 +115,20 @@ public partial class EditViewModel : ObservableObject, IDisposable
             var tagsToRemove = _initialTagIds.Except(selectedTagIds).ToArray();
 
             foreach (var tagId in tagsToAdd)
-                await _imageService.AddTagAsync(_imageId, tagId);
+            {
+                if (_isGroup)
+                    await _imageService.AddTagToCardImagesAsync(_cardId, tagId);
+                else
+                    await _imageService.AddTagAsync(_imageId, tagId);
+            }
 
             foreach (var tagId in tagsToRemove)
-                await _imageService.RemoveTagAsync(_imageId, tagId);
+            {
+                if (_isGroup)
+                    await _imageService.RemoveTagFromCardImagesAsync(_cardId, tagId);
+                else
+                    await _imageService.RemoveTagAsync(_imageId, tagId);
+            }
 
             SubmitSuccess?.Invoke();
         }

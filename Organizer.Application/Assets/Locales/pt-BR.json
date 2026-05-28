@@ -42,7 +42,7 @@
   "Loc.Home.OpenedHoursAgo": "Aberto ha {0}h",
   "Loc.Home.OpenedYesterday": "Ontem",
   "Loc.Home.OpenedDaysAgo": "Aberto ha {0} dias",
-  "Loc.Search.Placeholder": "Buscar por descrição, tag...",
+  "Loc.Search.Placeholder": "Buscar por descrição",
   "Loc.Search.Register": "Registrar",
   "Loc.Search.EmptyTitle": "Nenhuma imagem encontrada",
   "Loc.Search.EmptySubtitle": "Tente outros termos ou registre uma nova imagem",

@@ -42,7 +42,7 @@
   "Loc.Home.OpenedHoursAgo": "Opened {0}h ago",
   "Loc.Home.OpenedYesterday": "Yesterday",
   "Loc.Home.OpenedDaysAgo": "Opened {0} days ago",
-  "Loc.Search.Placeholder": "Search by description, tag...",
+  "Loc.Search.Placeholder": "Search by description",
   "Loc.Search.Register": "Register",
   "Loc.Search.EmptyTitle": "No images found",
   "Loc.Search.EmptySubtitle": "Try other terms or register a new image",

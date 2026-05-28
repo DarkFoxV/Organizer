@@ -120,11 +120,8 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
 
             q = q.Where(c =>
                 c.Images.Any(i =>
-                    (i.Description != null &&
-                     i.Description.ToLower().Contains(query))
-                    ||
-                    i.ImageTags.Any(it =>
-                        it.Tag.Name.ToLower().Contains(query))));
+                    i.Description != null &&
+                    i.Description.ToLower().Contains(query)));
         }
 
         // Ordenação
@@ -398,6 +395,40 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
 
         await db.ImageTags
             .Where(it => it.ImageId == imageId && it.TagId == tagId)
+            .ExecuteDeleteAsync();
+    }
+
+    public async Task AddTagToCardImagesAsync(int cardId, int tagId)
+    {
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
+
+        var imageIdsWithoutTag = await db.Images
+            .Where(i => i.CardId == cardId)
+            .Where(i => !i.ImageTags.Any(it => it.TagId == tagId))
+            .Select(i => i.Id)
+            .ToListAsync();
+
+        if (imageIdsWithoutTag.Count == 0)
+            return;
+
+        db.ImageTags.AddRange(imageIdsWithoutTag.Select(imageId => new ImageTag
+        {
+            ImageId = imageId,
+            TagId = tagId
+        }));
+
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+    }
+
+    public async Task RemoveTagFromCardImagesAsync(int cardId, int tagId)
+    {
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
+
+        await db.ImageTags
+            .Where(it => it.TagId == tagId && it.Image.CardId == cardId)
             .ExecuteDeleteAsync();
     }
 

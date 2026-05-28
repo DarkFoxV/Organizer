@@ -86,10 +86,9 @@ public partial class WorkspaceView : UserControl
             _autosaveTimer.Stop();
             _zoomQualityTimer.Stop();
 
-            if (_topLevel is null)
-                return;
+            if (_topLevel is not null)
+                _topLevel.RemoveHandler(KeyDownEvent, OnKeyDown);
 
-            _topLevel.RemoveHandler(KeyDownEvent, OnKeyDown);
             UnsubscribeFromViewModel();
             Viewport.PropertyChanged -= OnViewportPropertyChanged;
             BoardRoot.PropertyChanged -= OnBoardRootPropertyChanged;
@@ -163,6 +162,20 @@ public partial class WorkspaceView : UserControl
         if (e.Key == Key.Y)
         {
             e.Handled = VM.Redo();
+            return;
+        }
+
+        if (e.Key == Key.S)
+        {
+            await SaveWorkspaceFromShortcutAsync();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Q)
+        {
+            await CloseWorkspaceFromShortcutAsync();
+            e.Handled = true;
             return;
         }
 
@@ -329,6 +342,34 @@ public partial class WorkspaceView : UserControl
 
     private async void OnSaveWorkspace(object? sender, RoutedEventArgs e)
     {
+        await SaveWorkspaceFromShortcutAsync();
+    }
+
+    private async void OnCloseWorkspace(object? sender, RoutedEventArgs e)
+    {
+        await CloseWorkspaceFromShortcutAsync();
+    }
+
+    private async Task<bool> SaveWorkspaceBeforeCloseAsync(Window owner)
+    {
+        if (VM.HasWorkspaceFile)
+        {
+            VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
+            return await VM.SaveToCurrentFileAsync();
+        }
+
+        var storage = owner.StorageProvider;
+        var file = await storage.SaveFilePickerAsync(WorkspaceFilePicker.CreateSaveOptions());
+
+        if (file is null)
+            return false;
+
+        VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
+        return await VM.SaveToFileAsync(file);
+    }
+
+    private async Task SaveWorkspaceFromShortcutAsync()
+    {
         var storage = TopLevel.GetTopLevel(this)?.StorageProvider;
         if (storage is null)
             return;
@@ -342,7 +383,7 @@ public partial class WorkspaceView : UserControl
         await VM.SaveToFileAsync(file);
     }
 
-    private async void OnCloseWorkspace(object? sender, RoutedEventArgs e)
+    private async Task CloseWorkspaceFromShortcutAsync()
     {
         if (!VM.HasImages || _isClosingWorkspace)
             return;
@@ -386,24 +427,6 @@ public partial class WorkspaceView : UserControl
         {
             _isClosingWorkspace = false;
         }
-    }
-
-    private async Task<bool> SaveWorkspaceBeforeCloseAsync(Window owner)
-    {
-        if (VM.HasWorkspaceFile)
-        {
-            VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
-            return await VM.SaveToCurrentFileAsync();
-        }
-
-        var storage = owner.StorageProvider;
-        var file = await storage.SaveFilePickerAsync(WorkspaceFilePicker.CreateSaveOptions());
-
-        if (file is null)
-            return false;
-
-        VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
-        return await VM.SaveToFileAsync(file);
     }
 
     private void OnWorkspaceChanged()

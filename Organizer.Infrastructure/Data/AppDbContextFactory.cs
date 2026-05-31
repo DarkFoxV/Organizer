@@ -12,7 +12,7 @@ namespace Organizer.Application.Services;
 
 public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>, IDisposable, IAsyncDisposable
 {
-    private const int MaxConcurrentContexts = 5;
+    private const int MaxConcurrentContexts = 3;
 
     private readonly ConcurrentQueue<SqliteConnection> _availableConnections = new();
     private readonly SemaphoreSlim _connectionSlots = new(MaxConcurrentContexts, MaxConcurrentContexts);

@@ -29,6 +29,17 @@ public partial class ImageOrderList : UserControl
         DragDrop.AddDragOverHandler(OrderList, OnDragOver);
         DragDrop.AddDropHandler(OrderList, OnDrop);
         DragDrop.SetAllowDrop(OrderList, true);
+
+        DetachedFromVisualTree += (_, _) =>
+        {
+            if (_dragging is not null)
+                _dragging.IsDragging = false;
+
+            _dragging = null;
+            _pressedArgs = null;
+            _dragStarted = false;
+            DataContext = null;
+        };
     }
 
     private ImageOrderListViewModel? VM => DataContext as ImageOrderListViewModel;

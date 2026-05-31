@@ -1,12 +1,14 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Organizer.Application.ViewModels.Components;
 
-public partial class CardItemViewModel : ObservableObject
+public partial class CardItemViewModel : ObservableObject, IDisposable
 {
     [ObservableProperty] private bool _isLoaded;
 
@@ -18,7 +20,7 @@ public partial class CardItemViewModel : ObservableObject
     public string MimeType { get; init; } = "application/octet-stream";
     public string Description { get; init; } = string.Empty;
     public string CreatedAt { get; init; } = string.Empty;
-    public Func<Task<byte[]?>>? LoadImageDataAsync { get; init; }
+    public Func<Task<Stream?>>? LoadImageDataStreamAsync { get; init; }
     public bool IsGroup { get; init; }
     public int ImageCount { get; init; }
 
@@ -26,13 +28,17 @@ public partial class CardItemViewModel : ObservableObject
 
     public void ReleaseResources()
     {
-        Thumbnail?.Dispose();
+        var thumbnail = Thumbnail;
         Thumbnail = null;
         ImageData = null;
         IsLoaded = false;
+
+        if (thumbnail is not null)
+            Dispatcher.UIThread.Post(() => thumbnail.Dispose(), DispatcherPriority.Background);
     }
 
-    // Eventos que a SearchView escuta
+    public void Dispose() => ReleaseResources();
+
     public event Action<CardItemViewModel>? ViewRequested;
     public event Action<CardItemViewModel>? EditRequested;
     public event Action<CardItemViewModel>? DeleteRequested;

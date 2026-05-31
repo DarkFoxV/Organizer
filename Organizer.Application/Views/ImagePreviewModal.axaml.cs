@@ -20,27 +20,43 @@ public partial class ImagePreviewModal : UserControl
         {
             _topLevel = TopLevel.GetTopLevel(this);
             _topLevel?.AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+            SubscribeToCurrentViewModel();
         };
 
         DetachedFromVisualTree += (_, _) =>
         {
-            if (_topLevel is null)
-                return;
+            UnsubscribeFromCurrentViewModel();
 
-            _topLevel.RemoveHandler(KeyDownEvent, OnKeyDown);
+            if (_topLevel is not null)
+                _topLevel.RemoveHandler(KeyDownEvent, OnKeyDown);
+
             _topLevel = null;
         };
     }
 
     private void OnDataContextChanged(object? sender, System.EventArgs e)
     {
-        if (_viewModel is not null)
-            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        UnsubscribeFromCurrentViewModel();
+        SubscribeToCurrentViewModel();
+    }
+
+    private void SubscribeToCurrentViewModel()
+    {
+        if (_viewModel == DataContext)
+            return;
 
         _viewModel = DataContext as ImagePreviewViewModel;
 
         if (_viewModel is not null)
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    private void UnsubscribeFromCurrentViewModel()
+    {
+        if (_viewModel is not null)
+            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+
+        _viewModel = null;
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

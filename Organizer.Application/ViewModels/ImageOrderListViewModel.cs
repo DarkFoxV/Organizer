@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -11,6 +12,7 @@ namespace Organizer.Application.ViewModels.Components;
 public partial class ImageOrderListViewModel : ObservableObject, System.IDisposable
 {
     private readonly AppPreferencesService _preferencesService;
+    private bool _isDisposed;
 
     [ObservableProperty] private bool _isEmpty = true;
 
@@ -18,11 +20,7 @@ public partial class ImageOrderListViewModel : ObservableObject, System.IDisposa
     {
         _preferencesService = preferencesService;
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
-        Items.CollectionChanged += (_, _) =>
-        {
-            IsEmpty = Items.Count == 0;
-            OnPropertyChanged(nameof(CountLabel));
-        };
+        Items.CollectionChanged += OnItemsChanged;
     }
 
     public ObservableCollection<ImageOrderItemViewModel> Items { get; } = [];
@@ -56,22 +54,38 @@ public partial class ImageOrderListViewModel : ObservableObject, System.IDisposa
 
     private async Task AddImageAsync(ImageOrderItemViewModel vm)
     {
+        if (_isDisposed)
+        {
+            vm.Dispose();
+            return;
+        }
+
         vm.RemoveRequested += Remove;
 
-        await vm.LoadThumbnailAsync();
+        try
+        {
+            await vm.LoadThumbnailAsync();
+        }
+        catch
+        {
+            vm.Dispose();
+            throw;
+        }
+
+        if (_isDisposed)
+        {
+            vm.Dispose();
+            return;
+        }
 
         Items.Add(vm);
-
-        OnPropertyChanged(nameof(IsEmpty));
     }
 
     public void Remove(ImageOrderItemViewModel item)
     {
-        item.Dispose();
-
+        item.RemoveRequested -= Remove;
         Items.Remove(item);
-
-        OnPropertyChanged(nameof(IsEmpty));
+        item.Dispose();
     }
 
     public void Move(int fromIndex, int toIndex)
@@ -101,8 +115,35 @@ public partial class ImageOrderListViewModel : ObservableObject, System.IDisposa
         OnPropertyChanged(nameof(CountLabel));
     }
 
+    private void OnItemsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        IsEmpty = Items.Count == 0;
+        OnPropertyChanged(nameof(CountLabel));
+    }
+
+    public void ClearItems()
+    {
+        var items = Items.ToList();
+        Items.Clear();
+
+        foreach (var item in items)
+        {
+            item.RemoveRequested -= Remove;
+            item.Dispose();
+        }
+
+        IsEmpty = true;
+        OnPropertyChanged(nameof(CountLabel));
+    }
+
     public void Dispose()
     {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
         _preferencesService.PreferencesChanged -= OnPreferencesChanged;
+        Items.CollectionChanged -= OnItemsChanged;
+        ClearItems();
     }
 }

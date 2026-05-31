@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Organizer.Application.ViewModels.Components;
+using Organize.Organizer.Core;
 using Organize.Organizer.Core.Enums;
 using Organize.Organizer.Core.Interfaces;
 using Organizer.Application.Services;
@@ -12,19 +14,23 @@ using Organizer.Core.Helpers;
 
 namespace Organizer.Application.ViewModels;
 
-public partial class SearchViewModel : ObservableObject
+public partial class SearchViewModel : ObservableObject, IDisposable
 {
     private readonly ICardService _cardService;
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
     private readonly AppPreferencesService _preferencesService;
     private int _loadVersion;
+    private bool _isDisposed;
 
     [ObservableProperty] private bool _isEmpty;
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _tagsLoaded;
     [ObservableProperty] private bool _isDeleteConfirmationVisible;
-    [ObservableProperty] private CardItemViewModel? _pendingDeleteCard;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DeleteConfirmationTitle))]
+    [NotifyPropertyChangedFor(nameof(DeleteConfirmationMessage))]
+    private CardItemViewModel? _pendingDeleteCard;
 
     // ── Componentes ───────────────────────────────────────────────────────────
     public SearchBarViewModel SearchBar { get; } = new();
@@ -87,38 +93,81 @@ public partial class SearchViewModel : ObservableObject
 
     private async Task LoadTagsAsync()
     {
-        await TagSelector.LoadAsync();
-        TagsLoaded = true;
+        try
+        {
+            await TagSelector.LoadAsync();
+            if (_isDisposed)
+                return;
+
+            TagsLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LoadTagsAsync] {ex}");
+            TagsLoaded = false;
+        }
     }
-
-
-    // Chamado pelo MainWindowViewModel após salvar um registro novo
+    
     public async Task ReloadAsync()
     {
+        if (_isDisposed)
+            return;
+
         await LoadTagsAsync();
         await LoadCardsAsync(SearchBar.Query, Pagination.CurrentPage, SearchBar.SelectedSort);
+    }
+
+    public void Deactivate()
+    {
+        var hadImageResources = Cards.Count > 0 || Preview.IsVisible || CopyPicker.IsVisible;
+
+        _loadVersion++;
+        Preview.CloseWithoutMemoryCompaction();
+        CopyPicker.CloseWithoutMemoryCompaction();
+        PendingDeleteCard = null;
+        IsDeleteConfirmationVisible = false;
+        ClearCards();
+        IsEmpty = true;
+        IsLoading = false;
+
+        if (hadImageResources)
+            MemoryCleanupService.QueueLargeImageMemoryCompaction();
     }
 
     // ── Handlers ─────────────────────────────────────────────────────────────
     private void OnSearch(string query, SortOrder sort)
     {
+        if (_isDisposed)
+            return;
+
         Pagination.CurrentPage = 0;
         _ = LoadCardsAsync(query, 0, sort);
     }
 
     private void OnTagSelectionChanged()
     {
+        if (_isDisposed)
+            return;
+
         Pagination.CurrentPage = 0;
         _ = LoadCardsAsync(SearchBar.Query, 0, SearchBar.SelectedSort);
     }
 
-    private void OnPageChanged(int page) =>
+    private void OnPageChanged(int page)
+    {
+        if (_isDisposed)
+            return;
+
         _ = LoadCardsAsync(SearchBar.Query, page, SearchBar.SelectedSort);
+    }
 
     private void OnRegister() => RegisterRequested?.Invoke();
 
     private void OnPreferencesChanged()
     {
+        if (_isDisposed)
+            return;
+
         OnPropertyChanged(nameof(DeleteConfirmationTitle));
         OnPropertyChanged(nameof(DeleteConfirmationMessage));
         Pagination.CurrentPage = 0;
@@ -144,9 +193,13 @@ public partial class SearchViewModel : ObservableObject
 
     private async void OnViewCard(CardItemViewModel card)
     {
+        var loadVersion = _loadVersion;
+
         try
         {
             var imageIds = await _imageService.GetIdsByCardAsync(card.CardId);
+            if (_isDisposed || loadVersion != _loadVersion)
+                return;
 
             if (imageIds.Count == 0)
             {
@@ -172,8 +225,6 @@ public partial class SearchViewModel : ObservableObject
         {
             PendingDeleteCard = card;
             IsDeleteConfirmationVisible = true;
-            OnPropertyChanged(nameof(DeleteConfirmationTitle));
-            OnPropertyChanged(nameof(DeleteConfirmationMessage));
             return;
         }
 
@@ -189,8 +240,6 @@ public partial class SearchViewModel : ObservableObject
         var card = PendingDeleteCard;
         PendingDeleteCard = null;
         IsDeleteConfirmationVisible = false;
-        OnPropertyChanged(nameof(DeleteConfirmationTitle));
-        OnPropertyChanged(nameof(DeleteConfirmationMessage));
 
         await DeleteCardAsync(card);
     }
@@ -200,27 +249,43 @@ public partial class SearchViewModel : ObservableObject
     {
         PendingDeleteCard = null;
         IsDeleteConfirmationVisible = false;
-        OnPropertyChanged(nameof(DeleteConfirmationTitle));
-        OnPropertyChanged(nameof(DeleteConfirmationMessage));
     }
 
     private async Task DeleteCardAsync(CardItemViewModel card)
     {
-        await _cardService.DeleteAsync(card.CardId);
+        try
+        {
+            await _cardService.DeleteAsync(card.CardId);
 
-        Cards.Remove(card);
-        card.ReleaseResources();
-        IsEmpty = Cards.Count == 0;
+            var hadLargeImageResources = card.IsGroup || card.ImageData is { Length: >= 85_000 };
+
+            Cards.Remove(card);
+            UnsubscribeCard(card);
+            card.ReleaseResources();
+            IsEmpty = Cards.Count == 0;
+
+            if (hadLargeImageResources)
+                MemoryCleanupService.QueueLargeImageMemoryCompaction();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DeleteCardAsync] {ex}");
+        }
     }
 
     private async void OnCopyCard(CardItemViewModel card)
     {
+        var loadVersion = _loadVersion;
+
         try
         {
             if (!card.IsGroup)
                 return;
 
             var images = await _imageService.GetGroupImageSummariesAsync(card.CardId);
+            if (_isDisposed || loadVersion != _loadVersion)
+                return;
+
             if (images.Count == 0)
                 return;
 
@@ -238,6 +303,9 @@ public partial class SearchViewModel : ObservableObject
         int page = 0,
         SortOrder sort = SortOrder.MaisRecente)
     {
+        if (_isDisposed)
+            return;
+
         var loadVersion = ++_loadVersion;
         IsLoading = true;
 
@@ -263,30 +331,7 @@ public partial class SearchViewModel : ObservableObject
 
             Pagination.CurrentPage = page;
 
-            var cardViewModels = await Task.Run(() =>
-            {
-                return cards.Select(card =>
-                {
-                    var thumbnail = ImageHelper.ToBitmap(card.CoverThumbnail, maxWidth: 204, maxHeight: 164);
-
-                    return new CardItemViewModel
-                    {
-                        Id = card.CoverImageId ?? 0,
-                        CardId = card.CardId,
-                        Thumbnail = thumbnail,
-                        Filename = card.CoverFilename,
-                        MimeType = card.CoverMimeType ?? "application/octet-stream",
-                        Description = card.CoverDescription,
-                        CreatedAt = card.CreatedAt.ToString("dd/MM/yyyy"),
-                        LoadImageDataAsync = card.CoverImageId is null
-                            ? null
-                            : () => _imageService.GetDataAsync(card.CoverImageId.Value),
-                        IsGroup = card.CardType == CardType.Group,
-                        ImageCount = card.ImageCount,
-                        IsLoaded = thumbnail is not null
-                    };
-                }).ToList();
-            });
+            var cardViewModels = await Task.Run(() => CreateCardViewModels(cards));
 
             if (loadVersion != _loadVersion)
             {
@@ -296,13 +341,7 @@ public partial class SearchViewModel : ObservableObject
                 return;
             }
 
-            foreach (var existingCard in Cards)
-            {
-                UnsubscribeCard(existingCard);
-                existingCard.ReleaseResources();
-            }
-
-            Cards.Clear();
+            ClearCards();
 
             foreach (var vm in cardViewModels)
             {
@@ -320,7 +359,81 @@ public partial class SearchViewModel : ObservableObject
         }
         finally
         {
-            IsLoading = false;
+            if (!_isDisposed && loadVersion == _loadVersion)
+                IsLoading = false;
         }
+    }
+
+    private void ClearCards()
+    {
+        var existingCards = Cards.ToList();
+        Cards.Clear();
+
+        foreach (var existingCard in existingCards)
+        {
+            UnsubscribeCard(existingCard);
+            existingCard.ReleaseResources();
+        }
+    }
+
+    private List<CardItemViewModel> CreateCardViewModels(IEnumerable<SearchCardResult> cards)
+    {
+        var viewModels = new List<CardItemViewModel>();
+
+        try
+        {
+            foreach (var card in cards)
+            {
+                var thumbnail = ImageHelper.ToBitmap(card.CoverThumbnail, maxWidth: 204, maxHeight: 164);
+
+                viewModels.Add(new CardItemViewModel
+                {
+                    Id = card.CoverImageId ?? 0,
+                    CardId = card.CardId,
+                    Thumbnail = thumbnail,
+                    Filename = card.CoverFilename,
+                    MimeType = card.CoverMimeType ?? "application/octet-stream",
+                    Description = card.CoverDescription,
+                    CreatedAt = card.CreatedAt.ToString("dd/MM/yyyy"),
+                    LoadImageDataStreamAsync = card.CoverImageId is null
+                        ? null
+                        : () => _imageService.GetDataAsync(card.CoverImageId.Value),
+                    IsGroup = card.CardType == CardType.Group,
+                    ImageCount = card.ImageCount,
+                    IsLoaded = thumbnail is not null
+                });
+            }
+
+            return viewModels;
+        }
+        catch
+        {
+            foreach (var viewModel in viewModels)
+                viewModel.ReleaseResources();
+
+            throw;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _loadVersion++;
+
+        SearchBar.SearchRequested -= OnSearch;
+        SearchBar.RegisterRequested -= OnRegister;
+        Pagination.PageChanged -= OnPageChanged;
+        TagSelector.SelectionChanged -= OnTagSelectionChanged;
+        _preferencesService.PreferencesChanged -= OnPreferencesChanged;
+
+        PendingDeleteCard = null;
+        IsDeleteConfirmationVisible = false;
+        ClearCards();
+        Preview.Dispose();
+        CopyPicker.Dispose();
+        TagSelector.Dispose();
     }
 }

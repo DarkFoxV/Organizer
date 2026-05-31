@@ -592,9 +592,7 @@ public partial class WorkspaceView : UserControl
     {
         if (_isVisibleItemsUpdateQueued)
             return;
-
-        // Não enfileira durante o pan — o RenderTransform já move tudo
-        // visualmente; o culling pode aguardar o fim do gesto
+        
         if (_isPanning)
             return;
 

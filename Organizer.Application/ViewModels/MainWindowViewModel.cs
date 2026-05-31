@@ -52,6 +52,9 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (IsGlobalLoading) return;
 
+        if (button != NavButton.Search && ReferenceEquals(CurrentView, _searchViewModel))
+            _searchViewModel.Deactivate();
+
         DetachRegister();
         DetachEdit();
         DetachHome();
@@ -84,6 +87,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (IsGlobalLoading) return;
 
+        _searchViewModel.Deactivate();
         DetachHome();
         DetachRegister();
         DetachEdit();
@@ -108,6 +112,7 @@ public partial class MainWindowViewModel : ObservableObject
         editVm.CloseRequested += GoBackToSearch;
         editVm.SubmitSuccess += GoBackToSearch;
         await editVm.LoadAsync(card);
+        _searchViewModel.Deactivate();
         _activeEditViewModel = editVm;
         CurrentView = editVm;
     }

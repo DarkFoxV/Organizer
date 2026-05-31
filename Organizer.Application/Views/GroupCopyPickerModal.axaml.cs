@@ -24,15 +24,34 @@ public partial class GroupCopyPickerModal : UserControl
         if (sender is not Control { DataContext: GroupCopyPickerItemViewModel item })
             return;
 
-        var data = await vm.LoadImageDataAsync(item.Id);
-        if (data is null || data.Length == 0)
-            return;
+        var compactLargeImage = false;
 
-        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        if (clipboard is null)
-            return;
+        try
+        {
+            await using var data = await vm.OpenImageDataStreamAsync(item.Id);
+            if (!vm.IsVisible || !ReferenceEquals(DataContext, vm))
+                return;
 
-        if (await ClipboardService.SetImageAsync(clipboard, data, item.MimeType))
-            vm.CloseCommand.Execute(null);
+            if (data is null || (data.CanSeek && data.Length == data.Position))
+                return;
+
+            compactLargeImage = data.CanSeek && data.Length >= 85_000;
+
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            if (clipboard is null)
+                return;
+
+            if (await ClipboardService.SetImageAsync(clipboard, data, item.MimeType))
+                vm.CloseWithoutMemoryCompaction();
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine($"[GroupCopyPickerModal.OnCopyImage] {ex}");
+        }
+        finally
+        {
+            if (compactLargeImage)
+                MemoryCleanupService.QueueLargeImageMemoryCompaction();
+        }
     }
 }

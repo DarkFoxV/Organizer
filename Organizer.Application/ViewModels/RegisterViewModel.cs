@@ -2,7 +2,6 @@ using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-using System.Runtime;
 using System.Threading.Tasks;
 using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
@@ -37,9 +36,13 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] private bool _tagsLoaded;
 
-    [ObservableProperty] private bool _isSubmitting;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady), nameof(CanClose))]
+    private bool _isSubmitting;
 
-    [ObservableProperty] private bool _isPickingImages;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsReady), nameof(StatusText), nameof(StatusIsReady), nameof(CanClose))]
+    private bool _isPickingImages;
 
     [ObservableProperty] private string? _errorMessage;
 
@@ -56,6 +59,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         ? _preferencesService.T("Loc.Register.Ready")
         : _preferencesService.T("Loc.Register.FillFields");
     public bool StatusIsReady => IsReady;
+    public bool CanClose => !IsSubmitting && !IsPickingImages;
 
     // ── Eventos ───────────────────────────────────────────────────────────────
     public event Action? CloseRequested;
@@ -82,7 +86,6 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
         ImageOrder.Items.CollectionChanged += OnImagesChanged;
 
-        // SelectionChanged dispara quando qualquer tag é selecionada/deselecionada
         TagSelector.SelectionChanged += NotifyReady;
 
         _ = LoadTagsAsync();
@@ -90,6 +93,9 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
     private void NotifyReady()
     {
+        if (_isDisposed)
+            return;
+
         OnPropertyChanged(nameof(IsReady));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusIsReady));
@@ -97,9 +103,24 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
     private async Task LoadTagsAsync()
     {
-        await TagSelector.LoadAsync();
-        TagsLoaded = true;
-        NotifyReady();
+        try
+        {
+            await TagSelector.LoadAsync();
+            if (_isDisposed)
+                return;
+
+            TagsLoaded = true;
+            NotifyReady();
+        }
+        catch (Exception ex)
+        {
+            if (_isDisposed)
+                return;
+
+            ErrorMessage = $"Erro ao carregar tags: {ex.Message}";
+            Console.WriteLine(ex);
+            NotifyReady();
+        }
     }
 
     // ── Comandos ──────────────────────────────────────────────────────────────
@@ -124,17 +145,33 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
                 ]
             });
 
-            if (files.Count == 0)
-                return;
+            var unownedFiles = files.ToList();
 
-            foreach (var file in files)
-                await ImageOrder.AddImageAsync(file);
+            try
+            {
+                foreach (var file in files)
+                {
+                    if (_isDisposed)
+                        return;
+
+                    unownedFiles.Remove(file);
+                    await ImageOrder.AddImageAsync(file);
+                }
+            }
+            finally
+            {
+                foreach (var file in unownedFiles)
+                    file.Dispose();
+            }
         }
         finally
         {
-            IsPickingImages = false;
-            BusyStateChanged?.Invoke(false, string.Empty);
-            NotifyReady();
+            if (!_isDisposed)
+            {
+                IsPickingImages = false;
+                BusyStateChanged?.Invoke(false, string.Empty);
+                NotifyReady();
+            }
         }
     }
 
@@ -151,6 +188,9 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
             ErrorMessage = null;
 
             var images = await _clipboardService.GetImagesAsync(clipboard);
+            if (_isDisposed)
+                return false;
+
             if (images.Count == 0)
             {
                 ErrorMessage = "Clipboard nao contem uma imagem suportada para colar.";
@@ -159,6 +199,9 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
             foreach (var image in images)
             {
+                if (_isDisposed)
+                    return false;
+
                 await ImageOrder.AddImageAsync(
                     filename: image.Filename,
                     mimeType: image.MimeType,
@@ -174,9 +217,12 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         }
         finally
         {
-            IsPickingImages = false;
-            BusyStateChanged?.Invoke(false, string.Empty);
-            NotifyReady();
+            if (!_isDisposed)
+            {
+                IsPickingImages = false;
+                BusyStateChanged?.Invoke(false, string.Empty);
+                NotifyReady();
+            }
         }
     }
 
@@ -189,61 +235,112 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         ErrorMessage = null;
         BusyStateChanged?.Invoke(true, "Salvando imagens, aguarde...");
 
+        Card? createdCard = null;
+
         try
         {
             var items = ImageOrder.Items.ToList();
+            var selectedTags = TagSelector.SelectedTags.ToList();
+            var description = string.IsNullOrWhiteSpace(Description)
+                ? null
+                : Description.Trim();
             var cardType = items.Count == 1 ? CardType.Single : CardType.Group;
             var title = items.Count == 1
                 ? Path.GetFileNameWithoutExtension(items[0].Filename)
-                : Description.Trim();
+                : description ?? string.Empty;
 
-            // 1. Cria o card
-            var card = await _cardService.CreateAsync(title, cardType);
+            createdCard = await _cardService.CreateAsync(title, cardType);
 
-            // 2. Salva cada imagem na ordem definida pelo usuário
             Image? firstImage = null;
             for (var i = 0; i < items.Count; i++)
             {
+                if (_isDisposed)
+                    throw new OperationCanceledException("Register was disposed during submit.");
+
                 var item = items[i];
-                var mime = item.MimeType;
-                byte[]? data = await item.ReadDataAsync();
-                var image = await _imageService.CreateAsync(
-                    cardId: card.Id,
-                    data: data,
-                    filename: item.Filename,
-                    mimeType: mime,
-                    description: i == 0 ? Description.Trim() : null);
-                data = null;
-                item.RemoveRequested -= ImageOrder.Remove;
-                item.Dispose();
+                try
+                {
+                    var imageDescription = i == 0 ? description : null;
+                    Image image;
 
-                firstImage ??= image;
+                    if (item.HasFileSource)
+                    {
+                        await using var stream = await item.OpenReadAsync();
+                        if (_isDisposed)
+                            throw new OperationCanceledException("Register was disposed during submit.");
 
-                // 3. Associa as tags selecionadas em cada imagem
-                foreach (var tag in TagSelector.SelectedTags)
-                    await _imageService.AddTagAsync(image.Id, tag.Id);
+                        image = await _imageService.CreateAsync(
+                            cardId: createdCard.Id,
+                            dataStream: stream,
+                            thumbnail: item.ThumbnailData,
+                            filename: item.Filename,
+                            mimeType: item.MimeType,
+                            description: imageDescription);
+                    }
+                    else
+                    {
+                        byte[]? data = await item.ReadDataAsync();
+                        if (_isDisposed)
+                            throw new OperationCanceledException("Register was disposed during submit.");
+
+                        image = await _imageService.CreateAsync(
+                            cardId: createdCard.Id,
+                            data: data,
+                            thumbnail: item.ThumbnailData,
+                            filename: item.Filename,
+                            mimeType: item.MimeType,
+                            description: imageDescription);
+                        data = null;
+                    }
+
+                    firstImage ??= image;
+
+                    foreach (var tag in selectedTags)
+                        await _imageService.AddTagAsync(image.Id, tag.Id);
+                }
+                finally
+                {
+                    item.RemoveRequested -= ImageOrder.Remove;
+                    item.Dispose();
+                }
             }
 
-            // 4. Define a primeira imagem como capa do card
             if (firstImage is not null)
-                await _cardService.SetCoverAsync(card.Id, firstImage.Id);
+                await _cardService.SetCoverAsync(createdCard.Id, firstImage.Id);
 
-            Cleanup();
+            Cleanup(queueMemoryCompaction: true);
             SubmitSuccess?.Invoke();
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Erro ao salvar: {ex.Message}";
+            if (createdCard is not null)
+            {
+                try
+                {
+                    await _cardService.DeleteAsync(createdCard.Id);
+                }
+                catch (Exception rollbackEx)
+                {
+                    Console.WriteLine(rollbackEx);
+                }
+            }
+
+            if (!_isDisposed)
+                ErrorMessage = $"Erro ao salvar: {ex.Message}";
+
             Console.WriteLine(ex);
         }
         finally
         {
-            IsSubmitting = false;
-            BusyStateChanged?.Invoke(false, string.Empty);
+            if (!_isDisposed)
+            {
+                IsSubmitting = false;
+                BusyStateChanged?.Invoke(false, string.Empty);
+            }
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanClose))]
     private void Close()
     {
         Cleanup();
@@ -251,45 +348,40 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         CloseRequested?.Invoke();
     }
 
+    partial void OnIsSubmittingChanged(bool value)
+    {
+        CloseCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsPickingImagesChanged(bool value)
+    {
+        CloseCommand.NotifyCanExecuteChanged();
+    }
+
     public void Dispose()
     {
         Cleanup();
     }
 
-    private void Cleanup()
+    private void Cleanup(bool queueMemoryCompaction = false)
     {
         if (_isDisposed) return;
         _isDisposed = true;
-        var hadImages = ImageOrder.Items.Count > 0;
+        var shouldCompactMemory = queueMemoryCompaction || ImageOrder.Items.Count > 0;
         BusyStateChanged?.Invoke(false, string.Empty);
 
-        foreach (var item in ImageOrder.Items.ToList())
-        {
-            item.RemoveRequested -= ImageOrder.Remove;
-            item.Dispose();
-        }
-
-        ImageOrder.Items.Clear();
-
         TagSelector.SelectionChanged -= NotifyReady;
-        TagSelector.Dispose();
         ImageOrder.Items.CollectionChanged -= OnImagesChanged;
+        ImageOrder.ClearItems();
+        TagSelector.Dispose();
         ImageOrder.Dispose();
         _preferencesService.PreferencesChanged -= NotifyReady;
 
         Description = string.Empty;
         ErrorMessage = null;
 
-        if (hadImages)
-            CompactLargeImageMemory();
-    }
-
-    private static void CompactLargeImageMemory()
-    {
-        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-        GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-        GC.WaitForPendingFinalizers();
-        GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+        if (shouldCompactMemory)
+            MemoryCleanupService.QueueLargeImageMemoryCompaction();
     }
 
     private void OnImagesChanged(object? sender, NotifyCollectionChangedEventArgs e)

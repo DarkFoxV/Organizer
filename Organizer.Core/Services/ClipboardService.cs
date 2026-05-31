@@ -49,10 +49,21 @@ public class ClipboardService : IClipboardService
         ];
     }
 
-    public async Task<bool> SetImageAsync(IClipboard clipboard, byte[] imageData, string? mimeType = null)
+    public async Task<bool> SetImageAsync(IClipboard clipboard, Stream imageStream, string? mimeType = null)
     {
-        if (imageData.Length == 0)
+        if (!imageStream.CanRead)
             return false;
+
+        if (imageStream.CanSeek)
+            imageStream.Position = 0;
+
+        using var memoryStream = new MemoryStream();
+        await imageStream.CopyToAsync(memoryStream);
+
+        if (memoryStream.Length == 0)
+            return false;
+
+        var imageData = memoryStream.ToArray();
 
         var imageMimeType = NormalizeImageMime(mimeType) ?? DetectMime(imageData);
         if (imageMimeType is null)
@@ -63,6 +74,7 @@ public class ClipboardService : IClipboardService
 
         var dataTransfer = new DataTransfer();
         dataTransfer.Add(item);
+
         await clipboard.SetDataAsync(dataTransfer);
         return true;
     }
@@ -77,17 +89,24 @@ public class ClipboardService : IClipboardService
 
         foreach (var file in files.OfType<IStorageFile>())
         {
-            if (!IsSupportedImageFile(file.Name))
-                continue;
+            try
+            {
+                if (!IsSupportedImageFile(file.Name))
+                    continue;
 
-            await using var stream = await file.OpenReadAsync();
-            using var memoryStream = new MemoryStream();
-            await stream.CopyToAsync(memoryStream);
+                await using var stream = await file.OpenReadAsync();
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
 
-            images.Add(new ClipboardImageData(
-                Filename: file.Name,
-                MimeType: DetectMime(file.Name),
-                Data: memoryStream.ToArray()));
+                images.Add(new ClipboardImageData(
+                    Filename: file.Name,
+                    MimeType: DetectMime(file.Name),
+                    Data: memoryStream.ToArray()));
+            }
+            finally
+            {
+                file.Dispose();
+            }
         }
 
         return images;

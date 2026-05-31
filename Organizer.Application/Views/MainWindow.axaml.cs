@@ -36,6 +36,22 @@ public partial class MainWindow : Window
         if (DataContext is not MainWindowViewModel vm)
             return;
 
+        if (vm.IsGlobalLoading)
+        {
+            e.Cancel = true;
+
+            await ConfirmationDialog.ShowAsync(
+                this,
+                AppPreferencesService.Translate("Loc.Common.Wait"),
+                string.IsNullOrWhiteSpace(vm.GlobalLoadingText)
+                    ? "Uma operacao ainda esta em andamento. Aguarde ela terminar antes de fechar o app."
+                    : vm.GlobalLoadingText,
+                AppPreferencesService.Translate("Loc.Common.Ok"),
+                AppPreferencesService.Translate("Loc.Common.Ok"));
+
+            return;
+        }
+
         if (!vm.HasUnsavedWorkspaceChanges)
             return;
 

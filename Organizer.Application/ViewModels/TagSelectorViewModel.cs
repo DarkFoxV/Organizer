@@ -15,6 +15,8 @@ public partial class TagSelectorViewModel : ObservableObject, IDisposable
 {
     private readonly ITagService _tagService;
     private readonly AppPreferencesService? _preferencesService;
+    private int _loadVersion;
+    private bool _isDisposed;
 
     public ObservableCollection<TagItemViewModel> Tags { get; } = [];
 
@@ -27,7 +29,6 @@ public partial class TagSelectorViewModel : ObservableObject, IDisposable
     public IEnumerable<TagItemViewModel> SelectedTags =>
         Tags.Where(t => t.IsSelected);
 
-    // Disparado sempre que qualquer tag é selecionada/deselecionada
     public event Action? SelectionChanged;
 
     public TagSelectorViewModel(ITagService tagService, bool showAddButton = true)
@@ -45,14 +46,19 @@ public partial class TagSelectorViewModel : ObservableObject, IDisposable
         ShowAddButton = showAddButton;
     }
 
-    // Carrega tags do banco e monta os ViewModels
     public async Task LoadAsync()
     {
+        if (_isDisposed)
+            return;
+
+        var loadVersion = ++_loadVersion;
         var selectedTagIds = SelectedTags
             .Select(tag => tag.Id)
             .ToHashSet();
 
         var tags = await _tagService.GetAllAsync();
+        if (_isDisposed || loadVersion != _loadVersion)
+            return;
 
         ClearTags();
 
@@ -89,12 +95,18 @@ public partial class TagSelectorViewModel : ObservableObject, IDisposable
 
     private void OnTagToggled(TagItemViewModel _)
     {
+        if (_isDisposed)
+            return;
+
         OnPropertyChanged(nameof(SelectedTags));
         SelectionChanged?.Invoke();
     }
 
     public void SetSelectedTagIds(IEnumerable<int> tagIds)
     {
+        if (_isDisposed)
+            return;
+
         var selected = tagIds.ToHashSet();
 
         foreach (var tag in Tags)
@@ -107,6 +119,9 @@ public partial class TagSelectorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void OpenNewTagInput()
     {
+        if (_isDisposed)
+            return;
+
         ShowNewTagInput = true;
         NewTagName = string.Empty;
     }
@@ -114,6 +129,9 @@ public partial class TagSelectorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void CancelNewTag()
     {
+        if (_isDisposed)
+            return;
+
         ShowNewTagInput = false;
         NewTagName = string.Empty;
     }
@@ -121,6 +139,9 @@ public partial class TagSelectorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ConfirmNewTag()
     {
+        if (_isDisposed)
+            return;
+
         if (string.IsNullOrWhiteSpace(NewTagName)) return;
 
         try
@@ -128,6 +149,8 @@ public partial class TagSelectorViewModel : ObservableObject, IDisposable
             var tag = await _tagService.CreateAsync(
                 NewTagName.Trim(),
                 TagColor.Blue);
+            if (_isDisposed)
+                return;
 
             var vm = CreateTagItemViewModel(
                 tag.Id,
@@ -142,13 +165,21 @@ public partial class TagSelectorViewModel : ObservableObject, IDisposable
         }
         finally
         {
-            ShowNewTagInput = false;
-            NewTagName = string.Empty;
+            if (!_isDisposed)
+            {
+                ShowNewTagInput = false;
+                NewTagName = string.Empty;
+            }
         }
     }
 
     public void Dispose()
     {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _loadVersion++;
         ClearTags();
         SelectionChanged = null;
     }

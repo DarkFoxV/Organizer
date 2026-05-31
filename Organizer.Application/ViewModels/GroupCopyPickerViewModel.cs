@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -11,10 +12,12 @@ using Organizer.Core.Helpers;
 
 namespace Organizer.Application.ViewModels;
 
-public partial class GroupCopyPickerViewModel : ObservableObject
+public partial class GroupCopyPickerViewModel : ObservableObject, IDisposable
 {
     private readonly AppPreferencesService _preferencesService;
-    private Func<int, Task<byte[]?>>? _loadImageDataAsync;
+    private Func<int, Task<Stream?>>? _openImageDataStreamAsync;
+    private int _loadVersion;
+    private bool _isDisposed;
 
     [ObservableProperty] private bool _isVisible;
 
@@ -30,25 +33,24 @@ public partial class GroupCopyPickerViewModel : ObservableObject
 
     public async Task OpenAsync(
         IEnumerable<GroupImageSummary> images,
-        Func<int, Task<byte[]?>> loadImageDataAsync)
+        Func<int, Task<Stream?>>? openImageDataStreamAsync)
     {
-        _loadImageDataAsync = loadImageDataAsync;
+        if (_isDisposed)
+            return;
+
+        var loadVersion = ++_loadVersion;
+        _openImageDataStreamAsync = openImageDataStreamAsync;
 
         ClearItems();
-        var items = await Task.Run(() =>
+        var items = await Task.Run(() => CreateItems(images));
+
+        if (loadVersion != _loadVersion)
         {
-            return images
-                .Select((image, index) => new GroupCopyPickerItemViewModel
-                {
-                    Id = image.Id,
-                    Index = index,
-                    Thumbnail = ImageHelper.ToBitmap(image.Thumbnail, maxWidth: 220, maxHeight: 160),
-                    Filename = image.Filename,
-                    MimeType = image.MimeType ?? "application/octet-stream",
-                    Description = image.Description
-                })
-                .ToList();
-        });
+            foreach (var item in items)
+                item.Dispose();
+
+            return;
+        }
 
         foreach (var item in items)
             Items.Add(item);
@@ -57,11 +59,11 @@ public partial class GroupCopyPickerViewModel : ObservableObject
         IsVisible = true;
     }
 
-    public async Task<byte[]?> LoadImageDataAsync(int imageId)
+    public async Task<Stream?> OpenImageDataStreamAsync(int imageId)
     {
-        return _loadImageDataAsync is null
+        return _isDisposed || _openImageDataStreamAsync is null
             ? null
-            : await _loadImageDataAsync(imageId);
+            : await _openImageDataStreamAsync(imageId);
     }
 
     public string CountText => Items.Count == 1
@@ -69,25 +71,84 @@ public partial class GroupCopyPickerViewModel : ObservableObject
         : _preferencesService.T("Loc.CopyPicker.CountMany", Items.Count);
 
     [RelayCommand]
-    private void Close()
+    public void Close()
     {
+        CloseCore(queueMemoryCompaction: true);
+    }
+
+    public void CloseWithoutMemoryCompaction()
+    {
+        CloseCore(queueMemoryCompaction: false);
+    }
+
+    private void CloseCore(bool queueMemoryCompaction)
+    {
+        var hadImageResources = IsVisible || Items.Count > 0;
+
+        _loadVersion++;
         IsVisible = false;
-        _loadImageDataAsync = null;
+        _openImageDataStreamAsync = null;
         ClearItems();
+
+        if (queueMemoryCompaction && hadImageResources)
+            MemoryCleanupService.QueueLargeImageMemoryCompaction();
     }
 
     private void ClearItems()
     {
-        foreach (var item in Items)
-            item.Dispose();
+        var items = Items.ToList();
 
         Items.Clear();
+
+        foreach (var item in items)
+            item.Dispose();
+
         OnPropertyChanged(nameof(CountText));
+    }
+
+    private static List<GroupCopyPickerItemViewModel> CreateItems(IEnumerable<GroupImageSummary> images)
+    {
+        var items = new List<GroupCopyPickerItemViewModel>();
+
+        try
+        {
+            foreach (var (image, index) in images.Select((image, index) => (image, index)))
+            {
+                items.Add(new GroupCopyPickerItemViewModel
+                {
+                    Id = image.Id,
+                    Index = index,
+                    Thumbnail = ImageHelper.ToBitmap(image.Thumbnail, maxWidth: 220, maxHeight: 160),
+                    Filename = image.Filename,
+                    MimeType = image.MimeType ?? "application/octet-stream",
+                    Description = image.Description
+                });
+            }
+
+            return items;
+        }
+        catch
+        {
+            foreach (var item in items)
+                item.Dispose();
+
+            throw;
+        }
     }
 
     private void OnPreferencesChanged()
     {
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(CountText));
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        Close();
+        _preferencesService.PreferencesChanged -= OnPreferencesChanged;
+        _isDisposed = true;
     }
 }

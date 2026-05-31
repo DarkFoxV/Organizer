@@ -1,16 +1,18 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Organizer.Application.Services;
 
 namespace Organizer.Application.ViewModels.Components;
 
 public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
 {
+    private bool _isDisposed;
+
     [ObservableProperty] private bool _isDragging;
 
     [ObservableProperty] private bool _isDropTarget;
@@ -21,27 +23,51 @@ public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
 
     public string MimeType { get; init; } = "application/octet-stream";
 
-    public IStorageFile? SourceFile { get; init; }
+    public IStorageFile? SourceFile { get; set; }
 
     public byte[]? SourceData { get; set; }
 
+    public byte[]? ThumbnailData { get; private set; }
+
+    public bool HasFileSource => SourceFile is not null;
+
     public async Task LoadThumbnailAsync()
     {
+        if (_isDisposed)
+            return;
+
         await using var sourceStream = await OpenReadAsync();
-        using var full = new Bitmap(sourceStream);
 
-        var ratio = Math.Min(
-            80.0 / full.PixelSize.Width,
-            80.0 / full.PixelSize.Height);
-
-        var width = (int)(full.PixelSize.Width * ratio);
-        var height = (int)(full.PixelSize.Height * ratio);
-
-        Thumbnail = await Task.Run(() =>
+        byte[] thumbnailData;
+        try
         {
-            return full.CreateScaledBitmap(
-                new PixelSize(width, height));
-        });
+            thumbnailData = await Task.Run(() =>
+                ImageThumbnailService.CreateThumbnail(sourceStream));
+        }
+        catch
+        {
+            if (!_isDisposed)
+                Dispose();
+
+            throw;
+        }
+
+        if (_isDisposed)
+            return;
+
+        using var thumbnailStream = new MemoryStream(thumbnailData, writable: false);
+        var thumbnail = new Bitmap(thumbnailStream);
+
+        if (_isDisposed)
+        {
+            thumbnail.Dispose();
+            return;
+        }
+
+        var previousThumbnail = Thumbnail;
+        ThumbnailData = thumbnailData;
+        Thumbnail = thumbnail;
+        DisposeBitmap(previousThumbnail);
     }
 
     public async Task<byte[]> ReadDataAsync()
@@ -55,7 +81,7 @@ public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
         return ms.ToArray();
     }
 
-    private async Task<Stream> OpenReadAsync()
+    public async Task<Stream> OpenReadAsync()
     {
         if (SourceData is not null)
             return new MemoryStream(SourceData, writable: false);
@@ -68,9 +94,19 @@ public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
-        Thumbnail?.Dispose();
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        var thumbnail = Thumbnail;
         Thumbnail = null;
+        ThumbnailData = null;
+        DisposeBitmap(thumbnail);
+
         SourceData = null;
+        SourceFile?.Dispose();
+        SourceFile = null;
+        RemoveRequested = null;
     }
 
     public event Action<ImageOrderItemViewModel>? RemoveRequested;
@@ -78,8 +114,18 @@ public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Remove()
     {
-        Dispose();
+        var handler = RemoveRequested;
+        if (handler is null)
+        {
+            Dispose();
+            return;
+        }
 
-        RemoveRequested?.Invoke(this);
+        handler.Invoke(this);
+    }
+
+    private static void DisposeBitmap(Bitmap? bitmap)
+    {
+        bitmap?.Dispose();
     }
 }

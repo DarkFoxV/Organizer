@@ -1,3 +1,4 @@
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -23,24 +24,52 @@ public partial class ImageContainer : UserControl
         if (DataContext is not CardItemViewModel vm)
             return;
 
-        if (vm.IsGroup)
+        var compactLargeImage = false;
+
+        try
         {
-            vm.RequestCopy();
-            return;
+            if (vm.IsGroup)
+            {
+                vm.RequestCopy();
+                return;
+            }
+
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            if (clipboard is null)
+                return;
+
+            var imageData = vm.ImageData;
+            compactLargeImage = imageData is { Length: >= 85_000 };
+
+            if (imageData is { Length: > 0 })
+            {
+                using var imageStream = new MemoryStream(imageData, writable: false);
+                await ClipboardService.SetImageAsync(clipboard, imageStream, vm.MimeType);
+                return;
+            }
+
+            if (vm.LoadImageDataStreamAsync is null)
+                return;
+
+            await using var loadedImageStream = await vm.LoadImageDataStreamAsync();
+            if (!ReferenceEquals(DataContext, vm))
+                return;
+
+            if (loadedImageStream is null || (loadedImageStream.CanSeek && loadedImageStream.Length == loadedImageStream.Position))
+                return;
+
+            compactLargeImage = loadedImageStream.CanSeek && loadedImageStream.Length >= 85_000;
+            await ClipboardService.SetImageAsync(clipboard, loadedImageStream, vm.MimeType);
         }
-
-        var imageData = vm.ImageData;
-        if ((imageData is null || imageData.Length == 0) && vm.LoadImageDataAsync is not null)
-            imageData = await vm.LoadImageDataAsync();
-
-        if (imageData is null || imageData.Length == 0)
-            return;
-
-        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        if (clipboard is null)
-            return;
-
-        await ClipboardService.SetImageAsync(clipboard, imageData, vm.MimeType);
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine($"[ImageContainer.OnCopyImage] {ex}");
+        }
+        finally
+        {
+            if (compactLargeImage)
+                MemoryCleanupService.QueueLargeImageMemoryCompaction();
+        }
     }
 
     private void OnCardPointerReleased(object? sender, PointerReleasedEventArgs e)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Media.Imaging;
 using Microsoft.EntityFrameworkCore;
 using Organize.Organizer.Core;
 using Organize.Organizer.Core.Interfaces;
@@ -14,9 +13,6 @@ namespace Organizer.Application.Services;
 
 public class ImageService(AppDbContextFactory dbFactory) : IImageService
 {
-    private const int ThumbnailWidth = 220;
-    private const int ThumbnailHeight = 300;
-
     public async Task<Image> CreateAsync(
         int cardId,
         byte[] data,
@@ -24,10 +20,80 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
         string? mimeType = null,
         string? description = null)
     {
+        return await CreateAsync(
+            cardId,
+            data,
+            thumbnail: null,
+            filename,
+            mimeType,
+            description);
+    }
+
+    public async Task<Image> CreateAsync(
+        int cardId,
+        byte[] data,
+        byte[]? thumbnail,
+        string filename,
+        string? mimeType = null,
+        string? description = null)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+
+        thumbnail ??= ImageThumbnailService.CreateThumbnail(data);
+        return await InsertImageAsync(cardId, data, thumbnail, filename, mimeType, description);
+    }
+
+    public async Task<Image> CreateAsync(
+        int cardId,
+        Stream dataStream,
+        string filename,
+        string? mimeType = null,
+        string? description = null)
+    {
+        return await CreateAsync(
+            cardId,
+            dataStream,
+            thumbnail: null,
+            filename,
+            mimeType,
+            description);
+    }
+
+    public async Task<Image> CreateAsync(
+        int cardId,
+        Stream dataStream,
+        byte[]? thumbnail,
+        string filename,
+        string? mimeType = null,
+        string? description = null)
+    {
+        ArgumentNullException.ThrowIfNull(dataStream);
+
+        var data = await ReadAllBytesAsync(dataStream);
+        thumbnail ??= ImageThumbnailService.CreateThumbnail(data);
+
+        try
+        {
+            return await InsertImageAsync(cardId, data, thumbnail, filename, mimeType, description);
+        }
+        finally
+        {
+            data = [];
+            thumbnail = [];
+        }
+    }
+
+    private async Task<Image> InsertImageAsync(
+        int cardId,
+        byte[] data,
+        byte[] thumbnail,
+        string filename,
+        string? mimeType,
+        string? description)
+    {
         await using var lease = await dbFactory.CreateLeaseAsync();
         var db = lease.Context;
 
-        var thumbnail = await Task.Run(() => CreateThumbnail(data));
         var cardExists = await db.Cards
             .AsNoTracking()
             .AnyAsync(c => c.Id == cardId);
@@ -64,34 +130,47 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
             CreatedAt = image.CreatedAt
         };
 
+        image.Data = [];
+        image.Thumbnail = [];
         db.ChangeTracker.Clear();
 
         return result;
     }
 
-    public static byte[] CreateThumbnail(byte[] data)
+    private static async Task<byte[]> ReadAllBytesAsync(Stream dataStream)
     {
-        using var input = new MemoryStream(data);
+        if (!dataStream.CanRead)
+            throw new ArgumentException("Stream must be readable.", nameof(dataStream));
 
-        using var full = new Bitmap(input);
+        if (dataStream.CanSeek)
+        {
+            dataStream.Position = 0;
 
-        var ratio = Math.Min(
-            ThumbnailWidth / (double)full.PixelSize.Width,
-            ThumbnailHeight / (double)full.PixelSize.Height);
+            if (dataStream.Length > int.MaxValue)
+                throw new InvalidOperationException("Image is too large.");
 
-        var width = (int)(full.PixelSize.Width * ratio);
-        var height = (int)(full.PixelSize.Height * ratio);
+            var data = new byte[dataStream.Length];
+            var offset = 0;
 
-        using var thumb = full.CreateScaledBitmap(
-            new Avalonia.PixelSize(width, height));
+            while (offset < data.Length)
+            {
+                var read = await dataStream.ReadAsync(data.AsMemory(offset));
+                if (read == 0)
+                    break;
 
-        using var output = new MemoryStream();
+                offset += read;
+            }
 
-        thumb.Save(output);
+            if (offset != data.Length)
+                Array.Resize(ref data, offset);
 
-        return output.ToArray();
+            return data;
+        }
+
+        using var buffer = new MemoryStream();
+        await dataStream.CopyToAsync(buffer);
+        return buffer.ToArray();
     }
-
 
     public async Task<(List<SearchCardResult> Cards, int TotalCount)> SearchCardsAsync(
         string query,
@@ -234,16 +313,22 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
             })
             .FirstOrDefaultAsync();
     }
-
-    public async Task<byte[]?> GetDataAsync(int id)
+    
+    public async Task<Stream?> GetDataAsync(int id)
     {
         await using var lease = await dbFactory.CreateLeaseAsync();
         var db = lease.Context;
 
-        return await db.Images
+        var data = await db.Images
+            .AsNoTracking()
             .Where(i => i.Id == id)
             .Select(i => i.Data)
             .FirstOrDefaultAsync();
+
+        if (data is null)
+            return null;
+
+        return new MemoryStream(data, writable: false);
     }
 
     public async Task<List<Image>> GetByCardAsync(int cardId)

@@ -73,6 +73,7 @@
                                 Width="40" Height="40"
                                 Padding="0"
                                 VerticalAlignment="Top"
+                                IsEnabled="{Binding CanClose}"
                                 Command="{Binding CloseCommand}">
                             <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
                         </Button>

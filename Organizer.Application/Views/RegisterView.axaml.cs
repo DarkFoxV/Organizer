@@ -35,6 +35,9 @@ public partial class RegisterView : UserControl
                 _topLevel = null;
             }
 
+            ImageOrderListControl.DataContext = null;
+            TagSelectorControl.DataContext = null;
+
             if (DataContext is RegisterViewModel vm)
                 vm.Dispose();
         };

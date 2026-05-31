@@ -5,14 +5,12 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-using System.Runtime;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Input.Platform;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Organizer.Application.Services;
@@ -24,8 +22,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private const double CanvasPadding = 200;
     private const double PasteOffsetStep = 48;
     private const double BatchPasteGap = 36;
-    private const double MinimumBoardWidth = 4000;
-    private const double MinimumBoardHeight = 2500;
+    private const double MinimumBoardWidth = 1500;
+    private const double MinimumBoardHeight = 1500;
     private const int ThumbnailMaxDimension = 400;
     private const int WorkspaceThumbnailWidth = 480;
     private const int WorkspaceThumbnailHeight = 270;
@@ -51,7 +49,6 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private int _nextZIndex;
     private IStorageFile? _workspaceFile;
     private byte[]? _workspaceThumbnailData;
-    private static bool _isMemoryCompactionQueued;
 
     private sealed record PendingWorkspaceImage(
         Bitmap Bitmap,
@@ -496,7 +493,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         }
 
         ErrorMessage = null;
-        return await _clipboardService.SetImageAsync(clipboard, imageData, item.MimeType);
+        using var imageStream = new MemoryStream(imageData, writable: false);
+        return await _clipboardService.SetImageAsync(clipboard, imageStream, item.MimeType);
     }
 
     [RelayCommand]
@@ -531,7 +529,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         NotifyBoardStateChanged();
 
         if (hadImages)
-            QueueLargeImageMemoryCompaction();
+            MemoryCleanupService.QueueLargeImageMemoryCompaction();
     }
 
     public bool Undo()
@@ -1078,7 +1076,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             _redoStack.Clear();
 
             if (hadRedoSnapshots)
-                QueueLargeImageMemoryCompaction();
+                MemoryCleanupService.QueueLargeImageMemoryCompaction();
         }
 
         NotifyHistoryStateChanged();
@@ -1123,7 +1121,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         NotifyHistoryStateChanged();
 
         if (hadSnapshots)
-            QueueLargeImageMemoryCompaction();
+            MemoryCleanupService.QueueLargeImageMemoryCompaction();
     }
 
     private void NotifyHistoryStateChanged()
@@ -1195,7 +1193,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
         Items.Remove(item);
         item.Dispose();
-        QueueLargeImageMemoryCompaction();
+        MemoryCleanupService.QueueLargeImageMemoryCompaction();
 
         if (Items.Count == 0)
         {
@@ -1449,7 +1447,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             if (_undoStack.Count != undoCount || _redoStack.Count != redoCount)
             {
                 NotifyHistoryStateChanged();
-                QueueLargeImageMemoryCompaction();
+                MemoryCleanupService.QueueLargeImageMemoryCompaction();
             }
         }
 
@@ -1515,20 +1513,4 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     private static IBrush BrushFromHex(string color) => new SolidColorBrush(Color.Parse(color));
 
-    private static void QueueLargeImageMemoryCompaction()
-    {
-        if (_isMemoryCompactionQueued)
-            return;
-
-        _isMemoryCompactionQueued = true;
-
-        Dispatcher.UIThread.Post(() =>
-        {
-            _isMemoryCompactionQueued = false;
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-            GC.WaitForPendingFinalizers();
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-        }, DispatcherPriority.Background);
-    }
 }

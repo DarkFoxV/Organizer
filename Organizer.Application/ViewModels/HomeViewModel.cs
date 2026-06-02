@@ -25,6 +25,7 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
     [ObservableProperty] private int _workspaceTotal;
     [ObservableProperty] private int _tagTotal;
     [ObservableProperty] private string? _errorMessage;
+    [ObservableProperty] private bool _isWorkspaceListMode;
 
     public HomeViewModel(
         HomeWorkspaceCacheService homeWorkspaceCacheService,
@@ -38,6 +39,7 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
         _workspaceViewModel = workspaceViewModel;
         _preferencesService = preferencesService;
         _toastService = toastService;
+        _isWorkspaceListMode = _preferencesService.Current.HomeWorkspaceViewMode == HomeWorkspaceViewPreference.List;
         _homeWorkspaceCacheService.Changed += OnHomeWorkspaceCacheChanged;
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
         _ = RefreshAsync();
@@ -50,9 +52,19 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
     public ObservableCollection<HomeWorkspaceItemViewModel> RecentWorkspaces { get; } = [];
 
     public bool HasRecentWorkspaces => RecentWorkspaces.Count > 0;
+    public bool IsWorkspaceGridMode => !IsWorkspaceListMode;
     public string ImageTotalText => AppPreferencesService.Translate("Loc.Home.StatImages", ImageTotal);
     public string WorkspaceTotalText => AppPreferencesService.Translate("Loc.Home.StatWorkspaces", WorkspaceTotal);
     public string TagTotalText => AppPreferencesService.Translate("Loc.Home.StatTags", TagTotal);
+
+    partial void OnIsWorkspaceListModeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsWorkspaceGridMode));
+        _preferencesService.UpdateStoredData(preferences =>
+            preferences.HomeWorkspaceViewMode = value
+                ? HomeWorkspaceViewPreference.List
+                : HomeWorkspaceViewPreference.Grid);
+    }
 
     partial void OnSearchTextChanged(string value)
     {
@@ -127,6 +139,16 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
     public void ImportImages()
     {
         ImportImagesRequested?.Invoke();
+    }
+
+    public void ShowWorkspaceGrid()
+    {
+        IsWorkspaceListMode = false;
+    }
+
+    public void ShowWorkspaceList()
+    {
+        IsWorkspaceListMode = true;
     }
 
     public void RemoveFromHome(HomeWorkspaceItemViewModel workspace)

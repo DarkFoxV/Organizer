@@ -117,7 +117,7 @@
 
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="cvm:CardItemViewModel">
-                                <components:ImageContainer DataContext="{Binding}" Margin="8" />
+                                <components:ImageContainer DataContext="{Binding}" Margin="10" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
 

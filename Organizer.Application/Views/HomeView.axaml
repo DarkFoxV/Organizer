@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:Organizer.Application.ViewModels"
              x:Class="Organizer.Application.Views.HomeView"
              x:DataType="vm:HomeViewModel">
@@ -9,8 +10,68 @@
             <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="BoxShadow" Value="0 18 48 0 #66000000" />
+            <Setter Property="CornerRadius" Value="13" />
+            <Setter Property="BoxShadow" Value="0 18 48 0 #44000000" />
+        </Style>
+
+        <Style Selector="Border.stat-card">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="16 14" />
+        </Style>
+
+        <Style Selector="TextBlock.stat-label">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.stat-value">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.section-label">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+        </Style>
+
+        <Style Selector="Button.view-toggle-button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8 4" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.view-toggle-button:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.view-toggle-button.selected">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+        </Style>
+
+        <Style Selector="Button.view-toggle-button ic|FluentIcon">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
         </Style>
 
         <Style Selector="Border.workspace-card">
@@ -45,53 +106,165 @@
     </UserControl.Styles>
 
     <Grid Background="{DynamicResource AppBackgroundBrush}">
-        <Grid RowDefinitions="Auto,*,Auto,Auto"
-              Margin="40 30"
-              RowSpacing="26"
+        <Grid RowDefinitions="Auto,Auto,Auto,*"
+              Margin="32 24"
+              RowSpacing="16"
               MaxWidth="1180"
               HorizontalAlignment="Stretch"
               VerticalAlignment="Stretch">
 
-                <Grid ColumnDefinitions="*,320">
-                    <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto"
+                      ColumnSpacing="10">
+                    <StackPanel Spacing="3">
                         <TextBlock Text="{DynamicResource Loc.Home.Title}"
-                                   FontSize="34"
+                                   FontSize="20"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}" />
                         <TextBlock Text="{DynamicResource Loc.Home.Subtitle}"
-                                   FontSize="14"
+                                   FontSize="13"
                                    Foreground="{DynamicResource TextMutedBrush}" />
                     </StackPanel>
 
-                    <TextBox Grid.Column="1"
-                             Classes="field"
-                             PlaceholderText="{DynamicResource Loc.Home.SearchPlaceholder}"
-                             Text="{Binding SearchText, Mode=TwoWay}"
-                             VerticalAlignment="Center"
-                             Padding="14 10" />
+                    <Border Grid.Column="1"
+                            Width="260"
+                            Height="42"
+                            Background="{DynamicResource SurfaceAltBrush}"
+                            BorderBrush="{DynamicResource BorderBrushColor}"
+                            BorderThickness="1"
+                            CornerRadius="9"
+                            Padding="12 0"
+                            VerticalAlignment="Center">
+                        <Grid ColumnDefinitions="Auto,*"
+                              ColumnSpacing="8">
+                            <ic:FluentIcon Icon="ImageSearch"
+                                           IconVariant="Regular"
+                                           IconSize="Size20"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSubtleBrush}" />
+                            <TextBox Grid.Column="1"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="{DynamicResource TextPrimaryBrush}"
+                                     CaretBrush="{DynamicResource PrimaryBrush}"
+                                     PlaceholderText="{DynamicResource Loc.Home.SearchPlaceholder}"
+                                     Text="{Binding SearchText, Mode=TwoWay}"
+                                     VerticalAlignment="Center"
+                                     Padding="0" />
+                        </Grid>
+                    </Border>
+
+                    <Button Grid.Column="2"
+                            Classes="btn"
+                            Background="{DynamicResource SurfaceAltBrush}"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            Padding="14 10"
+                            Click="OnImportImagesClick">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <ic:FluentIcon Icon="ArrowUpload"
+                                           IconVariant="Regular"
+                                           IconSize="Size20"
+                                           VerticalAlignment="Center" />
+                            <TextBlock Text="{DynamicResource Loc.Home.ImportImages}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Grid.Column="3"
+                            Classes="btn btn-primary"
+                            Padding="14 10"
+                            Click="OnNewWorkspaceClick">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <ic:FluentIcon Icon="AddSquare"
+                                           IconVariant="Regular"
+                                           IconSize="Size20"
+                                           VerticalAlignment="Center" />
+                            <TextBlock Text="{DynamicResource Loc.Home.NewWorkspace}" />
+                        </StackPanel>
+                    </Button>
                 </Grid>
 
-                <Border Grid.Row="1"
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="*,*,*"
+                      ColumnSpacing="10">
+                    <Border Classes="stat-card">
+                        <StackPanel Spacing="7">
+                            <TextBlock Classes="stat-label"
+                                       Text="{DynamicResource Loc.Home.StatImagesLabel}" />
+                            <TextBlock Classes="stat-value"
+                                       Text="{Binding ImageTotal}" />
+                            <TextBlock Text="{DynamicResource Loc.Home.StatImagesDescription}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource AccentSoftTextBrush}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1" Classes="stat-card">
+                        <StackPanel Spacing="7">
+                            <TextBlock Classes="stat-label"
+                                       Text="{DynamicResource Loc.Home.StatWorkspacesLabel}" />
+                            <TextBlock Classes="stat-value"
+                                       Text="{Binding WorkspaceTotal}" />
+                            <TextBlock Text="{DynamicResource Loc.Home.StatWorkspacesDescription}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource SuccessTextBrush}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Classes="stat-card">
+                        <StackPanel Spacing="7">
+                            <TextBlock Classes="stat-label"
+                                       Text="{DynamicResource Loc.Home.StatTagsLabel}" />
+                            <TextBlock Classes="stat-value"
+                                       Text="{Binding TagTotal}" />
+                            <TextBlock Text="{DynamicResource Loc.Home.StatTagsDescription}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid Grid.Row="2"
+                      ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="section-label"
+                               Text="{DynamicResource Loc.Home.RecentTitle}" />
+                    <Border Grid.Column="1"
+                            Background="{DynamicResource SurfaceSoftBrush}"
+                            BorderBrush="{DynamicResource FloatingBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="7"
+                            Padding="3">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Classes="view-toggle-button"
+                                    Classes.selected="{Binding IsWorkspaceGridMode}"
+                                    Click="OnWorkspaceGridModeClick">
+                                <ic:FluentIcon Icon="GridKanban"
+                                               IconVariant="Regular"
+                                               IconSize="Size20" />
+                            </Button>
+                            <Button Classes="view-toggle-button"
+                                    Classes.selected="{Binding IsWorkspaceListMode}"
+                                    Click="OnWorkspaceListModeClick">
+                                <ic:FluentIcon Icon="AppsListDetail"
+                                               IconVariant="Regular"
+                                               IconSize="Size20" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="3"
                         Classes="home-card"
-                        Padding="22"
+                        Padding="12"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch">
-                    <Grid RowDefinitions="Auto,*">
-                        <TextBlock Text="{DynamicResource Loc.Home.RecentTitle}"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}" />
-
-                        <ScrollViewer Grid.Row="1"
-                                      Margin="0 18 0 0"
-                                      VerticalScrollBarVisibility="Auto"
+                    <Grid RowDefinitions="*">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled"
-                                      HorizontalAlignment="Center">
+                                      IsVisible="{Binding IsWorkspaceGridMode}">
                             <ItemsControl ItemsSource="{Binding RecentWorkspaces}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <WrapPanel ItemWidth="270"
-                                                   ItemHeight="292" />
+                                                   ItemHeight="260" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
@@ -102,9 +275,9 @@
                                             <Border Background="{DynamicResource SurfaceBrush}"
                                                     BorderBrush="{DynamicResource FloatingBorderBrush}"
                                                     BorderThickness="1"
-                                                    CornerRadius="16"
+                                                    CornerRadius="13"
                                                     Padding="12">
-                                                <Grid RowDefinitions="150,Auto,Auto,Auto"
+                                                <Grid RowDefinitions="132,Auto,Auto,Auto"
                                                       RowSpacing="9">
                                                     <Border Background="{DynamicResource SurfaceAltBrush}"
                                                             CornerRadius="12"
@@ -134,7 +307,7 @@
 
                                                     <TextBlock Grid.Row="1"
                                                                Text="{Binding Name}"
-                                                               FontSize="15"
+                                                               FontSize="14"
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                                TextTrimming="CharacterEllipsis" />
@@ -162,51 +335,89 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
+
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      IsVisible="{Binding IsWorkspaceListMode}">
+                            <ItemsControl ItemsSource="{Binding RecentWorkspaces}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="8" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:HomeWorkspaceItemViewModel">
+                                        <Border Classes="workspace-card"
+                                                PointerReleased="OnWorkspaceCardClick">
+                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                    BorderBrush="{DynamicResource FloatingBorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="13"
+                                                    Padding="10">
+                                                <Grid ColumnDefinitions="86,*,Auto"
+                                                      ColumnSpacing="12"
+                                                      MinHeight="76">
+                                                    <Border Width="86"
+                                                            Height="64"
+                                                            Background="{DynamicResource SurfaceAltBrush}"
+                                                            CornerRadius="10"
+                                                            ClipToBounds="True">
+                                                        <Grid>
+                                                            <Image Source="{Binding Thumbnail}"
+                                                                   Stretch="UniformToFill"
+                                                                   IsVisible="{Binding HasThumbnail}" />
+                                                            <TextBlock Text="{DynamicResource Loc.Home.WorkspaceFallback}"
+                                                                       IsVisible="{Binding HasNoThumbnail}"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"
+                                                                       FontSize="13"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource TextSubtleBrush}" />
+                                                            <Border IsVisible="{Binding IsMissing}"
+                                                                    Background="{DynamicResource DangerSoftBrush}">
+                                                                <TextBlock Text="{DynamicResource Loc.Home.FileNotFound}"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center"
+                                                                           FontSize="10"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{DynamicResource DangerSoftTextBrush}" />
+                                                            </Border>
+                                                        </Grid>
+                                                    </Border>
+
+                                                    <StackPanel Grid.Column="1"
+                                                                Spacing="5"
+                                                                VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding StatusText}"
+                                                                   FontSize="12"
+                                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="2"
+                                                                Orientation="Horizontal"
+                                                                Spacing="8"
+                                                                VerticalAlignment="Center">
+                                                        <Button Classes="card-action card-action-remove"
+                                                                Content="{DynamicResource Loc.Home.RemoveFromHome}"
+                                                                Click="OnRemoveFromHomeClick" />
+                                                        <Button Classes="card-action card-action-delete"
+                                                                Content="{DynamicResource Loc.Home.DeleteWorkspace}"
+                                                                Click="OnDeleteWorkspaceClick" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
-                </Border>
-
-                <Border Grid.Row="2"
-                        Classes="home-card"
-                        Padding="22">
-                    <Grid ColumnDefinitions="*,Auto,Auto"
-                          ColumnSpacing="12">
-                        <StackPanel>
-                            <TextBlock Text="{DynamicResource Loc.Home.QuickActions}"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextPrimaryBrush}" />
-                            <TextBlock Text="{DynamicResource Loc.Home.QuickActionsSubtitle}"
-                                       FontSize="13"
-                                       Foreground="{DynamicResource TextMutedBrush}" />
-                        </StackPanel>
-
-                        <Button Grid.Column="1"
-                                Classes="btn btn-primary"
-                                Content="{DynamicResource Loc.Home.NewWorkspace}"
-                                Padding="18 11"
-                                Click="OnNewWorkspaceClick" />
-                        <Button Grid.Column="2"
-                                Classes="btn"
-                                Background="{DynamicResource SurfaceAltBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                Content="{DynamicResource Loc.Home.ImportImages}"
-                                Padding="18 11"
-                                Click="OnImportImagesClick" />
-                    </Grid>
-                </Border>
-
-                <Border Grid.Row="3"
-                        Classes="home-card"
-                        Padding="18 14">
-                    <StackPanel Orientation="Horizontal"
-                                Spacing="24">
-                        <TextBlock Text="{Binding ImageTotalText}"
-                                   Foreground="{DynamicResource TextMutedBrush}" />
-                        <TextBlock Text="{Binding WorkspaceTotalText}"
-                                   Foreground="{DynamicResource TextMutedBrush}" />
-                        <TextBlock Text="{Binding TagTotalText}"
-                                   Foreground="{DynamicResource TextMutedBrush}" />
-                    </StackPanel>
                 </Border>
         </Grid>
 

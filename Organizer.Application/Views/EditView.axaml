@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:Organizer.Application.ViewModels"
              xmlns:components="using:Organizer.Application.Components"
              x:Class="Organizer.Application.Views.EditView"
@@ -11,6 +12,18 @@
             <Setter Property="FontSize" Value="16" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="ic|FluentIcon.section-icon">
+            <Setter Property="IconVariant" Value="Regular" />
+            <Setter Property="IconSize" Value="Size20" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="StackPanel.section-heading">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Spacing" Value="8" />
         </Style>
 
         <Style Selector="Border.section-card">
@@ -41,6 +54,23 @@
             <Setter Property="FontSize" Value="14" />
         </Style>
 
+        <Style Selector="Button.btn-secondary">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="Button.btn-secondary:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
+        </Style>
+
+        <Style Selector="Button ic|FluentIcon">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+        </Style>
+
     </UserControl.Styles>
 
     <Grid Background="{DynamicResource AppBackgroundBrush}"
@@ -67,47 +97,70 @@
                                        TextWrapping="Wrap" />
                         </StackPanel>
                         <Button Grid.Column="1"
-                                Classes="btn btn-danger"
-                                Width="40" Height="40"
-                                Padding="0"
+                                Classes="btn btn-secondary"
+                                Height="40"
+                                Padding="14 0"
                                 VerticalAlignment="Top"
                                 Command="{Binding CloseCommand}">
-                            <TextBlock Text="✕" FontSize="16" FontWeight="Bold" />
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="8">
+                                <ic:FluentIcon Icon="Dismiss"
+                                               IconVariant="Regular"
+                                               IconSize="Size20"
+                                               VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource Loc.Common.Close}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
                         </Button>
                     </Grid>
                 </Border>
 
                 <Border Classes="section-card">
-                    <StackPanel Spacing="12">
-                        <TextBlock Classes="section-title"
-                                   Text="{DynamicResource Loc.Register.Description}" />
-                        <TextBlock Text="{DynamicResource Loc.Edit.DescriptionHint}"
-                                   FontSize="13"
-                                   Foreground="{DynamicResource TextMutedBrush}"
-                                   TextWrapping="Wrap" />
-                        <TextBox Classes="field"
-                                 Text="{Binding Description}"
-                                 PlaceholderText="{DynamicResource Loc.Edit.DescriptionPlaceholder}" />
-                    </StackPanel>
-                </Border>
+                    <StackPanel Spacing="18">
+                        <StackPanel Classes="section-heading">
+                            <ic:FluentIcon Classes="section-icon"
+                                           Icon="DocumentText" />
+                            <TextBlock Classes="section-title"
+                                       Text="{DynamicResource Loc.Register.Info}" />
+                        </StackPanel>
 
-                <Border Classes="section-card">
-                    <StackPanel Spacing="12">
-                        <TextBlock Classes="section-title"
-                                   Text="{DynamicResource Loc.Register.Tags}" />
-                        <TextBlock Text="{DynamicResource Loc.Edit.TagsHint}"
-                                   FontSize="13"
-                                   Foreground="{DynamicResource TextMutedBrush}"
-                                   TextWrapping="Wrap" />
+                        <StackPanel Spacing="12">
+                            <StackPanel Classes="section-heading">
+                                <ic:FluentIcon Classes="section-icon"
+                                               Icon="TextDescription" />
+                                <TextBlock Classes="section-title"
+                                           Text="{DynamicResource Loc.Register.Description}" />
+                            </StackPanel>
+                            <TextBlock Text="{DynamicResource Loc.Edit.DescriptionHint}"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
+                            <TextBox Classes="field"
+                                     Text="{Binding Description}"
+                                     PlaceholderText="{DynamicResource Loc.Edit.DescriptionPlaceholder}" />
+                        </StackPanel>
 
-                        <TextBlock IsVisible="{Binding !TagsLoaded}"
-                                   Text="{DynamicResource Loc.Register.LoadingTags}"
-                                   FontSize="13"
-                                   Foreground="{DynamicResource TextMutedBrush}" />
+                        <StackPanel Spacing="12">
+                            <StackPanel Classes="section-heading">
+                                <ic:FluentIcon Classes="section-icon"
+                                               Icon="Tag" />
+                                <TextBlock Classes="section-title"
+                                           Text="{DynamicResource Loc.Register.Tags}" />
+                            </StackPanel>
+                            <TextBlock Text="{DynamicResource Loc.Edit.TagsHint}"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
 
-                        <components:TagSelector
-                            x:Name="TagSelectorControl"
-                            IsVisible="{Binding TagsLoaded}" />
+                            <TextBlock IsVisible="{Binding !TagsLoaded}"
+                                       Text="{DynamicResource Loc.Register.LoadingTags}"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+
+                            <components:TagSelector
+                                x:Name="TagSelectorControl"
+                                IsVisible="{Binding TagsLoaded}" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -118,9 +171,25 @@
                                 BorderThickness="1"
                                 CornerRadius="10"
                                 Padding="14 12">
-                            <TextBlock Text="{Binding StatusText}"
-                                       FontSize="13"
-                                       Foreground="{DynamicResource TextMutedBrush}" />
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="8">
+                                <ic:FluentIcon IsVisible="{Binding StatusIsReady}"
+                                               Icon="CheckmarkCircle"
+                                               IconVariant="Regular"
+                                               IconSize="Size20"
+                                               Foreground="{DynamicResource SuccessTextBrush}"
+                                               VerticalAlignment="Center" />
+                                <ic:FluentIcon IsVisible="{Binding !StatusIsReady}"
+                                               Icon="Warning"
+                                               IconVariant="Regular"
+                                               IconSize="Size20"
+                                               Foreground="{DynamicResource WarningTextBrush}"
+                                               VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding StatusText}"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
                         </Border>
 
                         <Border
@@ -143,8 +212,10 @@
                                 MinWidth="180">
                             <StackPanel Orientation="Horizontal"
                                         Spacing="10">
-                                <TextBlock Text="💾"
-                                           VerticalAlignment="Center" />
+                                <ic:FluentIcon Icon="DocumentSave"
+                                               IconVariant="Regular"
+                                               IconSize="Size20"
+                                               VerticalAlignment="Center" />
                                 <TextBlock IsVisible="{Binding !IsSubmitting}"
                                            Text="{DynamicResource Loc.Edit.Save}"
                                            VerticalAlignment="Center" />

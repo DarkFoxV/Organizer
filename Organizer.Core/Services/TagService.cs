@@ -95,6 +95,32 @@ public class TagService(AppDbContextFactory dbFactory) : ITagService
             .ToListAsync();
     }
 
+    public async Task<Dictionary<int, int>> GetUsageCountsAsync()
+    {
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
+
+        return await db.ImageTags
+            .GroupBy(imageTag => imageTag.TagId)
+            .Select(group => new
+            {
+                TagId = group.Key,
+                Count = group.Count()
+            })
+            .ToDictionaryAsync(item => item.TagId, item => item.Count);
+    }
+
+    public async Task<int> CountTaggedImagesAsync()
+    {
+        await using var lease = await dbFactory.CreateLeaseAsync();
+        var db = lease.Context;
+
+        return await db.ImageTags
+            .Select(imageTag => imageTag.ImageId)
+            .Distinct()
+            .CountAsync();
+    }
+
     public async Task<Tag> RenameAsync(int id, string newName)
     {
         await using var lease = await dbFactory.CreateLeaseAsync();

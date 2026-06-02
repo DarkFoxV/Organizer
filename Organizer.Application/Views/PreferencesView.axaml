@@ -1,11 +1,21 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Organizer.Application.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="980" d:DesignHeight="680"
              x:Class="Organizer.Organizer.Application.Views.PreferencesView"
              x:DataType="vm:PreferencesViewModel">
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="PreferenceOptionTemplate"
+                      x:CompileBindings="False">
+            <TextBlock Text="{Binding Label}"
+                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       VerticalAlignment="Center" />
+        </DataTemplate>
+    </UserControl.Resources>
 
     <UserControl.Styles>
         <Style Selector="Border.floating-panel">
@@ -25,6 +35,11 @@
             <Setter Property="Padding" Value="14 12" />
         </Style>
 
+        <Style Selector="Border.preference-row:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
+            <Setter Property="BoxShadow" Value="0 8 22 #26000000" />
+        </Style>
+
         <Style Selector="ComboBox.preference-select">
             <Setter Property="MinWidth" Value="190" />
             <Setter Property="Height" Value="38" />
@@ -34,10 +49,35 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12 0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="ComboBox.preference-select:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
         </Style>
 
         <Style Selector="ComboBox.preference-select:focus">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <Style Selector="ComboBox.preference-select TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="ComboBox.preference-select ComboBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        </Style>
+
+        <Style Selector="ComboBox.preference-select ComboBoxItem:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        </Style>
+
+        <Style Selector="ComboBox.preference-select ComboBoxItem:selected">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
 
         <Style Selector="TextBlock.section-title">
@@ -76,9 +116,37 @@
         </Style>
 
         <Style Selector="Button.settings-tab.selected">
-            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="Foreground" Value="#ffffff" />
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.settings-tab ic|FluentIcon">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+        </Style>
+
+        <Style Selector="Button.settings-tab.selected ic|FluentIcon">
+            <Setter Property="Foreground" Value="#ffffff" />
+        </Style>
+
+        <Style Selector="Button.settings-tab.selected TextBlock">
+            <Setter Property="Foreground" Value="#ffffff" />
+        </Style>
+
+        <Style Selector="StackPanel.section-heading ic|FluentIcon">
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+        </Style>
+
+        <Style Selector="Slider">
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Slider:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <Style Selector="ToggleSwitch">
+            <Setter Property="Cursor" Value="Hand" />
         </Style>
 
         <Style Selector="Button.backup-action">
@@ -131,14 +199,16 @@
 
                     <Border Grid.Column="1"
                             Classes="floating-panel"
+                            IsVisible="{Binding IsSaveIndicatorVisible}"
                             Padding="14 10"
                             VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Ellipse Width="9"
-                                     Height="9"
-                                     Fill="{DynamicResource SuccessBrush}"
-                                     VerticalAlignment="Center" />
-                            <TextBlock Text="{DynamicResource Loc.Common.SaveAuto}"
+                            <ic:FluentIcon Icon="CheckmarkCircle"
+                                           IconVariant="Regular"
+                                           IconSize="Size20"
+                                           Foreground="{DynamicResource SuccessBrush}"
+                                           VerticalAlignment="Center" />
+                            <TextBlock Text="{DynamicResource Loc.Preferences.Saved}"
                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                        FontSize="12"
                                        FontWeight="SemiBold"
@@ -153,17 +223,32 @@
                     <Button Classes="settings-tab"
                             Classes.selected="{Binding IsGeneralSelected}"
                             Click="OnGeneralSettingsClick">
-                        <TextBlock Text="{DynamicResource Loc.Preferences.TabSettings}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:FluentIcon Icon="Settings"
+                                           IconVariant="Regular"
+                                           IconSize="Size20" />
+                            <TextBlock Text="{DynamicResource Loc.Preferences.TabSettings}" />
+                        </StackPanel>
                     </Button>
                     <Button Classes="settings-tab"
                             Classes.selected="{Binding IsDataBackupSelected}"
                             Click="OnDataBackupClick">
-                        <TextBlock Text="{DynamicResource Loc.Preferences.TabDataBackup}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:FluentIcon Icon="Database"
+                                           IconVariant="Regular"
+                                           IconSize="Size20" />
+                            <TextBlock Text="{DynamicResource Loc.Preferences.TabDataBackup}" />
+                        </StackPanel>
                     </Button>
                     <Button Classes="settings-tab"
                             Classes.selected="{Binding IsAboutSelected}"
                             Click="OnAboutClick">
-                        <TextBlock Text="{DynamicResource Loc.Preferences.TabAbout}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:FluentIcon Icon="Info"
+                                           IconVariant="Regular"
+                                           IconSize="Size20" />
+                            <TextBlock Text="{DynamicResource Loc.Preferences.TabAbout}" />
+                        </StackPanel>
                     </Button>
                 </StackPanel>
 
@@ -178,7 +263,13 @@
                             Grid.Column="0"
                             Classes="floating-panel">
                         <StackPanel Spacing="14">
-                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Appearance}" />
+                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                <ic:FluentIcon Icon="Color"
+                                               IconVariant="Regular"
+                                               IconSize="Size20"
+                                               VerticalAlignment="Center" />
+                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Appearance}" />
+                            </StackPanel>
 
                             <Border Classes="preference-row">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
@@ -190,6 +281,7 @@
                                     <ComboBox Grid.Column="1"
                                               Classes="preference-select"
                                               ItemsSource="{Binding ThemeOptions}"
+                                              ItemTemplate="{StaticResource PreferenceOptionTemplate}"
                                               SelectedItem="{Binding SelectedTheme}" />
                                 </Grid>
                             </Border>
@@ -200,7 +292,13 @@
                             Grid.Column="1"
                             Classes="floating-panel">
                         <StackPanel Spacing="14">
-                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Search}" />
+                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                <ic:FluentIcon Icon="Search"
+                                               IconVariant="Regular"
+                                               IconSize="Size20"
+                                               VerticalAlignment="Center" />
+                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Search}" />
+                            </StackPanel>
 
                             <Border Classes="preference-row">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
@@ -212,6 +310,7 @@
                                     <ComboBox Grid.Column="1"
                                               Classes="preference-select"
                                               ItemsSource="{Binding ItemsPerPageOptions}"
+                                              ItemTemplate="{StaticResource PreferenceOptionTemplate}"
                                               SelectedItem="{Binding SelectedItemsPerPage}" />
                                 </Grid>
                             </Border>
@@ -222,7 +321,13 @@
                             Grid.Column="0"
                             Classes="floating-panel">
                         <StackPanel Spacing="14">
-                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Language}" />
+                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                <ic:FluentIcon Icon="LocalLanguage"
+                                               IconVariant="Regular"
+                                               IconSize="Size20"
+                                               VerticalAlignment="Center" />
+                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Language}" />
+                            </StackPanel>
 
                             <Border Classes="preference-row">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
@@ -234,6 +339,7 @@
                                     <ComboBox Grid.Column="1"
                                               Classes="preference-select"
                                               ItemsSource="{Binding LanguageOptions}"
+                                              ItemTemplate="{StaticResource PreferenceOptionTemplate}"
                                               SelectedItem="{Binding SelectedLanguage}" />
                                 </Grid>
                             </Border>
@@ -244,7 +350,13 @@
                             Grid.Column="1"
                             Classes="floating-panel">
                         <StackPanel Spacing="14">
-                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Security}" />
+                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                <ic:FluentIcon Icon="Shield"
+                                               IconVariant="Regular"
+                                               IconSize="Size20"
+                                               VerticalAlignment="Center" />
+                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Security}" />
+                            </StackPanel>
 
                             <Border Classes="preference-row">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
@@ -267,16 +379,16 @@
                         <StackPanel Spacing="14">
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Workspace}" />
+                                    <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                        <ic:FluentIcon Icon="Grid"
+                                                       IconVariant="Regular"
+                                                       IconSize="Size20"
+                                                       VerticalAlignment="Center" />
+                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Workspace}" />
+                                    </StackPanel>
                                     <TextBlock Classes="row-description"
                                                Text="{DynamicResource Loc.Preferences.WorkspaceDescription}" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding WorkspaceDefaultZoomPercent, StringFormat='{}{0:0}%'}"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           FontSize="18"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center" />
                             </Grid>
 
                             <Grid ColumnDefinitions="*,*"
@@ -293,6 +405,7 @@
                                         <ComboBox Grid.Column="1"
                                                   Classes="preference-select"
                                                   ItemsSource="{Binding WorkspacePasteOptions}"
+                                                  ItemTemplate="{StaticResource PreferenceOptionTemplate}"
                                                   SelectedItem="{Binding SelectedWorkspacePasteMode}" />
                                     </Grid>
                                 </Border>
@@ -308,6 +421,7 @@
                                         <ComboBox Grid.Column="1"
                                                   Classes="preference-select"
                                                   ItemsSource="{Binding WorkspaceBackgroundOptions}"
+                                                  ItemTemplate="{StaticResource PreferenceOptionTemplate}"
                                                   SelectedItem="{Binding SelectedWorkspaceBackground}" />
                                     </Grid>
                                 </Border>
@@ -317,7 +431,15 @@
                                         Classes="preference-row">
                                     <Grid ColumnDefinitions="*,280" ColumnSpacing="22">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.InitialZoom}" />
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.InitialZoom}" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding WorkspaceDefaultZoomPercent, StringFormat='{}{0:0}%'}"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
                                             <TextBlock Classes="row-description"
                                                        Text="{DynamicResource Loc.Preferences.InitialZoomDescription}" />
                                         </StackPanel>
@@ -333,20 +455,21 @@
                                 <Border Grid.Row="2"
                                         Grid.ColumnSpan="2"
                                         Classes="preference-row">
-                                    <Grid ColumnDefinitions="*,70,280" ColumnSpacing="18">
+                                    <Grid ColumnDefinitions="*,280" ColumnSpacing="22">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.HistoryLimit}" />
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.HistoryLimit}" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding WorkspaceHistoryLimit, StringFormat='{}{0:0}'}"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
                                             <TextBlock Classes="row-description"
                                                        Text="{DynamicResource Loc.Preferences.HistoryLimitDescription}" />
                                         </StackPanel>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding WorkspaceHistoryLimit, StringFormat='{}{0:0}'}"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   HorizontalAlignment="Right"
-                                                   VerticalAlignment="Center" />
-                                        <Slider Grid.Column="2"
+                                        <Slider Grid.Column="1"
                                                 Minimum="0"
                                                 Maximum="200"
                                                 TickFrequency="10"
@@ -366,7 +489,13 @@
                     <Border Classes="floating-panel">
                         <StackPanel Spacing="16">
                             <StackPanel Spacing="4">
-                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Title}" />
+                                <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                    <ic:FluentIcon Icon="Database"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size20"
+                                                   VerticalAlignment="Center" />
+                                    <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Title}" />
+                                </StackPanel>
                                 <TextBlock Classes="row-description"
                                            Text="{DynamicResource Loc.Backup.Description}" />
                             </StackPanel>
@@ -375,7 +504,13 @@
                                   ColumnSpacing="18">
                                 <Border Classes="preference-row">
                                     <StackPanel Spacing="12">
-                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Database}" />
+                                        <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                            <ic:FluentIcon Icon="Storage"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size20"
+                                                           VerticalAlignment="Center" />
+                                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Database}" />
+                                        </StackPanel>
 
                                         <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
                                             <TextBlock Classes="row-description" Text="{DynamicResource Loc.Backup.CurrentLocation}" />
@@ -401,7 +536,13 @@
                                 <Border Grid.Column="1"
                                         Classes="preference-row">
                                     <StackPanel Spacing="12">
-                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.LocalBackup}" />
+                                        <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                            <ic:FluentIcon Icon="ArrowDownload"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size20"
+                                                           VerticalAlignment="Center" />
+                                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.LocalBackup}" />
+                                        </StackPanel>
                                         <UniformGrid Columns="2" Rows="2">
                                             <Button Classes="backup-action"
                                                     Margin="0 0 8 8"
@@ -436,7 +577,13 @@
                     <Border Grid.Row="1"
                             Classes="floating-panel">
                         <StackPanel Spacing="14">
-                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.CloudBackup}" />
+                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                <ic:FluentIcon Icon="Cloud"
+                                               IconVariant="Regular"
+                                               IconSize="Size20"
+                                               VerticalAlignment="Center" />
+                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.CloudBackup}" />
+                            </StackPanel>
 
                             <Border Classes="preference-row">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
@@ -505,10 +652,82 @@
                 <Border Grid.Row="2"
                         Classes="floating-panel"
                         IsVisible="{Binding IsAboutSectionVisible}">
-                    <StackPanel Spacing="10">
-                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.TabAbout}" />
+                    <StackPanel Spacing="16">
+                        <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                            <ic:FluentIcon Icon="Info"
+                                           IconVariant="Regular"
+                                           IconSize="Size20"
+                                           VerticalAlignment="Center" />
+                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.TabAbout}" />
+                        </StackPanel>
                         <TextBlock Classes="row-description"
                                    Text="{DynamicResource Loc.Preferences.AboutDescription}" />
+
+                        <Grid ColumnDefinitions="*,*,*"
+                              RowDefinitions="Auto,Auto"
+                              ColumnSpacing="14"
+                              RowSpacing="14">
+                            <Border Classes="preference-row">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Classes="row-description"
+                                               Text="{DynamicResource Loc.Preferences.AboutVersion}" />
+                                    <TextBlock Classes="info-value"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Text="{Binding AppVersion}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Classes="preference-row">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Classes="row-description"
+                                               Text="{DynamicResource Loc.Preferences.AboutBuild}" />
+                                    <TextBlock Classes="info-value"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Text="{Binding BuildNumber}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2"
+                                    Classes="preference-row">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Classes="row-description"
+                                               Text="{DynamicResource Loc.Preferences.AboutTechnology}" />
+                                    <TextBlock Classes="info-value"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Text="{Binding TechnologyStackText}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Row="1"
+                                    Classes="preference-row">
+                                <TextBlock Classes="info-value"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Text="{Binding AboutImagesText}" />
+                            </Border>
+
+                            <Border Grid.Row="1"
+                                    Grid.Column="1"
+                                    Classes="preference-row">
+                                <TextBlock Classes="info-value"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Text="{Binding AboutWorkspacesText}" />
+                            </Border>
+
+                            <Border Grid.Row="1"
+                                    Grid.Column="2"
+                                    Classes="preference-row">
+                                <TextBlock Classes="info-value"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Text="{Binding AboutTagsText}" />
+                            </Border>
+                        </Grid>
                     </StackPanel>
                 </Border>
             </Grid>

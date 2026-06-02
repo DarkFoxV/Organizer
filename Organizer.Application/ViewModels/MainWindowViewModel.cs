@@ -43,7 +43,8 @@ public partial class MainWindowViewModel : ObservableObject
         _searchViewModel.RegisterRequested += GoToRegister;
         _searchViewModel.EditRequested += GoToEdit;
 
-        _currentView = _searchViewModel;
+        Navbar.Selected = NavButton.Home;
+        _currentView = CreateHomeViewModel();
 
         Navbar.NavigationRequested += OnNavigate;
     }
@@ -61,12 +62,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         if (button == NavButton.Home)
         {
-            var homeViewModel = _services.GetRequiredService<HomeViewModel>();
-            homeViewModel.WorkspaceOpened += GoToWorkspace;
-            homeViewModel.NewWorkspaceRequested += GoToWorkspace;
-            homeViewModel.ImportImagesRequested += GoToRegister;
-            _activeHomeViewModel = homeViewModel;
-            CurrentView = homeViewModel;
+            CurrentView = CreateHomeViewModel();
             return;
         }
 
@@ -81,6 +77,16 @@ public partial class MainWindowViewModel : ObservableObject
 
         if (button == NavButton.Search)
             _ = _searchViewModel.ReloadAsync();
+    }
+
+    private HomeViewModel CreateHomeViewModel()
+    {
+        var homeViewModel = _services.GetRequiredService<HomeViewModel>();
+        homeViewModel.WorkspaceOpened += GoToWorkspace;
+        homeViewModel.NewWorkspaceRequested += GoToWorkspace;
+        homeViewModel.ImportImagesRequested += GoToRegister;
+        _activeHomeViewModel = homeViewModel;
+        return homeViewModel;
     }
 
     private void GoToRegister()

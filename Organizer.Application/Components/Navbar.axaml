@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:viewModels="clr-namespace:Organizer.Application.ViewModels"
              xmlns:nav="clr-namespace:Organizer.Organizer.App.Enums"
              x:Class="Organizer.Application.Components.Navbar"
@@ -8,11 +9,11 @@
     <UserControl.Styles>
 
         <Style Selector="Button.nav-btn">
-            <Setter Property="Width" Value="270" />
-            <Setter Property="Height" Value="48" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Width" Value="206" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Padding" Value="16 12" />
+            <Setter Property="Padding" Value="12 9" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
             <Setter Property="BorderThickness" Value="0" />
@@ -31,6 +32,26 @@
             </Setter>
         </Style>
 
+        <Style Selector="ic|FluentIcon.nav-icon">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="IconSize" Value="Size20" />
+            <Setter Property="IconVariant" Value="Regular" />
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+        </Style>
+
+        <Style Selector="TextBlock.nav-text">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+        </Style>
+
+        <Style Selector="TextBlock.nav-label">
+            <Setter Property="Margin" Value="14 14 14 5" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+        </Style>
+
         <Style Selector="Button.nav-btn:pointerover">
             <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
@@ -47,23 +68,45 @@
 
     </UserControl.Styles>
 
-    <Border Width="280"
+    <Border Width="220"
             Background="{DynamicResource SurfaceBrush}"
             BorderBrush="{DynamicResource BorderBrushColor}"
             BorderThickness="0 0 1 0"
-            Padding="5">
+            Padding="10 14">
 
         <DockPanel>
 
-            <!-- Botões do topo -->
-            <StackPanel DockPanel.Dock="Top" Spacing="5">
+            <StackPanel DockPanel.Dock="Top" Spacing="6">
+                <StackPanel Orientation="Horizontal"
+                            Spacing="9"
+                            Margin="6 0 6 16"
+                            VerticalAlignment="Center">
+                    <Border Width="30"
+                            Height="30"
+                            Background="{DynamicResource SurfaceAltBrush}"
+                            CornerRadius="8"
+                            ClipToBounds="True">
+                        <Image Source="/Organizer.Application/Assets/Icons/organizer.png"
+                               Stretch="UniformToFill" />
+                    </Border>
+                    <TextBlock Text="Organizer"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <TextBlock Classes="nav-label" Text="MENU" />
 
                 <Button Classes="nav-btn"
                         Classes.selected="{Binding IsHomeSelected}"
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.Home}">
-                    <TextBlock Text="{DynamicResource Loc.Nav.Home}" FontSize="14" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Classes="nav-icon" Icon="HomeMore" />
+                        <TextBlock Classes="nav-text" Text="{DynamicResource Loc.Nav.Home}" />
+                    </StackPanel>
                 </Button>
 
                 <Button Classes="nav-btn"
@@ -71,7 +114,10 @@
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.Search}">
-                    <TextBlock Text="{DynamicResource Loc.Nav.Search}" FontSize="14" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Classes="nav-icon" Icon="ImageSearch" />
+                        <TextBlock Classes="nav-text" Text="{DynamicResource Loc.Nav.Search}" />
+                    </StackPanel>
                 </Button>
 
                 <Button Classes="nav-btn"
@@ -79,7 +125,10 @@
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.Workspace}">
-                    <TextBlock Text="{DynamicResource Loc.Nav.Workspace}" FontSize="14" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Classes="nav-icon" Icon="StackVertical" />
+                        <TextBlock Classes="nav-text" Text="{DynamicResource Loc.Nav.Workspace}" />
+                    </StackPanel>
                 </Button>
 
                 <Button Classes="nav-btn"
@@ -87,23 +136,27 @@
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.ManageTags}">
-                    <TextBlock Text="{DynamicResource Loc.Nav.ManageTags}" FontSize="14" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Classes="nav-icon" Icon="TagMultiple" />
+                        <TextBlock Classes="nav-text" Text="{DynamicResource Loc.Nav.ManageTags}" />
+                    </StackPanel>
                 </Button>
 
             </StackPanel>
 
-            <!-- Configurações fixado embaixo -->
             <StackPanel DockPanel.Dock="Bottom">
                 <Button Classes="nav-btn"
                         Classes.selected="{Binding IsPreferencesSelected}"
                         IsEnabled="{Binding IsNavigationEnabled}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="{x:Static nav:NavButton.Preferences}">
-                    <TextBlock Text="{DynamicResource Loc.Nav.Preferences}" FontSize="14" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Classes="nav-icon" Icon="SettingsCogMultiple" />
+                        <TextBlock Classes="nav-text" Text="{DynamicResource Loc.Nav.Preferences}" />
+                    </StackPanel>
                 </Button>
             </StackPanel>
 
-            <!-- Espaço vazio no meio -->
             <Grid />
 
         </DockPanel>

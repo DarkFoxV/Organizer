@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:Organizer.Application.ViewModels"
              xmlns:cvm="using:Organizer.Application.ViewModels.Components"
              x:Class="Organizer.Application.Views.ManageTagsView"
@@ -51,6 +52,32 @@
             <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
         </Style>
 
+        <Style Selector="Button.icon-btn">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.icon-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button ic|FluentIcon">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+        </Style>
+
+        <Style Selector="ic|FluentIcon.section-icon">
+            <Setter Property="IconVariant" Value="Regular" />
+            <Setter Property="IconSize" Value="Size20" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
         <Style Selector="Border.floating-panel">
             <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
@@ -70,6 +97,14 @@
         <Style Selector="Border.tag-card:pointerover">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
             <Setter Property="BoxShadow" Value="0 16 36 #5A000000" />
+        </Style>
+
+        <Style Selector="Border.unused-badge">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Padding" Value="8 3" />
         </Style>
 
     </UserControl.Styles>
@@ -105,12 +140,23 @@
                 <Border Classes="floating-panel"
                         Padding="24 20">
                     <StackPanel Spacing="5">
-                        <TextBlock Text="{DynamicResource Loc.Tags.ManageTitle}"
-                                   FontSize="22"
-                                   FontWeight="Bold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <ic:FluentIcon Classes="section-icon"
+                                           Icon="TagMultiple"
+                                           IconSize="Size24" />
+                            <TextBlock Text="{DynamicResource Loc.Tags.ManageTitle}"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                        </StackPanel>
                         <TextBlock Text="{DynamicResource Loc.Tags.ManageSubtitle}"
                                    FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                        <TextBlock Text="{Binding CollectionStatsText}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource AccentSoftTextBrush}" />
+                        <TextBlock Text="{Binding CollectionHealthText}"
+                                   FontSize="12"
                                    Foreground="{DynamicResource TextMutedBrush}" />
                     </StackPanel>
                 </Border>
@@ -120,10 +166,14 @@
                         Padding="22 18">
                     <StackPanel Spacing="14">
 
-                        <TextBlock Text="{DynamicResource Loc.Tags.New}"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:FluentIcon Classes="section-icon"
+                                           Icon="TagAdd" />
+                            <TextBlock Text="{DynamicResource Loc.Tags.New}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                        </StackPanel>
 
                         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                             <TextBox Grid.Column="0"
@@ -140,7 +190,10 @@
                                     Classes="btn btn-success"
                                     Command="{Binding CreateTagCommand}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" />
+                                    <ic:FluentIcon Icon="AddSquare"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size20"
+                                                   VerticalAlignment="Center" />
                                     <TextBlock Text="{DynamicResource Loc.Tags.Create}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
@@ -149,74 +202,98 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Cabeçalho da lista -->
                 <Border Classes="floating-panel"
-                        Padding="18 12">
-                    <Grid ColumnDefinitions="*,130,200" ColumnSpacing="20">
-                        <TextBlock Grid.Column="0" Text="{DynamicResource Loc.Tags.ColumnName}"
-                                   FontSize="12" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextSubtleBrush}" />
-                        <TextBlock Grid.Column="1" Text="{DynamicResource Loc.Tags.ColumnColor}"
-                                   FontSize="12" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextSubtleBrush}" />
-                        <TextBlock Grid.Column="2" Text="{DynamicResource Loc.Tags.ColumnActions}"
-                                   FontSize="12" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextSubtleBrush}" />
-                    </Grid>
+                        IsVisible="{Binding !HasTags}"
+                        Padding="32">
+                    <StackPanel HorizontalAlignment="Center"
+                                Spacing="10">
+                        <ic:FluentIcon Icon="TagAdd"
+                                       IconVariant="Regular"
+                                       IconSize="Size48"
+                                       Foreground="{DynamicResource TextSubtleBrush}"
+                                       HorizontalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Loc.Tags.EmptyTitle}"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Loc.Tags.EmptySubtitle}"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
                 </Border>
 
                 <!-- Lista de tags -->
-                <ItemsControl ItemsSource="{Binding Tags}">
+                <ItemsControl ItemsSource="{Binding Tags}"
+                              IsVisible="{Binding HasTags}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="cvm:TagRowViewModel">
 
                             <Border Classes="tag-card"
                                     Margin="0 0 0 10">
 
-                                <Grid ColumnDefinitions="*,130,200" ColumnSpacing="20">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
 
                                     <!-- Nome -->
                                     <Panel Grid.Column="0" VerticalAlignment="Center">
                                         <StackPanel IsVisible="{Binding IsNotEditing}"
-                                                    Orientation="Horizontal" Spacing="10">
-                                            <Border Width="12" Height="12"
-                                                    CornerRadius="6"
-                                                    Background="{Binding ColorHex}"
-                                                    VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding Name}"
-                                                       FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       VerticalAlignment="Center" />
+                                                    Spacing="4">
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <Border Width="12" Height="12"
+                                                        CornerRadius="6"
+                                                        Background="{Binding ColorHex}"
+                                                        VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           VerticalAlignment="Center" />
+                                                <Border IsVisible="{Binding IsUnused}"
+                                                        Classes="unused-badge">
+                                                    <TextBlock Text="{Binding UsageBadgeText}"
+                                                               FontSize="11"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextMutedBrush}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding UsageText}"
+                                                       Margin="22 0 0 0"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextMutedBrush}" />
                                         </StackPanel>
-                                        <TextBox IsVisible="{Binding IsEditing}"
-                                                 Classes="field"
-                                                 Text="{Binding EditName}" />
-                                    </Panel>
-
-                                    <!-- Cor -->
-                                    <Panel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock IsVisible="{Binding IsNotEditing}"
-                                                   Text="{Binding Color}"
-                                                   FontSize="13" Foreground="{DynamicResource TextMutedBrush}"
-                                                   VerticalAlignment="Center" />
-                                        <ComboBox IsVisible="{Binding IsEditing}"
-                                                  Classes="color-picker"
-                                                  ItemsSource="{Binding $parent[UserControl].((vm:ManageTagsViewModel)DataContext).ColorOptions}"
-                                                  SelectedItem="{Binding EditColor}" />
+                                        <Grid IsVisible="{Binding IsEditing}"
+                                              ColumnDefinitions="*,Auto"
+                                              ColumnSpacing="10">
+                                            <TextBox Grid.Column="0"
+                                                     Classes="field"
+                                                     Text="{Binding EditName}" />
+                                            <ComboBox Grid.Column="1"
+                                                      Classes="color-picker"
+                                                      ItemsSource="{Binding $parent[UserControl].((vm:ManageTagsViewModel)DataContext).ColorOptions}"
+                                                      SelectedItem="{Binding EditColor}" />
+                                        </Grid>
                                     </Panel>
 
                                     <!-- Ações -->
-                                    <Panel Grid.Column="2" VerticalAlignment="Center">
-                                        <StackPanel IsVisible="{Binding IsNotEditing}"
-                                                    Orientation="Horizontal" Spacing="8">
-                                            <Button Classes="btn btn-primary"
-                                                    Command="{Binding StartEditCommand}">
-                                                <TextBlock Text="{DynamicResource Loc.Tags.Edit}" />
-                                            </Button>
-                                            <Button Classes="btn btn-danger"
-                                                    Command="{Binding DeleteCommand}">
-                                                <TextBlock Text="{DynamicResource Loc.Tags.Delete}" />
-                                            </Button>
-                                        </StackPanel>
+                                    <Panel Grid.Column="1" VerticalAlignment="Center">
+                                        <Button IsVisible="{Binding IsNotEditing}"
+                                                Classes="icon-btn"
+                                                ToolTip.Tip="{DynamicResource Loc.Tags.ActionsMenu}">
+                                            <ic:FluentIcon Icon="MoreVertical"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size20" />
+                                            <Button.Flyout>
+                                                <MenuFlyout>
+                                                    <MenuItem Header="{DynamicResource Loc.Tags.Edit}"
+                                                              Command="{Binding StartEditCommand}" />
+                                                    <MenuItem Header="{DynamicResource Loc.Tags.Delete}"
+                                                              Command="{Binding DeleteCommand}" />
+                                                </MenuFlyout>
+                                            </Button.Flyout>
+                                        </Button>
                                         <StackPanel IsVisible="{Binding IsEditing}"
                                                     Orientation="Horizontal" Spacing="8">
                                             <Button Classes="btn btn-success"
@@ -240,6 +317,60 @@
             </StackPanel>
 
         </ScrollViewer>
+
+        <Border ZIndex="50"
+                IsVisible="{Binding IsDeleteConfirmationVisible}"
+                Background="{DynamicResource OverlayBrush}">
+            <Grid HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+                <Border HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="430"
+                        Background="{DynamicResource OverlayCardBrush}"
+                        BorderBrush="{DynamicResource FloatingBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="22"
+                        BoxShadow="0 24 60 #99000000">
+                    <StackPanel Spacing="18">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{Binding DeleteConfirmationTitle}"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       FontSize="20"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding DeleteConfirmationUsageText}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       FontSize="13"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{DynamicResource Loc.Tags.DeleteConfirmImpact}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       FontSize="13"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    Spacing="10">
+                            <Button Classes="btn btn-ghost"
+                                    Command="{Binding CancelDeleteCommand}">
+                                <TextBlock Text="{DynamicResource Loc.Common.Cancel}" />
+                            </Button>
+                            <Button Classes="btn btn-danger"
+                                    Command="{Binding ConfirmDeleteCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <ic:FluentIcon Icon="Delete"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size20"
+                                                   VerticalAlignment="Center" />
+                                    <TextBlock Text="{DynamicResource Loc.Common.Delete}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
 
     </Grid>
 

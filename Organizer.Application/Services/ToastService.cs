@@ -24,6 +24,26 @@ public sealed class ToastService : IToastService, IToastNotificationStore
         Show(ToastType.Info, title, message, TimeSpan.FromSeconds(4));
     }
 
+    public IToastProgress Progress(string title, string? message = null)
+    {
+        var notification = new ToastNotification
+        {
+            Type = ToastType.Progress,
+            Title = title.Trim(),
+            Message = string.IsNullOrWhiteSpace(message) ? null : message.Trim(),
+            Duration = TimeSpan.Zero,
+            CanClose = false
+        };
+
+        RunOnUiThread(() =>
+        {
+            MakeRoomForNextToast();
+            _toasts.Add(notification);
+        });
+
+        return new ToastProgressHandle(this, notification.Id);
+    }
+
     public void Success(string title, string? message = null)
     {
         Show(ToastType.Success, title, message, TimeSpan.FromSeconds(4));
@@ -75,7 +95,7 @@ public sealed class ToastService : IToastService, IToastNotificationStore
     {
         while (_toasts.Count >= MaxVisibleToasts)
         {
-            var toast = _toasts.FirstOrDefault(item => item.Type != ToastType.Error)
+            var toast = _toasts.FirstOrDefault(item => item.Type is not ToastType.Error and not ToastType.Progress)
                 ?? _toasts.FirstOrDefault();
 
             if (toast is null)
@@ -102,5 +122,19 @@ public sealed class ToastService : IToastService, IToastNotificationStore
         }
 
         Dispatcher.UIThread.Post(action);
+    }
+
+    private sealed class ToastProgressHandle(ToastService service, Guid id) : IToastProgress
+    {
+        private bool _isDisposed;
+
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            service.Dismiss(id);
+        }
     }
 }

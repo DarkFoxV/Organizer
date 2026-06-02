@@ -187,9 +187,12 @@ public class ImageService(AppDbContextFactory dbFactory) : IImageService
 
         if (tagIds.Count > 0)
         {
-            q = q.Where(c =>
-                c.Images.Any(i =>
-                    i.ImageTags.Any(it => tagIds.Contains(it.TagId))));
+            foreach (var tagId in tagIds.Distinct())
+            {
+                q = q.Where(c =>
+                    c.Images.Any(i =>
+                        i.ImageTags.Any(it => it.TagId == tagId)));
+            }
         }
 
         // Busca

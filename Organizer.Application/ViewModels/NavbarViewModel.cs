@@ -16,7 +16,7 @@ public partial class NavbarViewModel : ObservableObject
         nameof(IsWorkspaceSelected),
         nameof(IsManageTagsSelected),
         nameof(IsPreferencesSelected))]
-    private NavButton _selected = NavButton.Search;
+    private NavButton _selected = NavButton.Home;
 
     public bool IsHomeSelected => Selected == NavButton.Home;
     public bool IsSearchSelected => Selected == NavButton.Search;

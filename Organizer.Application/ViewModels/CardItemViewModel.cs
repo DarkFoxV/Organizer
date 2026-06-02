@@ -23,6 +23,8 @@ public partial class CardItemViewModel : ObservableObject, IDisposable
     public Func<Task<Stream?>>? LoadImageDataStreamAsync { get; init; }
     public bool IsGroup { get; init; }
     public int ImageCount { get; init; }
+    public string BadgeText => IsGroup ? $"{ImageCount}x" : GetFileTypeLabel();
+    public string MetaText => IsGroup ? $"{ImageCount} imgs" : GetFileTypeLabel();
 
     [ObservableProperty] private byte[]? _imageData;
 
@@ -65,5 +67,17 @@ public partial class CardItemViewModel : ObservableObject, IDisposable
     public void RequestCopy()
     {
         CopyRequested?.Invoke(this);
+    }
+
+    private string GetFileTypeLabel()
+    {
+        var extension = Path.GetExtension(Filename);
+        if (!string.IsNullOrWhiteSpace(extension))
+            return extension.TrimStart('.').ToUpperInvariant();
+
+        const string imagePrefix = "image/";
+        return MimeType.StartsWith(imagePrefix, StringComparison.OrdinalIgnoreCase)
+            ? MimeType[imagePrefix.Length..].ToUpperInvariant()
+            : "IMG";
     }
 }

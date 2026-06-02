@@ -20,6 +20,10 @@
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
         </Style>
 
+        <Style Selector="Border.toast.progress">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
         <Style Selector="Border.toast.success">
             <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
         </Style>
@@ -40,6 +44,10 @@
         </Style>
 
         <Style Selector="Border.toast-icon.info">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        </Style>
+
+        <Style Selector="Border.toast-icon.progress">
             <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
 
@@ -65,6 +73,10 @@
 
         <Style Selector="TextBlock.toast-icon-text.success">
             <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.toast-icon-text.progress">
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
         </Style>
 
         <Style Selector="TextBlock.toast-icon-text.warning">
@@ -101,6 +113,12 @@
             <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
+
+        <Style Selector="ProgressBar.toast-progress">
+            <Setter Property="Height" Value="4" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        </Style>
     </UserControl.Styles>
 
     <ItemsControl ItemsSource="{Binding Toasts}">
@@ -114,6 +132,7 @@
             <DataTemplate x:DataType="services:ToastNotification">
                 <Border Classes="toast"
                         Classes.info="{Binding IsInfo}"
+                        Classes.progress="{Binding IsProgress}"
                         Classes.success="{Binding IsSuccess}"
                         Classes.warning="{Binding IsWarning}"
                         Classes.error="{Binding IsError}"
@@ -122,11 +141,13 @@
                           ColumnSpacing="10">
                         <Border Classes="toast-icon"
                                 Classes.info="{Binding IsInfo}"
+                                Classes.progress="{Binding IsProgress}"
                                 Classes.success="{Binding IsSuccess}"
                                 Classes.warning="{Binding IsWarning}"
                                 Classes.error="{Binding IsError}">
                             <TextBlock Classes="toast-icon-text"
                                        Classes.info="{Binding IsInfo}"
+                                       Classes.progress="{Binding IsProgress}"
                                        Classes.success="{Binding IsSuccess}"
                                        Classes.warning="{Binding IsWarning}"
                                        Classes.error="{Binding IsError}"
@@ -145,6 +166,9 @@
                                        FontSize="12"
                                        Foreground="{DynamicResource TextMutedBrush}"
                                        TextWrapping="Wrap" />
+                            <ProgressBar Classes="toast-progress"
+                                         IsVisible="{Binding IsProgress}"
+                                         IsIndeterminate="True" />
                         </StackPanel>
 
                         <Button Grid.Column="2"

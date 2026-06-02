@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Organize.Organizer.Core.Enums;
 using Organize.Organizer.Core.Interfaces;
+using Organizer.Application.Services;
 using Organizer.Application.ViewModels.Components;
 
 namespace Organizer.Application.ViewModels;
@@ -13,10 +15,19 @@ namespace Organizer.Application.ViewModels;
 public partial class ManageTagsViewModel : ObservableObject
 {
     private readonly ITagService _tagService;
+    private readonly AppPreferencesService _preferencesService;
 
     [ObservableProperty] private bool _isLoading;
 
     [ObservableProperty] private TagColor _newTagColor = TagColor.Blue;
+
+    [ObservableProperty] private int _tagCount;
+
+    [ObservableProperty] private int _taggedImageCount;
+
+    [ObservableProperty] private bool _isDeleteConfirmationVisible;
+
+    [ObservableProperty] private TagRowViewModel? _pendingDeleteTag;
 
     // ── Nova tag ──────────────────────────────────────────────────────────────
 
@@ -24,9 +35,13 @@ public partial class ManageTagsViewModel : ObservableObject
 
     // ── Init ──────────────────────────────────────────────────────────────────
 
-    public ManageTagsViewModel(ITagService tagService)
+    public ManageTagsViewModel(
+        ITagService tagService,
+        AppPreferencesService preferencesService)
     {
         _tagService = tagService;
+        _preferencesService = preferencesService;
+        _preferencesService.PreferencesChanged += OnPreferencesChanged;
         _ = LoadTagsAsync();
     }
 
@@ -35,6 +50,25 @@ public partial class ManageTagsViewModel : ObservableObject
     public ObservableCollection<TagRowViewModel> Tags { get; } = [];
 
     public IEnumerable<TagColor> ColorOptions => Enum.GetValues<TagColor>();
+
+    public bool HasTags => Tags.Count > 0;
+
+    public string CollectionStatsText => _preferencesService.T("Loc.Tags.CollectionStats", TagCount, TaggedImageCount);
+
+    public string CollectionHealthText => _preferencesService.T(
+        "Loc.Tags.CollectionHealth",
+        Tags.Count(tag => !tag.IsUnused),
+        Tags.Count(tag => tag.IsUnused));
+
+    public string DeleteConfirmationTitle => PendingDeleteTag is null
+        ? string.Empty
+        : _preferencesService.T("Loc.Tags.DeleteConfirmTitle", PendingDeleteTag.Name);
+
+    public string DeleteConfirmationUsageText => PendingDeleteTag is null
+        ? string.Empty
+        : PendingDeleteTag.UsageCount == 0
+            ? _preferencesService.T("Loc.Tags.DeleteConfirmUnused")
+            : _preferencesService.T("Loc.Tags.DeleteConfirmUsage", PendingDeleteTag.UsageCount);
 
     // ── Load ──────────────────────────────────────────────────────────────────
 
@@ -45,18 +79,23 @@ public partial class ManageTagsViewModel : ObservableObject
         Tags.Clear();
 
         var tags = await _tagService.GetAllAsync();
+        var usageCounts = await _tagService.GetUsageCountsAsync();
+        TaggedImageCount = await _tagService.CountTaggedImagesAsync();
 
         foreach (var tag in tags)
         {
-            AddRow(tag.Id, tag.Name, tag.Color);
+            usageCounts.TryGetValue(tag.Id, out var usageCount);
+            AddRow(tag.Id, tag.Name, tag.Color, usageCount);
         }
 
+        SortRows();
+        RefreshStats();
         IsLoading = false;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private void AddRow(int id, string name, TagColor color)
+    private void AddRow(int id, string name, TagColor color, int usageCount = 0)
     {
         var row = new TagRowViewModel
         {
@@ -64,13 +103,17 @@ public partial class ManageTagsViewModel : ObservableObject
             Name = name,
             Color = color,
             EditName = name,
-            EditColor = color
+            EditColor = color,
+            UsageCount = usageCount
         };
+        UpdateUsageText(row);
 
         row.SaveRequested += OnSaveTag;
         row.DeleteRequested += OnDeleteTag;
 
         Tags.Add(row);
+        SortRows();
+        RefreshStats();
     }
 
     // ── Handlers ──────────────────────────────────────────────────────────────
@@ -89,9 +132,34 @@ public partial class ManageTagsViewModel : ObservableObject
 
     private async void OnDeleteTag(TagRowViewModel row)
     {
+        PendingDeleteTag = row;
+        IsDeleteConfirmationVisible = true;
+        OnPropertyChanged(nameof(DeleteConfirmationTitle));
+        OnPropertyChanged(nameof(DeleteConfirmationUsageText));
+    }
+
+    [RelayCommand]
+    private async Task ConfirmDelete()
+    {
+        if (PendingDeleteTag is not { } row)
+            return;
+
         await _tagService.DeleteAsync(row.Id);
 
         Tags.Remove(row);
+        PendingDeleteTag = null;
+        IsDeleteConfirmationVisible = false;
+        await RefreshTaggedImageCountAsync();
+        RefreshStats();
+    }
+
+    [RelayCommand]
+    private void CancelDelete()
+    {
+        PendingDeleteTag = null;
+        IsDeleteConfirmationVisible = false;
+        OnPropertyChanged(nameof(DeleteConfirmationTitle));
+        OnPropertyChanged(nameof(DeleteConfirmationUsageText));
     }
 
     // ── Criar nova tag ────────────────────────────────────────────────────────
@@ -110,5 +178,55 @@ public partial class ManageTagsViewModel : ObservableObject
 
         NewTagName = string.Empty;
         NewTagColor = TagColor.Blue;
+    }
+
+    private void RefreshStats()
+    {
+        TagCount = Tags.Count;
+        OnPropertyChanged(nameof(HasTags));
+        OnPropertyChanged(nameof(CollectionStatsText));
+        OnPropertyChanged(nameof(CollectionHealthText));
+    }
+
+    private async Task RefreshTaggedImageCountAsync()
+    {
+        TaggedImageCount = await _tagService.CountTaggedImagesAsync();
+        OnPropertyChanged(nameof(CollectionStatsText));
+    }
+
+    private void UpdateUsageText(TagRowViewModel row)
+    {
+        row.UsageText = row.UsageCount == 1
+            ? _preferencesService.T("Loc.Tags.UsageOne")
+            : _preferencesService.T("Loc.Tags.UsageMany", row.UsageCount);
+        row.UsageBadgeText = row.IsUnused
+            ? row.UsageText
+            : row.UsageText;
+    }
+
+    private void SortRows()
+    {
+        var sorted = Tags
+            .OrderByDescending(tag => tag.UsageCount)
+            .ThenBy(tag => tag.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        for (var targetIndex = 0; targetIndex < sorted.Count; targetIndex++)
+        {
+            var currentIndex = Tags.IndexOf(sorted[targetIndex]);
+            if (currentIndex >= 0 && currentIndex != targetIndex)
+                Tags.Move(currentIndex, targetIndex);
+        }
+    }
+
+    private void OnPreferencesChanged()
+    {
+        foreach (var row in Tags)
+            UpdateUsageText(row);
+
+        OnPropertyChanged(nameof(CollectionStatsText));
+        OnPropertyChanged(nameof(CollectionHealthText));
+        OnPropertyChanged(nameof(DeleteConfirmationTitle));
+        OnPropertyChanged(nameof(DeleteConfirmationUsageText));
     }
 }

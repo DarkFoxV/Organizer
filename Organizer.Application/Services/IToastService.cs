@@ -7,6 +7,8 @@ public interface IToastService
 {
     void Info(string title, string? message = null);
 
+    IToastProgress Progress(string title, string? message = null);
+
     void Success(string title, string? message = null);
 
     void Warning(string title, string? message = null);
@@ -19,4 +21,8 @@ public interface IToastNotificationStore
     ReadOnlyObservableCollection<ToastNotification> Toasts { get; }
 
     void Dismiss(Guid id);
+}
+
+public interface IToastProgress : IDisposable
+{
 }

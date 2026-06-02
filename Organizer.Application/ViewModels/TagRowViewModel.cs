@@ -25,6 +25,14 @@ public partial class TagRowViewModel : ObservableObject
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(DisplayColor))] [NotifyPropertyChangedFor(nameof(ColorHex))]
     private TagColor _color;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsUnused))]
+    private int _usageCount;
+
+    [ObservableProperty] private string _usageText = string.Empty;
+
+    [ObservableProperty] private string _usageBadgeText = string.Empty;
+
     // ── Dados temporários da edição ───────────────────────────────────────────
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(DisplayName))]
@@ -40,6 +48,8 @@ public partial class TagRowViewModel : ObservableObject
     public TagColor DisplayColor => IsEditing ? EditColor : Color;
 
     public bool IsNotEditing => !IsEditing;
+
+    public bool IsUnused => UsageCount == 0;
 
     // ── Cor visual ────────────────────────────────────────────────────────────
 

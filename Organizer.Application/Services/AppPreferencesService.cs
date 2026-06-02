@@ -330,6 +330,7 @@ public sealed class AppPreferences
     public bool ConfirmDeletion { get; set; } = true;
     public WorkspacePastePreference WorkspacePasteMode { get; set; } = WorkspacePastePreference.Pointer;
     public WorkspaceBackgroundPreference WorkspaceBackground { get; set; } = WorkspaceBackgroundPreference.Dark;
+    public HomeWorkspaceViewPreference HomeWorkspaceViewMode { get; set; } = HomeWorkspaceViewPreference.Grid;
     public int WorkspaceDefaultZoomPercent { get; set; } = 100;
     public int WorkspaceHistoryLimit { get; set; } = DefaultWorkspaceHistoryLimit;
     public DateTimeOffset? LastLocalBackupAt { get; set; }
@@ -373,4 +374,10 @@ public enum WorkspaceBackgroundPreference
     Dark,
     Neutral,
     Black
+}
+
+public enum HomeWorkspaceViewPreference
+{
+    Grid,
+    List
 }

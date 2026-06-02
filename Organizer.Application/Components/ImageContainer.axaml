@@ -1,21 +1,64 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:Organizer.Application.ViewModels.Components"
              x:Class="Organizer.Application.Components.ImageContainer"
              x:DataType="vm:CardItemViewModel"
-             Width="220">
+             Width="240">
 
     <UserControl.Styles>
+        <Style Selector="Border.image-card">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="ClipToBounds" Value="True" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Border.image-card:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="BoxShadow" Value="0 14 36 #59000000" />
+        </Style>
+
+        <Style Selector="Border.thumb-wrap">
+            <Setter Property="Height" Value="170" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+
+        <Style Selector="Border.type-badge">
+            <Setter Property="Background" Value="#B30C121C" />
+            <Setter Property="BorderBrush" Value="#14FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Padding" Value="8 4" />
+        </Style>
+
+        <Style Selector="TextBlock.card-title">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="LineHeight" Value="19" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="MaxHeight" Value="40" />
+        </Style>
+
+        <Style Selector="TextBlock.card-meta">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
 
         <Style Selector="Button.action-btn">
-            <Setter Property="Height" Value="38" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
             <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border Background="{TemplateBinding Background}"
@@ -28,134 +71,105 @@
             </Setter>
         </Style>
 
-        <Style Selector="Button.btn-view">
-            <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
-            <Setter Property="Foreground" Value="#fff" />
-        </Style>
-        <Style Selector="Button.btn-view:pointerover">
-            <Setter Property="Background" Value="{DynamicResource SuccessHoverBrush}" />
+        <Style Selector="Button.action-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
-        <Style Selector="Border.image-card">
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
-        </Style>
-        <Style Selector="Border.image-card:pointerover">
-            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
-            <Setter Property="BoxShadow" Value="0 16 36 #55000000" />
+        <Style Selector="Button.action-btn.danger:pointerover">
+            <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DangerSoftTextBrush}" />
         </Style>
 
-        <Style Selector="Button.btn-edit">
-            <Setter Property="Background" Value="#d97706" />
-            <Setter Property="Foreground" Value="#fff" />
+        <Style Selector="Button.action-btn ic|FluentIcon">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
         </Style>
-        <Style Selector="Button.btn-edit:pointerover">
-            <Setter Property="Background" Value="#b45309" />
-        </Style>
-
-        <Style Selector="Button.btn-delete">
-            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
-            <Setter Property="Foreground" Value="#fff" />
-        </Style>
-        <Style Selector="Button.btn-delete:pointerover">
-            <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}" />
-        </Style>
-
     </UserControl.Styles>
 
     <Border Classes="image-card"
-            Background="{DynamicResource SurfaceBrush}"
-            BorderThickness="1"
-            CornerRadius="12"
-            ClipToBounds="True"
-            Cursor="Hand"
             PointerReleased="OnCardPointerReleased">
 
-        <DockPanel>
-
-            <!-- Thumbnail -->
-            <Grid DockPanel.Dock="Top" Height="180">
-
-                <Border Padding="8">
+        <Grid RowDefinitions="170,Auto">
+            <Border Classes="thumb-wrap">
+                <Border Background="{DynamicResource AppBackgroundBrush}"
+                        CornerRadius="8"
+                        ClipToBounds="True">
+                    <Grid>
                     <Image Source="{Binding Thumbnail}"
                            Stretch="Uniform"
                            IsVisible="{Binding IsLoaded}" />
+
+                    <Border IsVisible="{Binding !IsLoaded}"
+                            Background="{DynamicResource SurfaceAltBrush}"
+                            CornerRadius="8">
+                        <ic:FluentIcon Icon="ImageSparkle"
+                                       IconVariant="Regular"
+                                       IconSize="Size32"
+                                       Foreground="{DynamicResource TextSubtleBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                    </Border>
+                    </Grid>
                 </Border>
+            </Border>
 
-                <Border IsVisible="{Binding !IsLoaded}"
-                        Background="{DynamicResource SurfaceAltBrush}">
-                    <TextBlock Text="⏳"
-                               FontSize="28"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
-                </Border>
+            <Border Classes="type-badge"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Margin="10">
+                <TextBlock Text="{Binding BadgeText}"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimaryBrush}" />
+            </Border>
 
-                <Border IsVisible="{Binding IsGroup}"
-                        Background="#CC000000"
-                        CornerRadius="99"
-                        Padding="6 3"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="0 8 8 0">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="⧉" Foreground="#fff" FontSize="11" />
-                        <TextBlock Text="{Binding ImageCount}"
-                                   Foreground="#fff"
-                                   FontSize="11"
-                                   FontWeight="SemiBold" />
-                    </StackPanel>
-                </Border>
+            <Border Grid.Row="1"
+                    Padding="14 12 14 14">
+                <StackPanel Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto"
+                          ColumnSpacing="8">
+                        <TextBlock Classes="card-title"
+                                   Text="{Binding Description}" />
 
-            </Grid>
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    Spacing="2">
+                            <Button Classes="action-btn danger"
+                                    Command="{Binding DeleteCommand}"
+                                    ToolTip.Tip="Deletar">
+                                <ic:FluentIcon Icon="Delete"
+                                               IconVariant="Regular"
+                                               IconSize="Size20" />
+                            </Button>
 
-            <!-- Botões -->
-            <Grid DockPanel.Dock="Bottom"
-                  ColumnDefinitions="*,6,*,6,*"
-                  Margin="10 8 10 10">
+                            <Button Classes="action-btn"
+                                    Click="OnCopyImage"
+                                    ToolTip.Tip="Copiar imagem">
+                                <ic:FluentIcon Icon="Copy"
+                                               IconVariant="Regular"
+                                               IconSize="Size20" />
+                            </Button>
 
-                <Button Grid.Column="0"
-                        Classes="action-btn btn-delete"
-                        Command="{Binding DeleteCommand}"
-                        ToolTip.Tip="Deletar">
-                    <TextBlock Text="🗑 Del" FontSize="12" />
-                </Button>
+                            <Button Classes="action-btn"
+                                    Command="{Binding EditCommand}"
+                                    ToolTip.Tip="Editar">
+                                <ic:FluentIcon Icon="Edit"
+                                               IconVariant="Regular"
+                                               IconSize="Size20" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
 
-                <Button Grid.Column="2"
-                        Classes="action-btn btn-view"
-                        Click="OnCopyImage"
-                        ToolTip.Tip="Copiar imagem">
-                    <TextBlock Text="⎘ Cop" FontSize="12" />
-                </Button>
-
-                <Button Grid.Column="4"
-                        Classes="action-btn btn-edit"
-                        Command="{Binding EditCommand}"
-                        ToolTip.Tip="Editar">
-                    <TextBlock Text="✏ Edit" FontSize="12" />
-                </Button>
-
-            </Grid>
-
-            <!-- Data -->
-            <TextBlock DockPanel.Dock="Bottom"
-                       Text="{Binding CreatedAt}"
-                       FontSize="11"
-                       Foreground="{DynamicResource TextSubtleBrush}"
-                       HorizontalAlignment="Center"
-                       Margin="0 0 0 4" />
-
-            <!-- Descrição -->
-            <ScrollViewer DockPanel.Dock="Bottom"
-                          Height="80"
-                          HorizontalScrollBarVisibility="Disabled"
-                          VerticalScrollBarVisibility="Auto">
-                <TextBlock Text="{Binding Description}"
-                           FontSize="13"
-                           Foreground="{DynamicResource TextMutedBrush}"
-                           TextWrapping="Wrap"
-                           Margin="12 8" />
-            </ScrollViewer>
-
-        </DockPanel>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Classes="card-meta"
+                                   Text="{Binding CreatedAt}" />
+                        <TextBlock Grid.Column="1"
+                                   Classes="card-meta"
+                                   Text="{Binding MetaText}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
 
     </Border>
 

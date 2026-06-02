@@ -1,9 +1,12 @@
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.EntityFrameworkCore;
 using Organizer.Application.Services;
 
 namespace Organizer.Application.ViewModels;
@@ -14,7 +17,10 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     private readonly BackupService _backupService;
     private readonly GoogleDriveOAuthService _googleDriveOAuthService;
     private readonly GoogleDriveBackupStorageProvider _googleDriveBackupStorageProvider;
+    private readonly AppDbContextFactory _dbContextFactory;
+    private readonly HomeWorkspaceCacheService _homeWorkspaceCacheService;
     private readonly IToastService _toastService;
+    private readonly DispatcherTimer _saveIndicatorTimer;
     private bool _isRefreshingOptions;
 
     public ObservableCollection<PreferenceOption<AppThemePreference>> ThemeOptions { get; } =
@@ -48,6 +54,10 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _googleDriveClientId = string.Empty;
     [ObservableProperty] private string _googleDriveClientSecret = string.Empty;
     [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private bool _isSaveIndicatorVisible;
+    [ObservableProperty] private int _aboutImageCount;
+    [ObservableProperty] private int _aboutWorkspaceCount;
+    [ObservableProperty] private int _aboutTagCount;
 
     public bool IsGeneralSectionVisible => SelectedSection == PreferencesSection.General;
     public bool IsDataBackupSectionVisible => SelectedSection == PreferencesSection.DataBackup;
@@ -62,72 +72,88 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     public string CloudProviderStatus => _googleDriveOAuthService.IsConnected
         ? _preferencesService.T("Loc.Backup.CloudStatusConnected")
         : _preferencesService.T("Loc.Backup.CloudStatusNotConnected");
+    public string AppVersion => GetAppVersion();
+    public string BuildNumber => Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "1.0.0";
+    public string AboutImagesText => _preferencesService.T("Loc.Preferences.AboutImages", AboutImageCount);
+    public string AboutWorkspacesText => _preferencesService.T("Loc.Preferences.AboutWorkspaces", AboutWorkspaceCount);
+    public string AboutTagsText => _preferencesService.T("Loc.Preferences.AboutTags", AboutTagCount);
+    public string TechnologyStackText => ".NET 10 • Avalonia • EF Core • SQLite";
 
     public PreferencesViewModel(
         AppPreferencesService preferencesService,
         BackupService backupService,
         GoogleDriveOAuthService googleDriveOAuthService,
         GoogleDriveBackupStorageProvider googleDriveBackupStorageProvider,
+        AppDbContextFactory dbContextFactory,
+        HomeWorkspaceCacheService homeWorkspaceCacheService,
         IToastService toastService)
     {
         _preferencesService = preferencesService;
         _backupService = backupService;
         _googleDriveOAuthService = googleDriveOAuthService;
         _googleDriveBackupStorageProvider = googleDriveBackupStorageProvider;
+        _dbContextFactory = dbContextFactory;
+        _homeWorkspaceCacheService = homeWorkspaceCacheService;
         _toastService = toastService;
+        _saveIndicatorTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(2.5)
+        };
+        _saveIndicatorTimer.Tick += OnSaveIndicatorTimerTick;
 
         RefreshOptions();
         RefreshDatabaseInfo();
+        _ = RefreshAboutStatsAsync();
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
     }
 
     partial void OnSelectedThemeChanged(PreferenceOption<AppThemePreference>? value)
     {
         if (!_isRefreshingOptions && value is not null)
-            _preferencesService.Update(preferences => preferences.Theme = value.Value);
+            SavePreference(preferences => preferences.Theme = value.Value);
     }
 
     partial void OnSelectedItemsPerPageChanged(PreferenceOption<int>? value)
     {
         if (!_isRefreshingOptions && value is not null)
-            _preferencesService.Update(preferences => preferences.SearchItemsPerPage = value.Value);
+            SavePreference(preferences => preferences.SearchItemsPerPage = value.Value);
     }
 
     partial void OnSelectedLanguageChanged(PreferenceOption<AppLanguagePreference>? value)
     {
         if (!_isRefreshingOptions && value is not null)
-            _preferencesService.Update(preferences => preferences.Language = value.Value);
+            SavePreference(preferences => preferences.Language = value.Value);
     }
 
     partial void OnConfirmDeletionChanged(bool value)
     {
         if (!_isRefreshingOptions)
-            _preferencesService.Update(preferences => preferences.ConfirmDeletion = value);
+            SavePreference(preferences => preferences.ConfirmDeletion = value);
     }
 
     partial void OnSelectedWorkspacePasteModeChanged(PreferenceOption<WorkspacePastePreference>? value)
     {
         if (!_isRefreshingOptions && value is not null)
-            _preferencesService.Update(preferences => preferences.WorkspacePasteMode = value.Value);
+            SavePreference(preferences => preferences.WorkspacePasteMode = value.Value);
     }
 
     partial void OnSelectedWorkspaceBackgroundChanged(PreferenceOption<WorkspaceBackgroundPreference>? value)
     {
         if (!_isRefreshingOptions && value is not null)
-            _preferencesService.Update(preferences => preferences.WorkspaceBackground = value.Value);
+            SavePreference(preferences => preferences.WorkspaceBackground = value.Value);
     }
 
     partial void OnWorkspaceDefaultZoomPercentChanged(double value)
     {
         if (!_isRefreshingOptions)
-            _preferencesService.Update(preferences => preferences.WorkspaceDefaultZoomPercent = (int)value);
+            SavePreference(preferences => preferences.WorkspaceDefaultZoomPercent = (int)value);
     }
 
     partial void OnWorkspaceHistoryLimitChanged(double value)
     {
         if (!_isRefreshingOptions)
         {
-            _preferencesService.Update(preferences =>
+            SavePreference(preferences =>
                 preferences.WorkspaceHistoryLimit = Math.Clamp(
                     (int)value,
                     AppPreferences.MinWorkspaceHistoryLimit,
@@ -140,7 +166,7 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         if (_isRefreshingOptions)
             return;
 
-        _preferencesService.Update(preferences => preferences.GoogleDriveClientId = NormalizeOptionalValue(value));
+        SavePreference(preferences => preferences.GoogleDriveClientId = NormalizeOptionalValue(value));
         OnPropertyChanged(nameof(CloudProviderStatus));
     }
 
@@ -149,7 +175,22 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         if (_isRefreshingOptions)
             return;
 
-        _preferencesService.Update(preferences => preferences.GoogleDriveClientSecret = NormalizeOptionalValue(value));
+        SavePreference(preferences => preferences.GoogleDriveClientSecret = NormalizeOptionalValue(value));
+    }
+
+    partial void OnAboutImageCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(AboutImagesText));
+    }
+
+    partial void OnAboutWorkspaceCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(AboutWorkspacesText));
+    }
+
+    partial void OnAboutTagCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(AboutTagsText));
     }
 
     partial void OnSelectedSectionChanged(PreferencesSection value)
@@ -163,6 +204,9 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
 
         if (value == PreferencesSection.DataBackup)
             RefreshDatabaseInfo();
+
+        if (value == PreferencesSection.About)
+            _ = RefreshAboutStatsAsync();
     }
 
     partial void OnIsBusyChanged(bool value)
@@ -286,13 +330,22 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
                     Path.GetTempPath(),
                     $"organizer-backup-{DateTimeOffset.Now:yyyy-MM-dd-HHmmss}.obak");
 
+                using var progressToast = _toastService.Progress(
+                    _preferencesService.T("Loc.Backup.ToastCloudBackupProgressTitle"),
+                    _preferencesService.T("Loc.Backup.ToastCloudBackupProgressMessage"));
+
                 try
                 {
-                    await _backupService.CreateLocalBackupAsync(
-                        backupPath,
-                        recordLocalBackup: false,
+                    await Task.Run(
+                        async () =>
+                        {
+                            await _backupService.CreateLocalBackupAsync(
+                                backupPath,
+                                recordLocalBackup: false,
+                                cancellationToken);
+                            await _googleDriveBackupStorageProvider.UploadBackupAsync(backupPath, cancellationToken);
+                        },
                         cancellationToken);
-                    await _googleDriveBackupStorageProvider.UploadBackupAsync(backupPath, cancellationToken);
 
                     _preferencesService.Update(preferences => preferences.LastCloudBackupAt = DateTimeOffset.UtcNow);
                     RefreshDatabaseInfo();
@@ -319,10 +372,20 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
                     Path.GetTempPath(),
                     $"organizer-cloud-restore-{Guid.NewGuid():N}.obak");
 
+                using var progressToast = _toastService.Progress(
+                    _preferencesService.T("Loc.Backup.ToastCloudRestoreProgressTitle"),
+                    _preferencesService.T("Loc.Backup.ToastCloudRestoreProgressMessage"));
+
                 try
                 {
-                    await _googleDriveBackupStorageProvider.DownloadLatestBackupAsync(backupPath, cancellationToken);
-                    await _backupService.RestoreFromBackupAsync(backupPath, cancellationToken);
+                    await Task.Run(
+                        async () =>
+                        {
+                            await _googleDriveBackupStorageProvider.DownloadLatestBackupAsync(backupPath, cancellationToken);
+                            await _backupService.RestoreFromBackupAsync(backupPath, cancellationToken);
+                        },
+                        cancellationToken);
+
                     RefreshDatabaseInfo();
                     _toastService.Success(
                         _preferencesService.T("Loc.Backup.ToastBackupRestoredTitle"),
@@ -339,6 +402,8 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         _preferencesService.PreferencesChanged -= OnPreferencesChanged;
+        _saveIndicatorTimer.Stop();
+        _saveIndicatorTimer.Tick -= OnSaveIndicatorTimerTick;
     }
 
     private void OnPreferencesChanged()
@@ -346,6 +411,28 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         RefreshOptions();
         RefreshDatabaseInfo();
         OnPropertyChanged(nameof(CloudProviderStatus));
+        OnPropertyChanged(nameof(AboutImagesText));
+        OnPropertyChanged(nameof(AboutWorkspacesText));
+        OnPropertyChanged(nameof(AboutTagsText));
+    }
+
+    private void SavePreference(Action<AppPreferences> update)
+    {
+        _preferencesService.Update(update);
+        ShowSaveIndicator();
+    }
+
+    private void ShowSaveIndicator()
+    {
+        IsSaveIndicatorVisible = true;
+        _saveIndicatorTimer.Stop();
+        _saveIndicatorTimer.Start();
+    }
+
+    private void OnSaveIndicatorTimerTick(object? sender, EventArgs e)
+    {
+        _saveIndicatorTimer.Stop();
+        IsSaveIndicatorVisible = false;
     }
 
     private async Task RunBackupActionAsync(Func<Task> action, string errorTitle)
@@ -390,6 +477,14 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         DatabaseSize = FormatBytes(info.Size);
         LastLocalBackup = FormatDate(info.LastLocalBackupAt);
         LastCloudBackup = FormatDate(info.LastCloudBackupAt);
+    }
+
+    private async Task RefreshAboutStatsAsync()
+    {
+        await using var lease = await _dbContextFactory.CreateLeaseAsync();
+        AboutImageCount = await lease.Context.Images.CountAsync();
+        AboutTagCount = await lease.Context.Tags.CountAsync();
+        AboutWorkspaceCount = _homeWorkspaceCacheService.RecentWorkspaces.Count;
     }
 
     private void RefreshOptions()
@@ -470,6 +565,18 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     private static string? NormalizeOptionalValue(string value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static string GetAppVersion()
+    {
+        var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+        var informationalVersion = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+
+        return string.IsNullOrWhiteSpace(informationalVersion)
+            ? assembly.GetName().Version?.ToString() ?? "1.0.0"
+            : informationalVersion;
     }
 
     private static void DeleteIfExists(string path)

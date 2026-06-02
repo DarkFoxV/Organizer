@@ -21,6 +21,8 @@ public sealed class ToastNotification
 
     public bool IsInfo => Type == ToastType.Info;
 
+    public bool IsProgress => Type == ToastType.Progress;
+
     public bool IsSuccess => Type == ToastType.Success;
 
     public bool IsWarning => Type == ToastType.Warning;
@@ -29,6 +31,7 @@ public sealed class ToastNotification
 
     public string Icon => Type switch
     {
+        ToastType.Progress => "...",
         ToastType.Success => "OK",
         ToastType.Warning => "!",
         ToastType.Error => "X",

@@ -52,6 +52,16 @@ public partial class HomeView : UserControl
         VM.ImportImages();
     }
 
+    private void OnWorkspaceGridModeClick(object? sender, RoutedEventArgs e)
+    {
+        VM.ShowWorkspaceGrid();
+    }
+
+    private void OnWorkspaceListModeClick(object? sender, RoutedEventArgs e)
+    {
+        VM.ShowWorkspaceList();
+    }
+
     private void OnRemoveFromHomeClick(object? sender, RoutedEventArgs e)
     {
         e.Handled = true;

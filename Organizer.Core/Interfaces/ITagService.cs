@@ -14,6 +14,10 @@ public interface ITagService
 
     Task<List<Tag>> GetAllAsync();
 
+    Task<Dictionary<int, int>> GetUsageCountsAsync();
+
+    Task<int> CountTaggedImagesAsync();
+
     Task<Tag> RenameAsync(int id, string newName);
 
     Task<Tag> ChangeColorAsync(int id, TagColor color);

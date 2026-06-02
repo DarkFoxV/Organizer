@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Specialized;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Input.Platform;
@@ -54,11 +53,9 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         && TagSelector.SelectedTags.Any()
         && !IsSubmitting
         && !IsPickingImages
-        && (ImageOrder.Items.Count <= 1 || !string.IsNullOrWhiteSpace(Description));
+        && !string.IsNullOrWhiteSpace(Description);
 
-    public string StatusText => IsReady
-        ? _preferencesService.T("Loc.Register.Ready")
-        : _preferencesService.T("Loc.Register.FillFields");
+    public string StatusText => GetStatusText();
     public bool StatusIsReady => IsReady;
     public bool CanClose => !IsSubmitting && !IsPickingImages;
 
@@ -244,13 +241,8 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         {
             var items = ImageOrder.Items.ToList();
             var selectedTags = TagSelector.SelectedTags.ToList();
-            var description = string.IsNullOrWhiteSpace(Description)
-                ? null
-                : Description.Trim();
+            var title = Description.Trim();
             var cardType = items.Count == 1 ? CardType.Single : CardType.Group;
-            var title = items.Count == 1
-                ? Path.GetFileNameWithoutExtension(items[0].Filename)
-                : description ?? string.Empty;
 
             createdCard = await _cardService.CreateAsync(title, cardType);
 
@@ -263,7 +255,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
                 var item = items[i];
                 try
                 {
-                    var imageDescription = i == 0 ? description : null;
+                    var imageDescription = i == 0 ? title : null;
                     Image image;
 
                     if (item.HasFileSource)
@@ -398,5 +390,22 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
     private void OnImagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         NotifyReady();
+    }
+
+    private string GetStatusText()
+    {
+        if (IsReady)
+            return _preferencesService.T("Loc.Register.Ready");
+
+        if (ImageOrder.IsEmpty)
+            return _preferencesService.T("Loc.Register.MissingImages");
+
+        if (string.IsNullOrWhiteSpace(Description))
+            return _preferencesService.T("Loc.Register.MissingTitle");
+
+        if (!TagSelector.SelectedTags.Any())
+            return _preferencesService.T("Loc.Register.MissingTags");
+
+        return _preferencesService.T("Loc.Register.FillFields");
     }
 }

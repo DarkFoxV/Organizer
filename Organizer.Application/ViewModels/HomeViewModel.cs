@@ -16,6 +16,7 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
     private readonly AppDbContextFactory _dbContextFactory;
     private readonly WorkspaceViewModel _workspaceViewModel;
     private readonly AppPreferencesService _preferencesService;
+    private readonly IToastService _toastService;
     private readonly List<HomeWorkspaceItemViewModel> _allWorkspaces = [];
     private bool _isDisposed;
 
@@ -29,12 +30,14 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
         HomeWorkspaceCacheService homeWorkspaceCacheService,
         AppDbContextFactory dbContextFactory,
         WorkspaceViewModel workspaceViewModel,
-        AppPreferencesService preferencesService)
+        AppPreferencesService preferencesService,
+        IToastService toastService)
     {
         _homeWorkspaceCacheService = homeWorkspaceCacheService;
         _dbContextFactory = dbContextFactory;
         _workspaceViewModel = workspaceViewModel;
         _preferencesService = preferencesService;
+        _toastService = toastService;
         _homeWorkspaceCacheService.Changed += OnHomeWorkspaceCacheChanged;
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
         _ = RefreshAsync();
@@ -133,7 +136,20 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
 
     public void DeleteWorkspace(HomeWorkspaceItemViewModel workspace)
     {
-        _homeWorkspaceCacheService.DeleteWorkspace(workspace.Path);
+        try
+        {
+            _homeWorkspaceCacheService.DeleteWorkspace(workspace.Path);
+            _toastService.Success(
+                AppPreferencesService.Translate("Loc.Home.ToastWorkspaceDeletedTitle"),
+                AppPreferencesService.Translate("Loc.Home.ToastWorkspaceDeletedMessage", workspace.Name));
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            _toastService.Error(
+                AppPreferencesService.Translate("Loc.Home.ToastWorkspaceDeleteFailedTitle"),
+                AppPreferencesService.Translate("Loc.Home.ToastWorkspaceDeleteFailedMessage"));
+        }
     }
 
     public void Dispose()

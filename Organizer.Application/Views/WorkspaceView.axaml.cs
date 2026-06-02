@@ -380,7 +380,7 @@ public partial class WorkspaceView : UserControl
             return;
 
         VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
-        await VM.SaveToFileAsync(file);
+        await VM.SaveToFileAsync(file, showToast: true);
     }
 
     private async Task CloseWorkspaceFromShortcutAsync()

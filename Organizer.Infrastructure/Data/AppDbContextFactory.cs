@@ -31,6 +31,8 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
         }
     }
 
+    public static string DatabasePath => DbPath;
+
     private static string DbPath
     {
         get
@@ -113,6 +115,37 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 
     public AppDbContext Create() => CreateDbContext([]);
 
+    public async Task WithExclusiveDatabaseAccessAsync(Func<Task> operation)
+    {
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
+
+        var acquiredSlots = 0;
+
+        try
+        {
+            for (; acquiredSlots < MaxConcurrentContexts; acquiredSlots++)
+                await _connectionSlots.WaitAsync();
+
+            CloseAvailableConnections();
+            await operation();
+            ReopenConnections();
+        }
+        catch
+        {
+            CloseAvailableConnections();
+
+            if (!_isDisposed)
+                ReopenConnections();
+
+            throw;
+        }
+        finally
+        {
+            for (var i = 0; i < acquiredSlots; i++)
+                _connectionSlots.Release();
+        }
+    }
+
     private static void EnsureDbDirectory()
     {
         var directory = Path.GetDirectoryName(DbPath);
@@ -130,6 +163,25 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
                               PRAGMA busy_timeout = 5000;
                               """;
         command.ExecuteNonQuery();
+    }
+
+    private void CloseAvailableConnections()
+    {
+        while (_availableConnections.TryDequeue(out var connection))
+            connection.Dispose();
+    }
+
+    private void ReopenConnections()
+    {
+        EnsureDbDirectory();
+
+        while (_availableConnections.Count < MaxConcurrentContexts)
+        {
+            var connection = new SqliteConnection(ConnectionString);
+            connection.Open();
+            ConfigureConnection(connection);
+            _availableConnections.Enqueue(connection);
+        }
     }
 
     private void ReturnConnection(SqliteConnection connection)

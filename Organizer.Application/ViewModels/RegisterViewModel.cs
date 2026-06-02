@@ -25,6 +25,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
     private readonly ITagService _tagService;
     private readonly IClipboardService _clipboardService;
     private readonly AppPreferencesService _preferencesService;
+    private readonly IToastService _toastService;
 
     // ── Componentes ───────────────────────────────────────────────────────────
     public TagSelectorViewModel TagSelector { get; }
@@ -72,13 +73,15 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         IImageService imageService,
         ITagService tagService,
         IClipboardService clipboardService,
-        AppPreferencesService preferencesService)
+        AppPreferencesService preferencesService,
+        IToastService toastService)
     {
         _cardService = cardService;
         _imageService = imageService;
         _tagService = tagService;
         _clipboardService = clipboardService;
         _preferencesService = preferencesService;
+        _toastService = toastService;
         _preferencesService.PreferencesChanged += NotifyReady;
 
         ImageOrder = new ImageOrderListViewModel(_preferencesService);
@@ -309,6 +312,11 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
                 await _cardService.SetCoverAsync(createdCard.Id, firstImage.Id);
 
             Cleanup(queueMemoryCompaction: true);
+            _toastService.Success(
+                _preferencesService.T("Loc.Register.ToastSavedTitle"),
+                items.Count == 1
+                    ? _preferencesService.T("Loc.Register.ToastSingleSavedMessage")
+                    : _preferencesService.T("Loc.Register.ToastGroupSavedMessage", items.Count));
             SubmitSuccess?.Invoke();
         }
         catch (Exception ex)
@@ -328,6 +336,9 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
             if (!_isDisposed)
                 ErrorMessage = $"Erro ao salvar: {ex.Message}";
 
+            _toastService.Error(
+                _preferencesService.T("Loc.Register.ToastSaveFailedTitle"),
+                _preferencesService.T("Loc.Register.ToastSaveFailedMessage"));
             Console.WriteLine(ex);
         }
         finally

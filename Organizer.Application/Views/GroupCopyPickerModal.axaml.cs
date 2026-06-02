@@ -11,6 +11,9 @@ public partial class GroupCopyPickerModal : UserControl
     private static IClipboardService ClipboardService =>
         global::Organizer.Application.App.Services.GetRequiredService<IClipboardService>();
 
+    private static IToastService ToastService =>
+        global::Organizer.Application.App.Services.GetRequiredService<IToastService>();
+
     public GroupCopyPickerModal()
     {
         InitializeComponent();
@@ -39,14 +42,33 @@ public partial class GroupCopyPickerModal : UserControl
 
             var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
             if (clipboard is null)
+            {
+                ToastService.Error(
+                    AppPreferencesService.Translate("Loc.Search.ToastCopyFailedTitle"),
+                    AppPreferencesService.Translate("Loc.Search.ToastCopyFailedMessage"));
                 return;
+            }
 
             if (await ClipboardService.SetImageAsync(clipboard, data, item.MimeType))
+            {
                 vm.CloseWithoutMemoryCompaction();
+                ToastService.Success(
+                    AppPreferencesService.Translate("Loc.Search.ToastImageCopiedTitle"),
+                    AppPreferencesService.Translate("Loc.Search.ToastImageCopiedMessage"));
+            }
+            else
+            {
+                ToastService.Error(
+                    AppPreferencesService.Translate("Loc.Search.ToastCopyFailedTitle"),
+                    AppPreferencesService.Translate("Loc.Search.ToastCopyFailedMessage"));
+            }
         }
         catch (System.Exception ex)
         {
             System.Console.WriteLine($"[GroupCopyPickerModal.OnCopyImage] {ex}");
+            ToastService.Error(
+                AppPreferencesService.Translate("Loc.Search.ToastCopyFailedTitle"),
+                AppPreferencesService.Translate("Loc.Search.ToastCopyFailedMessage"));
         }
         finally
         {

@@ -13,6 +13,7 @@ namespace Organizer.Application.Services;
 
 public sealed class AppPreferencesService
 {
+    private readonly object _preferencesLock = new();
     private readonly string _settingsPath;
     private AppPreferences _preferences;
 
@@ -35,11 +36,30 @@ public sealed class AppPreferencesService
 
     public void Update(Action<AppPreferences> update)
     {
-        update(_preferences);
-        Save();
+        lock (_preferencesLock)
+        {
+            update(_preferences);
+            Save();
+        }
+
         ApplyTheme();
         ApplyLanguage();
         PreferencesChanged?.Invoke();
+    }
+
+    public void UpdateStoredData(Action<AppPreferences> update)
+    {
+        lock (_preferencesLock)
+        {
+            update(_preferences);
+            Save();
+        }
+    }
+
+    public TResult ReadStoredData<TResult>(Func<AppPreferences, TResult> read)
+    {
+        lock (_preferencesLock)
+            return read(_preferences);
     }
 
     public string T(string key, params object[] args)
@@ -117,6 +137,7 @@ public sealed class AppPreferencesService
             var json = File.ReadAllText(_settingsPath);
             var preferences = JsonSerializer.Deserialize<AppPreferences>(json) ?? new AppPreferences();
             preferences.RecentWorkspaces ??= [];
+            preferences.GoogleDriveTokenStore ??= [];
             return preferences;
         }
         catch
@@ -311,6 +332,12 @@ public sealed class AppPreferences
     public WorkspaceBackgroundPreference WorkspaceBackground { get; set; } = WorkspaceBackgroundPreference.Dark;
     public int WorkspaceDefaultZoomPercent { get; set; } = 100;
     public int WorkspaceHistoryLimit { get; set; } = DefaultWorkspaceHistoryLimit;
+    public DateTimeOffset? LastLocalBackupAt { get; set; }
+    public DateTimeOffset? LastCloudBackupAt { get; set; }
+    public string? GoogleDriveClientId { get; set; }
+    public string? GoogleDriveClientSecret { get; set; }
+    public string? GoogleDriveRefreshToken { get; set; }
+    public Dictionary<string, string> GoogleDriveTokenStore { get; set; } = [];
     public List<RecentWorkspacePreference> RecentWorkspaces { get; set; } = [];
 }
 

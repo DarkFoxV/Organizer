@@ -20,6 +20,7 @@ public partial class SearchViewModel : ObservableObject, IDisposable
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
     private readonly AppPreferencesService _preferencesService;
+    private readonly IToastService _toastService;
     private int _loadVersion;
     private bool _isDisposed;
 
@@ -71,12 +72,14 @@ public partial class SearchViewModel : ObservableObject, IDisposable
         ICardService cardService,
         IImageService imageService,
         ITagService tagService,
-        AppPreferencesService preferencesService)
+        AppPreferencesService preferencesService,
+        IToastService toastService)
     {
         _cardService = cardService;
         _imageService = imageService;
         _tagService = tagService;
         _preferencesService = preferencesService;
+        _toastService = toastService;
 
         CopyPicker = new GroupCopyPickerViewModel(_preferencesService);
         TagSelector = new TagSelectorViewModel(_tagService, _preferencesService, showAddButton: false);
@@ -266,10 +269,19 @@ public partial class SearchViewModel : ObservableObject, IDisposable
 
             if (hadLargeImageResources)
                 MemoryCleanupService.QueueLargeImageMemoryCompaction();
+
+            _toastService.Success(
+                _preferencesService.T("Loc.Search.ToastCardDeletedTitle"),
+                card.IsGroup
+                    ? _preferencesService.T("Loc.Search.ToastGroupDeletedMessage")
+                    : _preferencesService.T("Loc.Search.ToastImageDeletedMessage"));
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[DeleteCardAsync] {ex}");
+            _toastService.Error(
+                _preferencesService.T("Loc.Search.ToastDeleteFailedTitle"),
+                _preferencesService.T("Loc.Search.ToastDeleteFailedMessage"));
         }
     }
 
@@ -287,13 +299,21 @@ public partial class SearchViewModel : ObservableObject, IDisposable
                 return;
 
             if (images.Count == 0)
+            {
+                _toastService.Warning(
+                    _preferencesService.T("Loc.Search.ToastCopyUnavailableTitle"),
+                    _preferencesService.T("Loc.Search.ToastCopyUnavailableMessage"));
                 return;
+            }
 
             await CopyPicker.OpenAsync(images, _imageService.GetDataAsync);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[OnCopyCard] {ex}");
+            _toastService.Error(
+                _preferencesService.T("Loc.Search.ToastCopyFailedTitle"),
+                _preferencesService.T("Loc.Search.ToastCopyFailedMessage"));
         }
     }
 

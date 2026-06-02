@@ -1,0 +1,164 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:services="using:Organizer.Application.Services"
+             x:Class="Organizer.Application.Components.ToastHost"
+             x:DataType="services:IToastNotificationStore">
+
+    <UserControl.Styles>
+        <Style Selector="Border.toast">
+            <Setter Property="Width" Value="340" />
+            <Setter Property="MaxWidth" Value="340" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Background" Value="{DynamicResource OverlayCardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="BoxShadow" Value="0 16 42 0 #78000000" />
+        </Style>
+
+        <Style Selector="Border.toast.info">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Border.toast.success">
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+        </Style>
+
+        <Style Selector="Border.toast.warning">
+            <Setter Property="BorderBrush" Value="{DynamicResource WarningTextBrush}" />
+        </Style>
+
+        <Style Selector="Border.toast.error">
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+        </Style>
+
+        <Style Selector="Border.toast-icon">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        </Style>
+
+        <Style Selector="Border.toast-icon.info">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        </Style>
+
+        <Style Selector="Border.toast-icon.success">
+            <Setter Property="Background" Value="#2416a34a" />
+        </Style>
+
+        <Style Selector="Border.toast-icon.warning">
+            <Setter Property="Background" Value="#26fb923c" />
+        </Style>
+
+        <Style Selector="Border.toast-icon.error">
+            <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.toast-icon-text">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBlock.toast-icon-text.success">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.toast-icon-text.warning">
+            <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.toast-icon-text.error">
+            <Setter Property="Foreground" Value="{DynamicResource DangerSoftTextBrush}" />
+        </Style>
+
+        <Style Selector="Button.toast-close">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <ContentPresenter HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.toast-close:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <ItemsControl ItemsSource="{Binding Toasts}">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <StackPanel Spacing="10" />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+
+        <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="services:ToastNotification">
+                <Border Classes="toast"
+                        Classes.info="{Binding IsInfo}"
+                        Classes.success="{Binding IsSuccess}"
+                        Classes.warning="{Binding IsWarning}"
+                        Classes.error="{Binding IsError}"
+                        Margin="0">
+                    <Grid ColumnDefinitions="Auto,*,Auto"
+                          ColumnSpacing="10">
+                        <Border Classes="toast-icon"
+                                Classes.info="{Binding IsInfo}"
+                                Classes.success="{Binding IsSuccess}"
+                                Classes.warning="{Binding IsWarning}"
+                                Classes.error="{Binding IsError}">
+                            <TextBlock Classes="toast-icon-text"
+                                       Classes.info="{Binding IsInfo}"
+                                       Classes.success="{Binding IsSuccess}"
+                                       Classes.warning="{Binding IsWarning}"
+                                       Classes.error="{Binding IsError}"
+                                       Text="{Binding Icon}" />
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                                    Spacing="3">
+                            <TextBlock Text="{Binding Title}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Message}"
+                                       IsVisible="{Binding HasMessage}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <Button Grid.Column="2"
+                                Classes="toast-close"
+                                IsVisible="{Binding CanClose}"
+                                Click="OnDismissClick"
+                                CommandParameter="{Binding}">
+                            <TextBlock Text="x"
+                                       FontSize="14"
+                                       FontWeight="SemiBold" />
+                        </Button>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

@@ -14,6 +14,9 @@ public partial class ImageContainer : UserControl
     private static IClipboardService ClipboardService =>
         App.Services.GetRequiredService<IClipboardService>();
 
+    private static IToastService ToastService =>
+        App.Services.GetRequiredService<IToastService>();
+
     public ImageContainer()
     {
         InitializeComponent();
@@ -36,7 +39,10 @@ public partial class ImageContainer : UserControl
 
             var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
             if (clipboard is null)
+            {
+                ShowCopyFailedToast();
                 return;
+            }
 
             var imageData = vm.ImageData;
             compactLargeImage = imageData is { Length: >= 85_000 };
@@ -44,12 +50,15 @@ public partial class ImageContainer : UserControl
             if (imageData is { Length: > 0 })
             {
                 using var imageStream = new MemoryStream(imageData, writable: false);
-                await ClipboardService.SetImageAsync(clipboard, imageStream, vm.MimeType);
+                ShowCopyResultToast(await ClipboardService.SetImageAsync(clipboard, imageStream, vm.MimeType));
                 return;
             }
 
             if (vm.LoadImageDataStreamAsync is null)
+            {
+                ShowCopyFailedToast();
                 return;
+            }
 
             await using var loadedImageStream = await vm.LoadImageDataStreamAsync();
             if (!ReferenceEquals(DataContext, vm))
@@ -59,17 +68,38 @@ public partial class ImageContainer : UserControl
                 return;
 
             compactLargeImage = loadedImageStream.CanSeek && loadedImageStream.Length >= 85_000;
-            await ClipboardService.SetImageAsync(clipboard, loadedImageStream, vm.MimeType);
+            ShowCopyResultToast(await ClipboardService.SetImageAsync(clipboard, loadedImageStream, vm.MimeType));
         }
         catch (System.Exception ex)
         {
             System.Console.WriteLine($"[ImageContainer.OnCopyImage] {ex}");
+            ShowCopyFailedToast();
         }
         finally
         {
             if (compactLargeImage)
                 MemoryCleanupService.QueueLargeImageMemoryCompaction();
         }
+    }
+
+    private static void ShowCopyResultToast(bool copied)
+    {
+        if (copied)
+        {
+            ToastService.Success(
+                AppPreferencesService.Translate("Loc.Search.ToastImageCopiedTitle"),
+                AppPreferencesService.Translate("Loc.Search.ToastImageCopiedMessage"));
+            return;
+        }
+
+        ShowCopyFailedToast();
+    }
+
+    private static void ShowCopyFailedToast()
+    {
+        ToastService.Error(
+            AppPreferencesService.Translate("Loc.Search.ToastCopyFailedTitle"),
+            AppPreferencesService.Translate("Loc.Search.ToastCopyFailedMessage"));
     }
 
     private void OnCardPointerReleased(object? sender, PointerReleasedEventArgs e)

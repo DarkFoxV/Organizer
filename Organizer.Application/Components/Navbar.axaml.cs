@@ -11,6 +11,5 @@ public partial class Navbar : UserControl
         DataContext = new NavbarViewModel();
     }
 
-    // Expõe o ViewModel pra MainWindow conseguir escutar NavigationRequested
     public NavbarViewModel ViewModel => (NavbarViewModel)DataContext!;
 }

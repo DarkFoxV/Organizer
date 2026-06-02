@@ -35,6 +35,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private readonly AppPreferencesService _preferencesService;
     private readonly WorkspaceArchiveService _workspaceArchiveService;
     private readonly HomeWorkspaceCacheService _homeWorkspaceCacheService;
+    private readonly IToastService _toastService;
     private readonly Stack<WorkspaceSnapshot> _undoStack = [];
     private readonly Stack<WorkspaceSnapshot> _redoStack = [];
     private WorkspaceCanvasItemViewModel? _selectedItem;
@@ -137,12 +138,14 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         IClipboardService clipboardService,
         AppPreferencesService preferencesService,
         WorkspaceArchiveService workspaceArchiveService,
-        HomeWorkspaceCacheService homeWorkspaceCacheService)
+        HomeWorkspaceCacheService homeWorkspaceCacheService,
+        IToastService toastService)
     {
         _clipboardService = clipboardService;
         _preferencesService = preferencesService;
         _workspaceArchiveService = workspaceArchiveService;
         _homeWorkspaceCacheService = homeWorkspaceCacheService;
+        _toastService = toastService;
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
         _preferencesService.RecentWorkspacesChanged += OnRecentWorkspacesChanged;
         Items.CollectionChanged += OnItemsChanged;
@@ -237,23 +240,25 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         }
     }
 
-    public async Task<bool> SaveToCurrentFileAsync()
+    public async Task<bool> SaveToCurrentFileAsync(bool showToast = false)
     {
         if (_workspaceFile is null)
         {
             ErrorMessage = "Workspace atual nao tem arquivo de destino.";
+            if (showToast)
+                ShowWorkspaceSaveFailedToast();
             return false;
         }
 
-        return await SaveToFileCoreAsync(_workspaceFile, rememberFile: false);
+        return await SaveToFileCoreAsync(_workspaceFile, rememberFile: false, showToast);
     }
 
-    public async Task<bool> SaveToFileAsync(IStorageFile file)
+    public async Task<bool> SaveToFileAsync(IStorageFile file, bool showToast = false)
     {
-        return await SaveToFileCoreAsync(file, rememberFile: true);
+        return await SaveToFileCoreAsync(file, rememberFile: true, showToast);
     }
 
-    private async Task<bool> SaveToFileCoreAsync(IStorageFile file, bool rememberFile)
+    private async Task<bool> SaveToFileCoreAsync(IStorageFile file, bool rememberFile, bool showToast)
     {
         var rememberedFile = false;
         var localPath = file.TryGetLocalPath();
@@ -263,13 +268,21 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             if (!string.IsNullOrWhiteSpace(localPath))
             {
                 if (!await SaveToPathAsync(localPath))
+                {
+                    if (showToast)
+                        ShowWorkspaceSaveFailedToast();
                     return false;
+                }
             }
             else
             {
                 await using var stream = await file.OpenWriteAsync();
                 if (!await SaveAsync(stream))
+                {
+                    if (showToast)
+                        ShowWorkspaceSaveFailedToast();
                     return false;
+                }
             }
 
             if (rememberFile)
@@ -277,11 +290,21 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
                 SetWorkspaceFile(file);
                 rememberedFile = true;
             }
+
+            if (showToast)
+            {
+                _toastService.Success(
+                    _preferencesService.T("Loc.Workspace.ToastSavedTitle"),
+                    _preferencesService.T("Loc.Workspace.ToastSavedMessage"));
+            }
+
             return true;
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Erro ao salvar workspace: {ex.Message}";
+            if (showToast)
+                ShowWorkspaceSaveFailedToast();
             return false;
         }
         finally
@@ -289,6 +312,13 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             if (rememberFile && !rememberedFile && !ReferenceEquals(_workspaceFile, file))
                 file.Dispose();
         }
+    }
+
+    private void ShowWorkspaceSaveFailedToast()
+    {
+        _toastService.Error(
+            _preferencesService.T("Loc.Workspace.ToastSaveFailedTitle"),
+            _preferencesService.T("Loc.Workspace.ToastSaveFailedMessage"));
     }
 
     public void SetWorkspaceThumbnail(byte[]? thumbnailData)

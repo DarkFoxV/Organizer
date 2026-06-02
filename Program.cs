@@ -31,8 +31,20 @@ internal class Program
         // ─────────────────────────────
 
         services.AddSingleton<AppPreferencesService>();
+        services.AddSingleton<IAppLogger, TraceAppLogger>();
+        services.AddSingleton<ITokenStorage, PreferencesTokenStorage>();
         services.AddSingleton<WorkspaceArchiveService>();
         services.AddSingleton<HomeWorkspaceCacheService>();
+        services.AddSingleton<DatabaseFileService>();
+        services.AddSingleton<BackupService>();
+        services.AddSingleton<GoogleDriveOAuthService>();
+        services.AddSingleton<LocalBackupStorageProvider>();
+        services.AddSingleton<GoogleDriveBackupStorageProvider>();
+        services.AddSingleton<IBackupStorageProvider>(sp => sp.GetRequiredService<LocalBackupStorageProvider>());
+        services.AddSingleton<IBackupStorageProvider>(sp => sp.GetRequiredService<GoogleDriveBackupStorageProvider>());
+        services.AddSingleton<ToastService>();
+        services.AddSingleton<IToastService>(sp => sp.GetRequiredService<ToastService>());
+        services.AddSingleton<IToastNotificationStore>(sp => sp.GetRequiredService<ToastService>());
         services.AddTransient<ICardService, CardService>();
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<ITagService, TagService>();

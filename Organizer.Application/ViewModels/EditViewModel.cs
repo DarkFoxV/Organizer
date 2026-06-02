@@ -14,6 +14,7 @@ public partial class EditViewModel : ObservableObject, IDisposable
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
     private readonly AppPreferencesService _preferencesService;
+    private readonly IToastService _toastService;
 
     private int _imageId;
     private int _cardId;
@@ -53,11 +54,13 @@ public partial class EditViewModel : ObservableObject, IDisposable
     public EditViewModel(
         IImageService imageService,
         ITagService tagService,
-        AppPreferencesService preferencesService)
+        AppPreferencesService preferencesService,
+        IToastService toastService)
     {
         _imageService = imageService;
         _tagService = tagService;
         _preferencesService = preferencesService;
+        _toastService = toastService;
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
 
         TagSelector = new TagSelectorViewModel(_tagService, _preferencesService, showAddButton: false);
@@ -130,11 +133,17 @@ public partial class EditViewModel : ObservableObject, IDisposable
                     await _imageService.RemoveTagAsync(_imageId, tagId);
             }
 
+            _toastService.Success(
+                _preferencesService.T("Loc.Edit.ToastSavedTitle"),
+                _preferencesService.T("Loc.Edit.ToastSavedMessage"));
             SubmitSuccess?.Invoke();
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Erro ao salvar: {ex.Message}";
+            _toastService.Error(
+                _preferencesService.T("Loc.Edit.ToastSaveFailedTitle"),
+                _preferencesService.T("Loc.Edit.ToastSaveFailedMessage"));
             Console.WriteLine(ex);
         }
         finally

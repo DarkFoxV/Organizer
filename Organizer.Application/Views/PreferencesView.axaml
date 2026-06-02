@@ -57,13 +57,64 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
+
+        <Style Selector="Button.settings-tab">
+            <Setter Property="MinWidth" Value="120" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="14 8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.settings-tab:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.settings-tab.selected">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.backup-action">
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Padding" Value="14 9" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.backup-action:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+        </Style>
+
+        <Style Selector="Button.backup-action:disabled">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+        </Style>
+
+        <Style Selector="TextBlock.info-value">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
     </UserControl.Styles>
 
     <Grid Background="{DynamicResource AppBackgroundBrush}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
             <Grid Margin="28"
-                  RowDefinitions="Auto,*"
+                  RowDefinitions="Auto,Auto,*"
                   RowSpacing="20">
 
                 <Grid ColumnDefinitions="*,Auto"
@@ -96,7 +147,28 @@
                     </Border>
                 </Grid>
 
-                <Grid Grid.Row="1"
+                <StackPanel Grid.Row="1"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                    <Button Classes="settings-tab"
+                            Classes.selected="{Binding IsGeneralSelected}"
+                            Click="OnGeneralSettingsClick">
+                        <TextBlock Text="{DynamicResource Loc.Preferences.TabSettings}" />
+                    </Button>
+                    <Button Classes="settings-tab"
+                            Classes.selected="{Binding IsDataBackupSelected}"
+                            Click="OnDataBackupClick">
+                        <TextBlock Text="{DynamicResource Loc.Preferences.TabDataBackup}" />
+                    </Button>
+                    <Button Classes="settings-tab"
+                            Classes.selected="{Binding IsAboutSelected}"
+                            Click="OnAboutClick">
+                        <TextBlock Text="{DynamicResource Loc.Preferences.TabAbout}" />
+                    </Button>
+                </StackPanel>
+
+                <Grid Grid.Row="2"
+                      IsVisible="{Binding IsGeneralSectionVisible}"
                       ColumnDefinitions="1.05*,1.05*"
                       RowDefinitions="Auto,Auto,Auto"
                       ColumnSpacing="18"
@@ -286,6 +358,159 @@
                         </StackPanel>
                     </Border>
                 </Grid>
+
+                <Grid Grid.Row="2"
+                      IsVisible="{Binding IsDataBackupSectionVisible}"
+                      RowDefinitions="Auto,Auto,Auto"
+                      RowSpacing="18">
+                    <Border Classes="floating-panel">
+                        <StackPanel Spacing="16">
+                            <StackPanel Spacing="4">
+                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Title}" />
+                                <TextBlock Classes="row-description"
+                                           Text="{DynamicResource Loc.Backup.Description}" />
+                            </StackPanel>
+
+                            <Grid ColumnDefinitions="1.1*,1.1*"
+                                  ColumnSpacing="18">
+                                <Border Classes="preference-row">
+                                    <StackPanel Spacing="12">
+                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Database}" />
+
+                                        <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+                                            <TextBlock Classes="row-description" Text="{DynamicResource Loc.Backup.CurrentLocation}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Classes="info-value"
+                                                       Text="{Binding DatabaseLocation}" />
+
+                                            <TextBlock Grid.Row="1" Classes="row-description" Text="{DynamicResource Loc.Backup.DatabaseSize}" />
+                                            <TextBlock Grid.Row="1"
+                                                       Grid.Column="1"
+                                                       Classes="info-value"
+                                                       Text="{Binding DatabaseSize}" />
+
+                                            <TextBlock Grid.Row="2" Classes="row-description" Text="{DynamicResource Loc.Backup.LastLocalBackup}" />
+                                            <TextBlock Grid.Row="2"
+                                                       Grid.Column="1"
+                                                       Classes="info-value"
+                                                       Text="{Binding LastLocalBackup}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="1"
+                                        Classes="preference-row">
+                                    <StackPanel Spacing="12">
+                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.LocalBackup}" />
+                                        <UniformGrid Columns="2" Rows="2">
+                                            <Button Classes="backup-action"
+                                                    Margin="0 0 8 8"
+                                                    IsEnabled="{Binding IsNotBusy}"
+                                                    Click="OnCreateLocalBackupClick">
+                                                <TextBlock Text="{DynamicResource Loc.Backup.CreateLocalBackup}" TextWrapping="Wrap" />
+                                            </Button>
+                                            <Button Classes="backup-action"
+                                                    Margin="0 0 0 8"
+                                                    IsEnabled="{Binding IsNotBusy}"
+                                                    Click="OnRestoreFromBackupClick">
+                                                <TextBlock Text="{DynamicResource Loc.Backup.RestoreFromBackup}" TextWrapping="Wrap" />
+                                            </Button>
+                                            <Button Classes="backup-action"
+                                                    Margin="0 0 8 0"
+                                                    IsEnabled="{Binding IsNotBusy}"
+                                                    Click="OnExportDatabaseClick">
+                                                <TextBlock Text="{DynamicResource Loc.Backup.ExportDatabase}" TextWrapping="Wrap" />
+                                            </Button>
+                                            <Button Classes="backup-action"
+                                                    IsEnabled="{Binding IsNotBusy}"
+                                                    Click="OnImportDatabaseClick">
+                                                <TextBlock Text="{DynamicResource Loc.Backup.ImportDatabase}" TextWrapping="Wrap" />
+                                            </Button>
+                                        </UniformGrid>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Classes="floating-panel">
+                        <StackPanel Spacing="14">
+                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.CloudBackup}" />
+
+                            <Border Classes="preference-row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="160,*" RowSpacing="8">
+                                        <TextBlock Classes="row-description" Text="{DynamicResource Loc.Backup.Provider}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Classes="info-value"
+                                                   Text="{Binding CloudProviderName}" />
+
+                                        <TextBlock Grid.Row="1" Classes="row-description" Text="{DynamicResource Loc.Backup.Status}" />
+                                        <TextBlock Grid.Row="1"
+                                                   Grid.Column="1"
+                                                   Classes="info-value"
+                                                   Text="{Binding CloudProviderStatus}" />
+
+                                        <TextBlock Grid.Row="2" Classes="row-description" Text="{DynamicResource Loc.Backup.LastCloudBackup}" />
+                                        <TextBlock Grid.Row="2"
+                                                   Grid.Column="1"
+                                                   Classes="info-value"
+                                                   Text="{Binding LastCloudBackup}" />
+
+                                        <TextBlock Grid.Row="3" Classes="row-description" Text="{DynamicResource Loc.Backup.GoogleClientId}" />
+                                        <TextBox Grid.Row="3"
+                                                 Grid.Column="1"
+                                                 Classes="field"
+                                                 Text="{Binding GoogleDriveClientId, Mode=TwoWay}"
+                                                 PlaceholderText="{DynamicResource Loc.Backup.GoogleClientIdWatermark}"
+                                                 MinWidth="320" />
+
+                                        <TextBlock Grid.Row="4" Classes="row-description" Text="{DynamicResource Loc.Backup.GoogleClientSecret}" />
+                                        <TextBox Grid.Row="4"
+                                                 Grid.Column="1"
+                                                 Classes="field"
+                                                 Text="{Binding GoogleDriveClientSecret, Mode=TwoWay}"
+                                                 PlaceholderText="{DynamicResource Loc.Backup.GoogleClientSecretWatermark}"
+                                                 PasswordChar="*"
+                                                 MinWidth="320" />
+
+                                    </Grid>
+
+                                    <StackPanel Grid.Column="1"
+                                                MinWidth="230"
+                                                Spacing="8">
+                                        <Button Classes="backup-action"
+                                                IsEnabled="{Binding IsNotBusy}"
+                                                Click="OnConnectGoogleDriveClick">
+                                            <TextBlock Text="{DynamicResource Loc.Backup.ConnectGoogleDrive}" />
+                                        </Button>
+                                        <Button Classes="backup-action"
+                                                IsEnabled="{Binding IsNotBusy}"
+                                                Click="OnBackupToGoogleDriveClick">
+                                            <TextBlock Text="{DynamicResource Loc.Backup.BackupToGoogleDrive}" />
+                                        </Button>
+                                        <Button Classes="backup-action"
+                                                IsEnabled="{Binding IsNotBusy}"
+                                                Click="OnRestoreFromGoogleDriveClick">
+                                            <TextBlock Text="{DynamicResource Loc.Backup.RestoreFromGoogleDrive}" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="2"
+                        Classes="floating-panel"
+                        IsVisible="{Binding IsAboutSectionVisible}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.TabAbout}" />
+                        <TextBlock Classes="row-description"
+                                   Text="{DynamicResource Loc.Preferences.AboutDescription}" />
+                    </StackPanel>
+                </Border>
             </Grid>
         </ScrollViewer>
     </Grid>

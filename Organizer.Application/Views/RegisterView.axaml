@@ -30,9 +30,9 @@
             <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="22" />
-            <Setter Property="Padding" Value="24" />
-            <Setter Property="BoxShadow" Value="0 18 50 #77000000" />
+            <Setter Property="CornerRadius" Value="13" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
         </Style>
 
         <Style Selector="StackPanel.page-shell">

@@ -39,7 +39,7 @@
             <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="CornerRadius" Value="11" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
@@ -66,7 +66,7 @@
     <Grid IsVisible="{Binding IsVisible}">
         <Border Background="{DynamicResource OverlayBrush}" />
 
-        <Panel IsHitTestVisible="False">
+        <Panel IsVisible="False" IsHitTestVisible="False">
             <Ellipse Width="560"
                      Height="560"
                      Fill="#163047"
@@ -89,10 +89,10 @@
                     Background="{DynamicResource SurfaceSoftBrush}"
                     BorderBrush="{DynamicResource FloatingBorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="22"
+                    CornerRadius="13"
                     Padding="22 18"
                     Margin="0 0 0 16"
-                    BoxShadow="0 18 50 #77000000">
+                    BoxShadow="0 0 0 0 Transparent">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Grid.Column="0" Spacing="5">
                         <TextBlock Text="{Binding Title}"
@@ -130,7 +130,7 @@
                                 <Grid RowDefinitions="170,Auto,*">
                                     <Border Grid.Row="0"
                                             Background="{DynamicResource SurfaceSoftAltBrush}"
-                                            CornerRadius="18 18 0 0"
+                                            CornerRadius="11 11 0 0"
                                             Padding="10">
                                         <Grid>
                                             <Image Source="{Binding Thumbnail}"
@@ -150,7 +150,7 @@
                                           ColumnSpacing="10">
                                         <Border Grid.Column="0"
                                                 Background="{DynamicResource AccentSoftBrush}"
-                                                CornerRadius="99"
+                                                CornerRadius="7"
                                                 Padding="8 3"
                                                 VerticalAlignment="Top">
                                             <TextBlock Text="{Binding NumberText}"

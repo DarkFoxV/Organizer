@@ -12,8 +12,8 @@
             <Setter Property="Background" Value="{DynamicResource OverlayCardBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="BoxShadow" Value="0 16 42 0 #78000000" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
         </Style>
 
         <Style Selector="Border.toast.info">
@@ -39,7 +39,7 @@
         <Style Selector="Border.toast-icon">
             <Setter Property="Width" Value="28" />
             <Setter Property="Height" Value="28" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="7" />
             <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
 
@@ -94,7 +94,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="7" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Focusable" Value="False" />
             <Setter Property="Template">

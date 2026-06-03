@@ -29,6 +29,9 @@ public partial class SearchViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _tagsLoaded;
     [ObservableProperty] private bool _isDeleteConfirmationVisible;
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ResultSummary))]
+    private int _totalResults;
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DeleteConfirmationTitle))]
     [NotifyPropertyChangedFor(nameof(DeleteConfirmationMessage))]
     private CardItemViewModel? _pendingDeleteCard;
@@ -42,6 +45,10 @@ public partial class SearchViewModel : ObservableObject, IDisposable
 
     // ── Estado ────────────────────────────────────────────────────────────────
     public ObservableCollection<CardItemViewModel> Cards { get; } = [];
+
+    public string ResultSummary => TotalResults == 1
+        ? _preferencesService.T("Loc.Search.ResultCountOne")
+        : _preferencesService.T("Loc.Search.ResultCountMany", TotalResults);
 
     public string DeleteConfirmationTitle => PendingDeleteCard?.IsGroup == true
         ? _preferencesService.T("Loc.Search.DeleteGroupTitle")
@@ -173,6 +180,8 @@ public partial class SearchViewModel : ObservableObject, IDisposable
 
         OnPropertyChanged(nameof(DeleteConfirmationTitle));
         OnPropertyChanged(nameof(DeleteConfirmationMessage));
+        OnPropertyChanged(nameof(ResultSummary));
+        SearchBar.RefreshSortOptions();
         Pagination.CurrentPage = 0;
         _ = LoadCardsAsync(SearchBar.Query, 0, SearchBar.SelectedSort);
     }
@@ -265,6 +274,7 @@ public partial class SearchViewModel : ObservableObject, IDisposable
             Cards.Remove(card);
             UnsubscribeCard(card);
             card.ReleaseResources();
+            TotalResults = Math.Max(0, TotalResults - 1);
             IsEmpty = Cards.Count == 0;
 
             if (hadLargeImageResources)
@@ -350,6 +360,7 @@ public partial class SearchViewModel : ObservableObject, IDisposable
                 (int)Math.Ceiling(total / (double)_preferencesService.Current.SearchItemsPerPage);
 
             Pagination.CurrentPage = page;
+            TotalResults = total;
 
             var cardViewModels = await Task.Run(() => CreateCardViewModels(cards));
 
@@ -375,6 +386,7 @@ public partial class SearchViewModel : ObservableObject, IDisposable
         {
             Console.WriteLine($"[LoadCardsAsync] {ex}");
 
+            TotalResults = 0;
             IsEmpty = true;
         }
         finally

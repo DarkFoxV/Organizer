@@ -167,36 +167,38 @@ public sealed class AppPreferencesService
             return;
 
         var useLightPalette = _preferences.Theme == AppThemePreference.Light;
+        var useGrayPalette = _preferences.Theme == AppThemePreference.Gray;
 
         app.RequestedThemeVariant = _preferences.Theme switch
         {
             AppThemePreference.Light => ThemeVariant.Light,
-            AppThemePreference.Dark => ThemeVariant.Dark,
+            AppThemePreference.Dark or AppThemePreference.Gray => ThemeVariant.Dark,
             _ => ThemeVariant.Default
         };
 
-        ApplyPalette(app.Resources, useLightPalette, _preferences.WorkspaceBackground);
+        ApplyPalette(app.Resources, useLightPalette, useGrayPalette, _preferences.WorkspaceBackground);
     }
 
     private static void ApplyPalette(
         IResourceDictionary resources,
         bool light,
+        bool gray,
         WorkspaceBackgroundPreference workspaceBackground)
     {
         if (light)
         {
-            SetBrush(resources, "AppBackgroundBrush", "#f4f7fb");
+            SetBrush(resources, "AppBackgroundBrush", "#F5F7FA");
             SetBrush(resources, "SurfaceBrush", "#ffffff");
-            SetBrush(resources, "SurfaceAltBrush", "#eef3f8");
-            SetBrush(resources, "SurfaceSoftBrush", "#f4ffffff");
-            SetBrush(resources, "SurfaceSoftAltBrush", "#dcecf2f8");
-            SetBrush(resources, "BorderBrushColor", "#cbd5e1");
-            SetBrush(resources, "FloatingBorderBrush", "#c7d4e4");
+            SetBrush(resources, "SurfaceAltBrush", "#F8FAFC");
+            SetBrush(resources, "SurfaceSoftBrush", "#ffffff");
+            SetBrush(resources, "SurfaceSoftAltBrush", "#F3F6FA");
+            SetBrush(resources, "BorderBrushColor", "#E4E8EF");
+            SetBrush(resources, "FloatingBorderBrush", "#E4E8EF");
             SetBrush(resources, "TextPrimaryBrush", "#111827");
-            SetBrush(resources, "TextMutedBrush", "#526173");
-            SetBrush(resources, "TextSubtleBrush", "#8a97a8");
-            SetBrush(resources, "PrimaryBrush", "#2563eb");
-            SetBrush(resources, "PrimaryHoverBrush", "#1d4ed8");
+            SetBrush(resources, "TextMutedBrush", "#6B7280");
+            SetBrush(resources, "TextSubtleBrush", "#9CA3AF");
+            SetBrush(resources, "PrimaryBrush", "#2563EB");
+            SetBrush(resources, "PrimaryHoverBrush", "#1D4ED8");
             SetBrush(resources, "SuccessBrush", "#16a34a");
             SetBrush(resources, "SuccessHoverBrush", "#15803d");
             SetBrush(resources, "DangerBrush", "#dc2626");
@@ -205,26 +207,60 @@ public sealed class AppPreferencesService
             SetBrush(resources, "DangerSoftTextBrush", "#b91c1c");
             SetBrush(resources, "WarningTextBrush", "#b45309");
             SetBrush(resources, "SuccessTextBrush", "#15803d");
-            SetBrush(resources, "AccentSoftBrush", "#dbeafe");
-            SetBrush(resources, "AccentSoftTextBrush", "#1d4ed8");
-            ApplyWorkspacePalette(resources, workspaceBackground, light);
+            SetBrush(resources, "AccentSoftBrush", "#EEF4FF");
+            SetBrush(resources, "AccentSoftTextBrush", "#2563EB");
+            SetImageBadgePalette(resources, light, gray);
+            SetSearchPalette(resources, light, gray);
+            ApplyWorkspacePalette(resources, workspaceBackground, light, gray);
             SetBrush(resources, "OverlayBrush", "#660f172a");
             SetBrush(resources, "OverlayCardBrush", "#fffafcff");
             return;
         }
 
-        SetBrush(resources, "AppBackgroundBrush", "#0d1117");
-        SetBrush(resources, "SurfaceBrush", "#161b22");
-        SetBrush(resources, "SurfaceAltBrush", "#1c2230");
-        SetBrush(resources, "SurfaceSoftBrush", "#E6121824");
-        SetBrush(resources, "SurfaceSoftAltBrush", "#99161d2a");
-        SetBrush(resources, "BorderBrushColor", "#2a3347");
-        SetBrush(resources, "FloatingBorderBrush", "#3A50677D");
-        SetBrush(resources, "TextPrimaryBrush", "#e6edf3");
-        SetBrush(resources, "TextMutedBrush", "#8b949e");
-        SetBrush(resources, "TextSubtleBrush", "#484f58");
-        SetBrush(resources, "PrimaryBrush", "#3b82f6");
-        SetBrush(resources, "PrimaryHoverBrush", "#1d4ed8");
+        if (gray)
+        {
+            SetBrush(resources, "AppBackgroundBrush", "#1c1c1e");
+            SetBrush(resources, "SurfaceBrush", "#242426");
+            SetBrush(resources, "SurfaceAltBrush", "#1c1c1e");
+            SetBrush(resources, "SurfaceSoftBrush", "#242426");
+            SetBrush(resources, "SurfaceSoftAltBrush", "#2e2e32");
+            SetBrush(resources, "BorderBrushColor", "#333336");
+            SetBrush(resources, "FloatingBorderBrush", "#333336");
+            SetBrush(resources, "TextPrimaryBrush", "#e8e8ea");
+            SetBrush(resources, "TextMutedBrush", "#8a8a92");
+            SetBrush(resources, "TextSubtleBrush", "#52525a");
+            SetBrush(resources, "PrimaryBrush", "#1544a8");
+            SetBrush(resources, "PrimaryHoverBrush", "#1a52c8");
+            SetBrush(resources, "SuccessBrush", "#2a7a50");
+            SetBrush(resources, "SuccessHoverBrush", "#338c5d");
+            SetBrush(resources, "DangerBrush", "#8a1820");
+            SetBrush(resources, "DangerHoverBrush", "#a61d27");
+            SetBrush(resources, "DangerSoftBrush", "#321f22");
+            SetBrush(resources, "DangerSoftTextBrush", "#d89098");
+            SetBrush(resources, "WarningTextBrush", "#c8a060");
+            SetBrush(resources, "SuccessTextBrush", "#8fc69d");
+            SetBrush(resources, "AccentSoftBrush", "#2e2e32");
+            SetBrush(resources, "AccentSoftTextBrush", "#c8c8ce");
+            SetImageBadgePalette(resources, light, gray);
+            SetSearchPalette(resources, light, gray);
+            ApplyWorkspacePalette(resources, workspaceBackground, light, gray);
+            SetBrush(resources, "OverlayBrush", "#99000000");
+            SetBrush(resources, "OverlayCardBrush", "#f0242426");
+            return;
+        }
+
+        SetBrush(resources, "AppBackgroundBrush", "#080b10");
+        SetBrush(resources, "SurfaceBrush", "#0d1219");
+        SetBrush(resources, "SurfaceAltBrush", "#080b10");
+        SetBrush(resources, "SurfaceSoftBrush", "#0d1219");
+        SetBrush(resources, "SurfaceSoftAltBrush", "#111822");
+        SetBrush(resources, "BorderBrushColor", "#1a2030");
+        SetBrush(resources, "FloatingBorderBrush", "#1a2030");
+        SetBrush(resources, "TextPrimaryBrush", "#dde3ed");
+        SetBrush(resources, "TextMutedBrush", "#7a8ca8");
+        SetBrush(resources, "TextSubtleBrush", "#3e4b61");
+        SetBrush(resources, "PrimaryBrush", "#1544a8");
+        SetBrush(resources, "PrimaryHoverBrush", "#1a52c8");
         SetBrush(resources, "SuccessBrush", "#16a34a");
         SetBrush(resources, "SuccessHoverBrush", "#15803d");
         SetBrush(resources, "DangerBrush", "#dc2626");
@@ -233,56 +269,98 @@ public sealed class AppPreferencesService
         SetBrush(resources, "DangerSoftTextBrush", "#f87171");
         SetBrush(resources, "WarningTextBrush", "#fb923c");
         SetBrush(resources, "SuccessTextBrush", "#4ade80");
-        SetBrush(resources, "AccentSoftBrush", "#263b82f6");
-        SetBrush(resources, "AccentSoftTextBrush", "#60a5fa");
-        ApplyWorkspacePalette(resources, workspaceBackground, light);
+        SetBrush(resources, "AccentSoftBrush", "#10151e");
+        SetBrush(resources, "AccentSoftTextBrush", "#c8d0df");
+        SetImageBadgePalette(resources, light, gray);
+        SetSearchPalette(resources, light, gray);
+        ApplyWorkspacePalette(resources, workspaceBackground, light, gray);
         SetBrush(resources, "OverlayBrush", "#99000000");
         SetBrush(resources, "OverlayCardBrush", "#f0121824");
+    }
+
+    private static void SetSearchPalette(IResourceDictionary resources, bool light, bool gray)
+    {
+        if (light)
+        {
+            SetBrush(resources, "SearchBackgroundBrush", "#F5F7FA");
+            SetBrush(resources, "SearchControlBrush", "#ffffff");
+            SetBrush(resources, "SearchControlBorderBrush", "#E4E8EF");
+            SetBrush(resources, "SearchMutedBrush", "#6B7280");
+            SetBrush(resources, "SearchIconBrush", "#9CA3AF");
+            SetBrush(resources, "SearchRegisterBrush", "#2563EB");
+            SetBrush(resources, "SearchRegisterHoverBrush", "#1D4ED8");
+            SetBrush(resources, "SearchRegisterTextBrush", "#ffffff");
+            return;
+        }
+
+        if (gray)
+        {
+            SetBrush(resources, "SearchBackgroundBrush", "#1c1c1e");
+            SetBrush(resources, "SearchControlBrush", "#242426");
+            SetBrush(resources, "SearchControlBorderBrush", "#333336");
+            SetBrush(resources, "SearchMutedBrush", "#8a8a92");
+            SetBrush(resources, "SearchIconBrush", "#52525a");
+            SetBrush(resources, "SearchRegisterBrush", "#1544a8");
+            SetBrush(resources, "SearchRegisterHoverBrush", "#1a52c8");
+            SetBrush(resources, "SearchRegisterTextBrush", "#c8dcff");
+            return;
+        }
+
+        SetBrush(resources, "SearchBackgroundBrush", "#080b10");
+        SetBrush(resources, "SearchControlBrush", "#0d1219");
+        SetBrush(resources, "SearchControlBorderBrush", "#1a2030");
+        SetBrush(resources, "SearchMutedBrush", "#7a8ca8");
+        SetBrush(resources, "SearchIconBrush", "#3a4255");
+        SetBrush(resources, "SearchRegisterBrush", "#1544a8");
+        SetBrush(resources, "SearchRegisterHoverBrush", "#1a52c8");
+        SetBrush(resources, "SearchRegisterTextBrush", "#c8dcff");
+    }
+
+    private static void SetImageBadgePalette(IResourceDictionary resources, bool light, bool gray)
+    {
+        if (light)
+        {
+            SetBrush(resources, "ImageBadgeBackgroundBrush", "#E0FFFFFF");
+            SetBrush(resources, "ImageBadgeBorderBrush", "#BFCBD5E1");
+            SetBrush(resources, "ImageBadgeTextBrush", "#64748B");
+            return;
+        }
+
+        if (gray)
+        {
+            SetBrush(resources, "ImageBadgeBackgroundBrush", "#CC242426");
+            SetBrush(resources, "ImageBadgeBorderBrush", "#14FFFFFF");
+            SetBrush(resources, "ImageBadgeTextBrush", "#9a9aa2");
+            return;
+        }
+
+        SetBrush(resources, "ImageBadgeBackgroundBrush", "#B30C121C");
+        SetBrush(resources, "ImageBadgeBorderBrush", "#14FFFFFF");
+        SetBrush(resources, "ImageBadgeTextBrush", "#dde3ed");
     }
 
     private static void ApplyWorkspacePalette(
         IResourceDictionary resources,
         WorkspaceBackgroundPreference workspaceBackground,
-        bool light)
+        bool light,
+        bool gray)
     {
-        if (light)
-        {
-            switch (workspaceBackground)
-            {
-                case WorkspaceBackgroundPreference.Neutral:
-                    SetBrush(resources, "WorkspaceViewportBrush", "#e5e7eb");
-                    SetBrush(resources, "WorkspaceBoardBrush", "#f8fafc");
-                    SetBrush(resources, "WorkspaceBoardBorderBrush", "#cbd5e1");
-                    return;
-                case WorkspaceBackgroundPreference.Black:
-                    SetBrush(resources, "WorkspaceViewportBrush", "#171717");
-                    SetBrush(resources, "WorkspaceBoardBrush", "#262626");
-                    SetBrush(resources, "WorkspaceBoardBorderBrush", "#525252");
-                    return;
-                default:
-                    SetBrush(resources, "WorkspaceViewportBrush", "#dbeafe");
-                    SetBrush(resources, "WorkspaceBoardBrush", "#eff6ff");
-                    SetBrush(resources, "WorkspaceBoardBorderBrush", "#93c5fd");
-                    return;
-            }
-        }
-
         switch (workspaceBackground)
         {
-            case WorkspaceBackgroundPreference.Neutral:
-                SetBrush(resources, "WorkspaceViewportBrush", "#111827");
-                SetBrush(resources, "WorkspaceBoardBrush", "#1f2937");
-                SetBrush(resources, "WorkspaceBoardBorderBrush", "#374151");
+            case WorkspaceBackgroundPreference.Light:
+                SetBrush(resources, "WorkspaceViewportBrush", "#F5F7FA");
+                SetBrush(resources, "WorkspaceBoardBrush", "#FFFFFF");
+                SetBrush(resources, "WorkspaceBoardBorderBrush", "#E4E8EF");
                 return;
-            case WorkspaceBackgroundPreference.Black:
-                SetBrush(resources, "WorkspaceViewportBrush", "#000000");
-                SetBrush(resources, "WorkspaceBoardBrush", "#171717");
-                SetBrush(resources, "WorkspaceBoardBorderBrush", "#404040");
+            case WorkspaceBackgroundPreference.Gray:
+                SetBrush(resources, "WorkspaceViewportBrush", "#1c1c1e");
+                SetBrush(resources, "WorkspaceBoardBrush", "#242426");
+                SetBrush(resources, "WorkspaceBoardBorderBrush", "#333336");
                 return;
             default:
-                SetBrush(resources, "WorkspaceViewportBrush", "#06152f");
-                SetBrush(resources, "WorkspaceBoardBrush", "#0b2142");
-                SetBrush(resources, "WorkspaceBoardBorderBrush", "#1d4ed8");
+                SetBrush(resources, "WorkspaceViewportBrush", "#080b10");
+                SetBrush(resources, "WorkspaceBoardBrush", "#0d1219");
+                SetBrush(resources, "WorkspaceBoardBorderBrush", "#1a2030");
                 return;
         }
     }
@@ -353,7 +431,8 @@ public enum AppThemePreference
 {
     System,
     Dark,
-    Light
+    Light,
+    Gray
 }
 
 public enum AppLanguagePreference
@@ -372,8 +451,8 @@ public enum WorkspacePastePreference
 public enum WorkspaceBackgroundPreference
 {
     Dark,
-    Neutral,
-    Black
+    Gray,
+    Light
 }
 
 public enum HomeWorkspaceViewPreference

@@ -1,36 +1,51 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:Organizer.Application.ViewModels.Components"
              x:Class="Organizer.Application.Components.SearchBar"
              x:DataType="vm:SearchBarViewModel">
 
     <UserControl.Styles>
 
-        <Style Selector="TextBox.search-input">
-            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+        <Style Selector="Border.search-field">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Background" Value="{DynamicResource SearchControlBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SearchControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12 10" />
-            <Setter Property="FontSize" Value="15" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="12 0" />
+        </Style>
+
+        <Style Selector="Border.sort-field">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Width" Value="176" />
+            <Setter Property="Background" Value="{DynamicResource SearchControlBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SearchControlBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="10 0" />
+        </Style>
+
+        <Style Selector="TextBox.search-input">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4 3 8 3" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontSize" Value="13" />
             <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}" />
-        </Style>
-        <Style Selector="TextBox.search-input:focus">
-            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
-        </Style>
-        <Style Selector="TextBox.search-input /template/ Border#PART_BorderElement">
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
 
         <Style Selector="Button.btn">
-            <Setter Property="Height" Value="42" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="CornerRadius" Value="9" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Padding" Value="16 0" />
+            <Setter Property="Padding" Value="15 0" />
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border Background="{TemplateBinding Background}"
@@ -53,52 +68,81 @@
         </Style>
 
         <Style Selector="Button.btn-register">
-            <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
-            <Setter Property="Foreground" Value="#ffffff" />
+            <Setter Property="Background" Value="{DynamicResource SearchRegisterBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource SearchRegisterTextBrush}" />
         </Style>
         <Style Selector="Button.btn-register:pointerover">
-            <Setter Property="Background" Value="{DynamicResource SuccessHoverBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SearchRegisterHoverBrush}" />
         </Style>
 
         <Style Selector="ComboBox.sort-picker">
-            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12 0" />
-            <Setter Property="Height" Value="42" />
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource SearchMutedBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="ComboBox.sort-picker:focus">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
         </Style>
 
+        <Style Selector="ic|FluentIcon.search-icon">
+            <Setter Property="IconVariant" Value="Regular" />
+            <Setter Property="IconSize" Value="Size20" />
+            <Setter Property="Foreground" Value="{DynamicResource SearchIconBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="Button ic|FluentIcon">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+        </Style>
+
     </UserControl.Styles>
 
-    <Grid ColumnDefinitions="*,Auto,170"
+    <Grid ColumnDefinitions="*,Auto"
           ColumnSpacing="10">
-        <!-- Campo de busca -->
-        <TextBox Grid.Column="0"
-                 Classes="search-input"
-                 Text="{Binding Query}"
-                 PlaceholderText="{DynamicResource Loc.Search.Placeholder}" />
+        <Border Grid.Column="0"
+                Classes="search-field">
+            <Grid ColumnDefinitions="Auto,*"
+                  ColumnSpacing="8"
+                  VerticalAlignment="Center">
+                <ic:FluentIcon Classes="search-icon"
+                               Icon="Search" />
+                <TextBox Grid.Column="1"
+                         Classes="search-input"
+                         Text="{Binding Query}"
+                         PlaceholderText="{DynamicResource Loc.Search.Placeholder}" />
+            </Grid>
+        </Border>
 
-        <!-- Botão registrar -->
-        <Button Grid.Column="1"
-                Classes="btn btn-register"
-                Command="{Binding RegisterCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="+" VerticalAlignment="Center" FontSize="16" />
-                <TextBlock Text="{DynamicResource Loc.Search.Register}" VerticalAlignment="Center" />
-            </StackPanel>
-        </Button>
+        <StackPanel Grid.Column="1"
+                    Orientation="Horizontal"
+                    Spacing="8">
+            <Border Classes="sort-field">
+                <Grid ColumnDefinitions="Auto,*"
+                      ColumnSpacing="7">
+                    <ic:FluentIcon Classes="search-icon"
+                                   Icon="ArrowSort" />
+                    <ComboBox Grid.Column="1"
+                              Classes="sort-picker"
+                              ItemsSource="{Binding SortOptions}"
+                              SelectedItem="{Binding SelectedSortOption}" />
+                </Grid>
+            </Border>
 
-        <!-- Ordenação -->
-        <ComboBox Grid.Column="2"
-                  Classes="sort-picker"
-                  ItemsSource="{Binding SortOptions}"
-                  SelectedItem="{Binding SelectedSort}" />
+            <Button Classes="btn btn-register"
+                    Command="{Binding RegisterCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="Add"
+                                   IconVariant="Regular"
+                                   IconSize="Size16"
+                                   VerticalAlignment="Center" />
+                    <TextBlock Text="{DynamicResource Loc.Search.Register}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
 
     </Grid>
 

@@ -18,37 +18,58 @@
     </UserControl.Resources>
 
     <UserControl.Styles>
-        <Style Selector="Border.floating-panel">
+        <Style Selector="Border.section-card">
             <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="18" />
-            <Setter Property="BoxShadow" Value="0 18 34 #66000000" />
+            <Setter Property="CornerRadius" Value="13" />
+        </Style>
+
+        <Style Selector="Border.section-head">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+            <Setter Property="Padding" Value="18 14 18 12" />
         </Style>
 
         <Style Selector="Border.preference-row">
-            <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="14 12" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+            <Setter Property="Padding" Value="18 13" />
+        </Style>
+
+        <Style Selector="Border.preference-row.last">
+            <Setter Property="BorderThickness" Value="0" />
         </Style>
 
         <Style Selector="Border.preference-row:pointerover">
-            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
-            <Setter Property="BoxShadow" Value="0 8 22 #26000000" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        </Style>
+
+        <Style Selector="Border.preference-tile">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="0 0 1 0" />
+            <Setter Property="Padding" Value="18 13" />
+        </Style>
+
+        <Style Selector="Border.preference-tile.last">
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style Selector="Border.preference-tile:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
 
         <Style Selector="ComboBox.preference-select">
-            <Setter Property="MinWidth" Value="190" />
-            <Setter Property="Height" Value="38" />
-            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="MinWidth" Value="160" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12 0" />
+            <Setter Property="Padding" Value="10 0" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
@@ -81,14 +102,20 @@
         </Style>
 
         <Style Selector="TextBlock.section-title">
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="FontSize" Value="17" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="TextBlock.section-subtitle">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
 
         <Style Selector="TextBlock.row-title">
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
@@ -99,14 +126,14 @@
         </Style>
 
         <Style Selector="Button.settings-tab">
-            <Setter Property="MinWidth" Value="120" />
-            <Setter Property="Height" Value="38" />
-            <Setter Property="Padding" Value="14 8" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="14 7" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="9" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
@@ -116,9 +143,9 @@
         </Style>
 
         <Style Selector="Button.settings-tab.selected">
-            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
-            <Setter Property="Foreground" Value="#ffffff" />
-            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
         </Style>
 
         <Style Selector="Button.settings-tab ic|FluentIcon">
@@ -126,15 +153,47 @@
         </Style>
 
         <Style Selector="Button.settings-tab.selected ic|FluentIcon">
-            <Setter Property="Foreground" Value="#ffffff" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
         <Style Selector="Button.settings-tab.selected TextBlock">
-            <Setter Property="Foreground" Value="#ffffff" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.theme-option">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="11 6" />
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.theme-option:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.theme-option.selected">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.theme-option ic|FluentIcon">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+        </Style>
+
+        <Style Selector="Button.theme-option TextBlock">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+            <Setter Property="FontSize" Value="11" />
         </Style>
 
         <Style Selector="StackPanel.section-heading ic|FluentIcon">
-            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
         </Style>
 
         <Style Selector="Slider">
@@ -150,13 +209,15 @@
         </Style>
 
         <Style Selector="Button.backup-action">
-            <Setter Property="MinHeight" Value="38" />
-            <Setter Property="Padding" Value="14 9" />
-            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="MinHeight" Value="64" />
+            <Setter Property="Padding" Value="14 11" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="9" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
@@ -165,10 +226,104 @@
             <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
         </Style>
 
+        <Style Selector="Button.backup-action.primary">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.backup-action.danger">
+            <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DangerSoftTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+        </Style>
+
         <Style Selector="Button.backup-action:disabled">
             <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+        </Style>
+
+        <Style Selector="Button.backup-action ic|FluentIcon">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+        </Style>
+
+        <Style Selector="TextBlock.backup-action-title">
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style Selector="TextBlock.backup-action-desc">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style Selector="Grid.backup-actions-grid">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+
+        <Style Selector="Border.backup-stat-cell">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="0 0 1 0" />
+            <Setter Property="Padding" Value="18 14" />
+        </Style>
+
+        <Style Selector="Border.backup-stat-cell.last">
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style Selector="TextBlock.backup-stat-label">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+        </Style>
+
+        <Style Selector="TextBlock.backup-stat-value">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style Selector="Border.backup-field-row">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+            <Setter Property="Padding" Value="18 11" />
+        </Style>
+
+        <Style Selector="Border.backup-field-row.last">
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style Selector="TextBlock.backup-field-label">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+
+        <Style Selector="Border.cloud-status-dot">
+            <Setter Property="Width" Value="7" />
+            <Setter Property="Height" Value="7" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="Border.cloud-status-dot.connected">
+            <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
+        </Style>
+
+        <Style Selector="Border.cloud-status-dot.disconnected">
+            <Setter Property="Background" Value="{DynamicResource TextSubtleBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.cloud-status-text.connected">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.cloud-status-text.disconnected">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
         </Style>
 
         <Style Selector="TextBlock.info-value">
@@ -176,104 +331,177 @@
             <Setter Property="FontSize" Value="13" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
+
+        <Style Selector="Border.about-hero">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+            <Setter Property="Padding" Value="22 20" />
+        </Style>
+
+        <Style Selector="Border.about-icon">
+            <Setter Property="Width" Value="48" />
+            <Setter Property="Height" Value="48" />
+        </Style>
+
+        <Style Selector="Border.about-version-badge">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="10 4" />
+        </Style>
+
+        <Style Selector="Border.about-stat-cell">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="0 0 1 1" />
+            <Setter Property="Padding" Value="20 16" />
+        </Style>
+
+        <Style Selector="Border.about-stat-cell.last">
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+        </Style>
+
+        <Style Selector="TextBlock.about-label">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+        </Style>
+
+        <Style Selector="TextBlock.about-stat-value">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="LineHeight" Value="24" />
+        </Style>
+
+        <Style Selector="TextBlock.about-stat-sub">
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+
+        <Style Selector="Border.about-tech-section">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+            <Setter Property="Padding" Value="20 14" />
+        </Style>
+
+        <Style Selector="Border.about-chip">
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Padding" Value="11 5" />
+        </Style>
+
+        <Style Selector="Border.about-link">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="0 0 1 1" />
+            <Setter Property="Padding" Value="18 13" />
+        </Style>
+
+        <Style Selector="Border.about-link.right">
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+        </Style>
+
+        <Style Selector="Border.about-link.bottom">
+            <Setter Property="BorderThickness" Value="0 0 1 0" />
+        </Style>
+
+        <Style Selector="Border.about-link.right.bottom">
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style Selector="TextBlock.about-link-title">
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="TextBlock.about-link-sub">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style Selector="Border.autosave-hint">
+            <Setter Property="Padding" Value="24 10" />
+        </Style>
     </UserControl.Styles>
 
-    <Grid Background="{DynamicResource AppBackgroundBrush}">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
-                      VerticalScrollBarVisibility="Auto">
-            <Grid Margin="28"
-                  RowDefinitions="Auto,Auto,*"
-                  RowSpacing="20">
+    <Grid Background="{DynamicResource AppBackgroundBrush}"
+          RowDefinitions="Auto,Auto,*,Auto">
+        <StackPanel Margin="24 20 24 0"
+                    Spacing="3">
+            <TextBlock Text="{DynamicResource Loc.Preferences.Title}"
+                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       FontSize="15"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="{DynamicResource Loc.Preferences.Subtitle}"
+                       Foreground="{DynamicResource TextSubtleBrush}"
+                       FontSize="12" />
+        </StackPanel>
 
-                <Grid ColumnDefinitions="*,Auto"
-                      ColumnSpacing="18">
-                    <StackPanel Spacing="5">
-                        <TextBlock Text="{DynamicResource Loc.Preferences.Title}"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                   FontSize="28"
-                                   FontWeight="SemiBold" />
-                        <TextBlock Text="{DynamicResource Loc.Preferences.Subtitle}"
-                                   Foreground="{DynamicResource TextMutedBrush}"
-                                   FontSize="13" />
-                    </StackPanel>
-
-                    <Border Grid.Column="1"
-                            Classes="floating-panel"
-                            IsVisible="{Binding IsSaveIndicatorVisible}"
-                            Padding="14 10"
-                            VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <ic:FluentIcon Icon="CheckmarkCircle"
-                                           IconVariant="Regular"
-                                           IconSize="Size20"
-                                           Foreground="{DynamicResource SuccessBrush}"
-                                           VerticalAlignment="Center" />
-                            <TextBlock Text="{DynamicResource Loc.Preferences.Saved}"
-                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                </Grid>
-
-                <StackPanel Grid.Row="1"
-                            Orientation="Horizontal"
-                            Spacing="10">
-                    <Button Classes="settings-tab"
-                            Classes.selected="{Binding IsGeneralSelected}"
-                            Click="OnGeneralSettingsClick">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ic:FluentIcon Icon="Settings"
-                                           IconVariant="Regular"
-                                           IconSize="Size20" />
-                            <TextBlock Text="{DynamicResource Loc.Preferences.TabSettings}" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="settings-tab"
-                            Classes.selected="{Binding IsDataBackupSelected}"
-                            Click="OnDataBackupClick">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ic:FluentIcon Icon="Database"
-                                           IconVariant="Regular"
-                                           IconSize="Size20" />
-                            <TextBlock Text="{DynamicResource Loc.Preferences.TabDataBackup}" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="settings-tab"
-                            Classes.selected="{Binding IsAboutSelected}"
-                            Click="OnAboutClick">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ic:FluentIcon Icon="Info"
-                                           IconVariant="Regular"
-                                           IconSize="Size20" />
-                            <TextBlock Text="{DynamicResource Loc.Preferences.TabAbout}" />
-                        </StackPanel>
-                    </Button>
+        <StackPanel Grid.Row="1"
+                    Margin="24 14 24 0"
+                    Orientation="Horizontal"
+                    Spacing="4">
+            <Button Classes="settings-tab"
+                    Classes.selected="{Binding IsGeneralSelected}"
+                    Click="OnGeneralSettingsClick">
+                <StackPanel Orientation="Horizontal" Spacing="7">
+                    <ic:FluentIcon Icon="Settings"
+                                   IconVariant="Regular"
+                                   IconSize="Size16" />
+                    <TextBlock Text="{DynamicResource Loc.Preferences.TabSettings}" />
                 </StackPanel>
+            </Button>
+            <Button Classes="settings-tab"
+                    Classes.selected="{Binding IsDataBackupSelected}"
+                    Click="OnDataBackupClick">
+                <StackPanel Orientation="Horizontal" Spacing="7">
+                    <ic:FluentIcon Icon="Database"
+                                   IconVariant="Regular"
+                                   IconSize="Size16" />
+                    <TextBlock Text="{DynamicResource Loc.Preferences.TabDataBackup}" />
+                </StackPanel>
+            </Button>
+            <Button Classes="settings-tab"
+                    Classes.selected="{Binding IsAboutSelected}"
+                    Click="OnAboutClick">
+                <StackPanel Orientation="Horizontal" Spacing="7">
+                    <ic:FluentIcon Icon="Info"
+                                   IconVariant="Regular"
+                                   IconSize="Size16" />
+                    <TextBlock Text="{DynamicResource Loc.Preferences.TabAbout}" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
 
-                <Grid Grid.Row="2"
-                      IsVisible="{Binding IsGeneralSectionVisible}"
-                      ColumnDefinitions="1.05*,1.05*"
-                      RowDefinitions="Auto,Auto,Auto"
-                      ColumnSpacing="18"
-                      RowSpacing="18">
+        <ScrollViewer Grid.Row="2"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto"
+                      Margin="0 16 0 0">
+            <Grid Margin="24 0 24 28">
+                <StackPanel IsVisible="{Binding IsGeneralSectionVisible}"
+                            Spacing="12">
+                    <Border Classes="section-card">
+                        <StackPanel>
+                            <Border Classes="section-head">
+                                <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="10">
+                                    <ic:FluentIcon Icon="Color"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   VerticalAlignment="Top" />
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Appearance}" />
+                                        <TextBlock Classes="section-subtitle" Text="{DynamicResource Loc.Preferences.AppearanceDescription}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
 
-                    <Border Grid.Row="0"
-                            Grid.Column="0"
-                            Classes="floating-panel">
-                        <StackPanel Spacing="14">
-                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
-                                <ic:FluentIcon Icon="Color"
-                                               IconVariant="Regular"
-                                               IconSize="Size20"
-                                               VerticalAlignment="Center" />
-                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Appearance}" />
-                            </StackPanel>
-
-                            <Border Classes="preference-row">
+                            <Border Classes="preference-row last">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
-                                    <StackPanel Spacing="4">
+                                    <StackPanel Spacing="3">
                                         <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.Theme}" />
                                         <TextBlock Classes="row-description"
                                                    Text="{DynamicResource Loc.Preferences.ThemeDescription}" />
@@ -282,27 +510,121 @@
                                               Classes="preference-select"
                                               ItemsSource="{Binding ThemeOptions}"
                                               ItemTemplate="{StaticResource PreferenceOptionTemplate}"
-                                              SelectedItem="{Binding SelectedTheme}" />
+                                              SelectedItem="{Binding SelectedTheme}"
+                                              IsVisible="False" />
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Spacing="6">
+                                        <Button Classes="theme-option"
+                                                Classes.selected="{Binding IsSystemThemeSelected}"
+                                                Click="OnSystemThemeClick">
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <ic:FluentIcon Icon="Desktop"
+                                                               IconVariant="Regular"
+                                                               IconSize="Size16" />
+                                                <TextBlock Text="{DynamicResource Loc.Preferences.Theme.System}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="theme-option"
+                                                Classes.selected="{Binding IsDarkThemeSelected}"
+                                                Click="OnDarkThemeClick">
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <ic:FluentIcon Icon="WeatherMoon"
+                                                               IconVariant="Regular"
+                                                               IconSize="Size16" />
+                                                <TextBlock Text="{DynamicResource Loc.Preferences.Theme.Dark}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="theme-option"
+                                                Classes.selected="{Binding IsLightThemeSelected}"
+                                                Click="OnLightThemeClick">
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <ic:FluentIcon Icon="WeatherSunny"
+                                                               IconVariant="Regular"
+                                                               IconSize="Size16" />
+                                                <TextBlock Text="{DynamicResource Loc.Preferences.Theme.Light}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="theme-option"
+                                                Classes.selected="{Binding IsGrayThemeSelected}"
+                                                Click="OnGrayThemeClick">
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <ic:FluentIcon Icon="Grid"
+                                                               IconVariant="Regular"
+                                                               IconSize="Size16" />
+                                                <TextBlock Text="{DynamicResource Loc.Preferences.Theme.Gray}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
                                 </Grid>
                             </Border>
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Row="0"
-                            Grid.Column="1"
-                            Classes="floating-panel">
-                        <StackPanel Spacing="14">
-                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
-                                <ic:FluentIcon Icon="Search"
-                                               IconVariant="Regular"
-                                               IconSize="Size20"
-                                               VerticalAlignment="Center" />
-                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Search}" />
-                            </StackPanel>
+                    <Border Classes="section-card">
+                        <Grid ColumnDefinitions="*,*">
+                            <Border Classes="preference-tile">
+                                <StackPanel Spacing="10">
+                                    <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                        <ic:FluentIcon Icon="LocalLanguage"
+                                                       IconVariant="Regular"
+                                                       IconSize="Size16"
+                                                       VerticalAlignment="Center" />
+                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Language}" />
+                                    </StackPanel>
+                                    <StackPanel Spacing="3">
+                                        <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.LanguageInterface}" />
+                                        <TextBlock Classes="row-description"
+                                                   Text="{DynamicResource Loc.Preferences.LanguageDescription}" />
+                                    </StackPanel>
+                                    <ComboBox Classes="preference-select"
+                                              HorizontalAlignment="Stretch"
+                                              ItemsSource="{Binding LanguageOptions}"
+                                              ItemTemplate="{StaticResource PreferenceOptionTemplate}"
+                                              SelectedItem="{Binding SelectedLanguage}" />
+                                </StackPanel>
+                            </Border>
 
-                            <Border Classes="preference-row">
+                            <Border Grid.Column="1"
+                                    Classes="preference-tile last">
+                                <StackPanel Spacing="10">
+                                    <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                                        <ic:FluentIcon Icon="Shield"
+                                                       IconVariant="Regular"
+                                                       IconSize="Size16"
+                                                       VerticalAlignment="Center" />
+                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Security}" />
+                                    </StackPanel>
+                                    <StackPanel Spacing="3">
+                                        <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.ConfirmDeletion}" />
+                                        <TextBlock Classes="row-description"
+                                                   Text="{DynamicResource Loc.Preferences.ConfirmDeletionDescription}" />
+                                    </StackPanel>
+                                    <ToggleSwitch IsChecked="{Binding ConfirmDeletion}"
+                                                  HorizontalAlignment="Left" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="section-card">
+                        <StackPanel>
+                            <Border Classes="section-head">
+                                <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="10">
+                                    <ic:FluentIcon Icon="Search"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   VerticalAlignment="Top" />
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Search}" />
+                                        <TextBlock Classes="section-subtitle" Text="{DynamicResource Loc.Preferences.SearchDescription}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Classes="preference-row last">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
-                                    <StackPanel Spacing="4">
+                                    <StackPanel Spacing="3">
                                         <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.ItemsPerPage}" />
                                         <TextBlock Classes="row-description"
                                                    Text="{DynamicResource Loc.Preferences.ItemsPerPageDescription}" />
@@ -317,87 +639,27 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Row="1"
-                            Grid.Column="0"
-                            Classes="floating-panel">
-                        <StackPanel Spacing="14">
-                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
-                                <ic:FluentIcon Icon="LocalLanguage"
-                                               IconVariant="Regular"
-                                               IconSize="Size20"
-                                               VerticalAlignment="Center" />
-                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Language}" />
-                            </StackPanel>
-
-                            <Border Classes="preference-row">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.LanguageInterface}" />
-                                        <TextBlock Classes="row-description"
-                                                   Text="{DynamicResource Loc.Preferences.LanguageDescription}" />
-                                    </StackPanel>
-                                    <ComboBox Grid.Column="1"
-                                              Classes="preference-select"
-                                              ItemsSource="{Binding LanguageOptions}"
-                                              ItemTemplate="{StaticResource PreferenceOptionTemplate}"
-                                              SelectedItem="{Binding SelectedLanguage}" />
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Grid.Row="1"
-                            Grid.Column="1"
-                            Classes="floating-panel">
-                        <StackPanel Spacing="14">
-                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
-                                <ic:FluentIcon Icon="Shield"
-                                               IconVariant="Regular"
-                                               IconSize="Size20"
-                                               VerticalAlignment="Center" />
-                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Security}" />
-                            </StackPanel>
-
-                            <Border Classes="preference-row">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.ConfirmDeletion}" />
-                                        <TextBlock Classes="row-description"
-                                                   Text="{DynamicResource Loc.Preferences.ConfirmDeletionDescription}" />
-                                    </StackPanel>
-                                    <ToggleSwitch Grid.Column="1"
-                                                  IsChecked="{Binding ConfirmDeletion}"
-                                                  VerticalAlignment="Center" />
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Grid.Row="2"
-                            Grid.ColumnSpan="2"
-                            Classes="floating-panel">
-                        <StackPanel Spacing="14">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <StackPanel Spacing="4">
-                                    <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
-                                        <ic:FluentIcon Icon="Grid"
-                                                       IconVariant="Regular"
-                                                       IconSize="Size20"
-                                                       VerticalAlignment="Center" />
+                    <Border Classes="section-card">
+                        <StackPanel>
+                            <Border Classes="section-head">
+                                <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="10">
+                                    <ic:FluentIcon Icon="Grid"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   VerticalAlignment="Top" />
+                                    <StackPanel Spacing="1">
                                         <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.Workspace}" />
+                                        <TextBlock Classes="section-subtitle"
+                                                   Text="{DynamicResource Loc.Preferences.WorkspaceDescription}" />
                                     </StackPanel>
-                                    <TextBlock Classes="row-description"
-                                               Text="{DynamicResource Loc.Preferences.WorkspaceDescription}" />
                                 </StackPanel>
-                            </Grid>
+                            </Border>
 
                             <Grid ColumnDefinitions="*,*"
-                                  RowDefinitions="Auto,Auto,Auto"
-                                  ColumnSpacing="14"
-                                  RowSpacing="14">
-                                <Border Classes="preference-row">
+                                  RowDefinitions="Auto,Auto">
+                                <Border Classes="preference-tile">
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
-                                        <StackPanel Spacing="4">
+                                        <StackPanel Spacing="3">
                                             <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.PasteMode}" />
                                             <TextBlock Classes="row-description"
                                                        Text="{DynamicResource Loc.Preferences.PasteModeDescription}" />
@@ -411,9 +673,9 @@
                                 </Border>
 
                                 <Border Grid.Column="1"
-                                        Classes="preference-row">
+                                        Classes="preference-tile last">
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
-                                        <StackPanel Spacing="4">
+                                        <StackPanel Spacing="3">
                                             <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.CanvasBackground}" />
                                             <TextBlock Classes="row-description"
                                                        Text="{DynamicResource Loc.Preferences.CanvasBackgroundDescription}" />
@@ -427,16 +689,15 @@
                                 </Border>
 
                                 <Border Grid.Row="1"
-                                        Grid.ColumnSpan="2"
-                                        Classes="preference-row">
-                                    <Grid ColumnDefinitions="*,280" ColumnSpacing="22">
-                                        <StackPanel Spacing="4">
+                                        Classes="preference-tile">
+                                    <Grid ColumnDefinitions="*,220" ColumnSpacing="18">
+                                        <StackPanel Spacing="3">
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.InitialZoom}" />
                                                 <TextBlock Grid.Column="1"
                                                            Text="{Binding WorkspaceDefaultZoomPercent, StringFormat='{}{0:0}%'}"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                                           FontSize="14"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                           FontSize="12"
                                                            FontWeight="SemiBold"
                                                            VerticalAlignment="Center" />
                                             </Grid>
@@ -448,21 +709,22 @@
                                                 Maximum="200"
                                                 TickFrequency="10"
                                                 IsSnapToTickEnabled="True"
+                                                VerticalAlignment="Center"
                                                 Value="{Binding WorkspaceDefaultZoomPercent}" />
                                     </Grid>
                                 </Border>
 
-                                <Border Grid.Row="2"
-                                        Grid.ColumnSpan="2"
-                                        Classes="preference-row">
-                                    <Grid ColumnDefinitions="*,280" ColumnSpacing="22">
-                                        <StackPanel Spacing="4">
+                                <Border Grid.Row="1"
+                                        Grid.Column="1"
+                                        Classes="preference-tile last">
+                                    <Grid ColumnDefinitions="*,220" ColumnSpacing="18">
+                                        <StackPanel Spacing="3">
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.HistoryLimit}" />
                                                 <TextBlock Grid.Column="1"
                                                            Text="{Binding WorkspaceHistoryLimit, StringFormat='{}{0:0}'}"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                                           FontSize="14"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                           FontSize="12"
                                                            FontWeight="SemiBold"
                                                            VerticalAlignment="Center" />
                                             </Grid>
@@ -474,263 +736,536 @@
                                                 Maximum="200"
                                                 TickFrequency="10"
                                                 IsSnapToTickEnabled="True"
+                                                VerticalAlignment="Center"
                                                 Value="{Binding WorkspaceHistoryLimit}" />
                                     </Grid>
                                 </Border>
                             </Grid>
                         </StackPanel>
                     </Border>
-                </Grid>
+                </StackPanel>
 
-                <Grid Grid.Row="2"
-                      IsVisible="{Binding IsDataBackupSectionVisible}"
-                      RowDefinitions="Auto,Auto,Auto"
-                      RowSpacing="18">
-                    <Border Classes="floating-panel">
-                        <StackPanel Spacing="16">
-                            <StackPanel Spacing="4">
-                                <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
+                <StackPanel IsVisible="{Binding IsDataBackupSectionVisible}"
+                            HorizontalAlignment="Stretch"
+                            Spacing="12">
+                    <Border Classes="section-card">
+                        <StackPanel>
+                            <Border Classes="section-head">
+                                <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="10">
                                     <ic:FluentIcon Icon="Database"
                                                    IconVariant="Regular"
-                                                   IconSize="Size20"
-                                                   VerticalAlignment="Center" />
-                                    <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Title}" />
+                                                   IconSize="Size16"
+                                                   VerticalAlignment="Top" />
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Database}" />
+                                        <TextBlock Classes="section-subtitle"
+                                                   Text="{DynamicResource Loc.Backup.DatabaseDescription}" />
+                                    </StackPanel>
                                 </StackPanel>
-                                <TextBlock Classes="row-description"
-                                           Text="{DynamicResource Loc.Backup.Description}" />
-                            </StackPanel>
+                            </Border>
 
-                            <Grid ColumnDefinitions="1.1*,1.1*"
-                                  ColumnSpacing="18">
-                                <Border Classes="preference-row">
-                                    <StackPanel Spacing="12">
-                                        <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
-                                            <ic:FluentIcon Icon="Storage"
-                                                           IconVariant="Regular"
-                                                           IconSize="Size20"
-                                                           VerticalAlignment="Center" />
-                                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Database}" />
-                                        </StackPanel>
-
-                                        <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
-                                            <TextBlock Classes="row-description" Text="{DynamicResource Loc.Backup.CurrentLocation}" />
-                                            <TextBlock Grid.Column="1"
-                                                       Classes="info-value"
-                                                       Text="{Binding DatabaseLocation}" />
-
-                                            <TextBlock Grid.Row="1" Classes="row-description" Text="{DynamicResource Loc.Backup.DatabaseSize}" />
-                                            <TextBlock Grid.Row="1"
-                                                       Grid.Column="1"
-                                                       Classes="info-value"
-                                                       Text="{Binding DatabaseSize}" />
-
-                                            <TextBlock Grid.Row="2" Classes="row-description" Text="{DynamicResource Loc.Backup.LastLocalBackup}" />
-                                            <TextBlock Grid.Row="2"
-                                                       Grid.Column="1"
-                                                       Classes="info-value"
-                                                       Text="{Binding LastLocalBackup}" />
-                                        </Grid>
+                            <Grid ColumnDefinitions="*,*,*">
+                                <Border Classes="backup-stat-cell">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="backup-stat-label" Text="{DynamicResource Loc.Backup.DatabaseSize}" />
+                                        <TextBlock Classes="backup-stat-value" Text="{Binding DatabaseSize}" />
                                     </StackPanel>
                                 </Border>
 
                                 <Border Grid.Column="1"
-                                        Classes="preference-row">
-                                    <StackPanel Spacing="12">
-                                        <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
-                                            <ic:FluentIcon Icon="ArrowDownload"
-                                                           IconVariant="Regular"
-                                                           IconSize="Size20"
-                                                           VerticalAlignment="Center" />
-                                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.LocalBackup}" />
-                                        </StackPanel>
-                                        <UniformGrid Columns="2" Rows="2">
-                                            <Button Classes="backup-action"
-                                                    Margin="0 0 8 8"
-                                                    IsEnabled="{Binding IsNotBusy}"
-                                                    Click="OnCreateLocalBackupClick">
-                                                <TextBlock Text="{DynamicResource Loc.Backup.CreateLocalBackup}" TextWrapping="Wrap" />
-                                            </Button>
-                                            <Button Classes="backup-action"
-                                                    Margin="0 0 0 8"
-                                                    IsEnabled="{Binding IsNotBusy}"
-                                                    Click="OnRestoreFromBackupClick">
-                                                <TextBlock Text="{DynamicResource Loc.Backup.RestoreFromBackup}" TextWrapping="Wrap" />
-                                            </Button>
-                                            <Button Classes="backup-action"
-                                                    Margin="0 0 8 0"
-                                                    IsEnabled="{Binding IsNotBusy}"
-                                                    Click="OnExportDatabaseClick">
-                                                <TextBlock Text="{DynamicResource Loc.Backup.ExportDatabase}" TextWrapping="Wrap" />
-                                            </Button>
-                                            <Button Classes="backup-action"
-                                                    IsEnabled="{Binding IsNotBusy}"
-                                                    Click="OnImportDatabaseClick">
-                                                <TextBlock Text="{DynamicResource Loc.Backup.ImportDatabase}" TextWrapping="Wrap" />
-                                            </Button>
-                                        </UniformGrid>
+                                        Classes="backup-stat-cell">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="backup-stat-label" Text="{DynamicResource Loc.Backup.LastLocalBackup}" />
+                                        <TextBlock Classes="backup-stat-value" Text="{Binding LastLocalBackup}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2"
+                                        Classes="backup-stat-cell last">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="backup-stat-label" Text="{DynamicResource Loc.Backup.CurrentLocation}" />
+                                        <TextBlock Classes="backup-stat-value"
+                                                   FontFamily="monospace"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                   Text="{Binding DatabaseLocation}" />
                                     </StackPanel>
                                 </Border>
                             </Grid>
-                        </StackPanel>
-                    </Border>
 
-                    <Border Grid.Row="1"
-                            Classes="floating-panel">
-                        <StackPanel Spacing="14">
-                            <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
-                                <ic:FluentIcon Icon="Cloud"
-                                               IconVariant="Regular"
-                                               IconSize="Size20"
-                                               VerticalAlignment="Center" />
-                                <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.CloudBackup}" />
-                            </StackPanel>
-
-                            <Border Classes="preference-row">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
-                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="160,*" RowSpacing="8">
-                                        <TextBlock Classes="row-description" Text="{DynamicResource Loc.Backup.Provider}" />
-                                        <TextBlock Grid.Column="1"
-                                                   Classes="info-value"
-                                                   Text="{Binding CloudProviderName}" />
-
-                                        <TextBlock Grid.Row="1" Classes="row-description" Text="{DynamicResource Loc.Backup.Status}" />
-                                        <TextBlock Grid.Row="1"
-                                                   Grid.Column="1"
-                                                   Classes="info-value"
-                                                   Text="{Binding CloudProviderStatus}" />
-
-                                        <TextBlock Grid.Row="2" Classes="row-description" Text="{DynamicResource Loc.Backup.LastCloudBackup}" />
-                                        <TextBlock Grid.Row="2"
-                                                   Grid.Column="1"
-                                                   Classes="info-value"
-                                                   Text="{Binding LastCloudBackup}" />
-
-                                        <TextBlock Grid.Row="3" Classes="row-description" Text="{DynamicResource Loc.Backup.GoogleClientId}" />
-                                        <TextBox Grid.Row="3"
-                                                 Grid.Column="1"
-                                                 Classes="field"
-                                                 Text="{Binding GoogleDriveClientId, Mode=TwoWay}"
-                                                 PlaceholderText="{DynamicResource Loc.Backup.GoogleClientIdWatermark}"
-                                                 MinWidth="320" />
-
-                                        <TextBlock Grid.Row="4" Classes="row-description" Text="{DynamicResource Loc.Backup.GoogleClientSecret}" />
-                                        <TextBox Grid.Row="4"
-                                                 Grid.Column="1"
-                                                 Classes="field"
-                                                 Text="{Binding GoogleDriveClientSecret, Mode=TwoWay}"
-                                                 PlaceholderText="{DynamicResource Loc.Backup.GoogleClientSecretWatermark}"
-                                                 PasswordChar="*"
-                                                 MinWidth="320" />
-
-                                    </Grid>
-
-                                    <StackPanel Grid.Column="1"
-                                                MinWidth="230"
-                                                Spacing="8">
-                                        <Button Classes="backup-action"
-                                                IsEnabled="{Binding IsNotBusy}"
-                                                Click="OnConnectGoogleDriveClick">
-                                            <TextBlock Text="{DynamicResource Loc.Backup.ConnectGoogleDrive}" />
-                                        </Button>
-                                        <Button Classes="backup-action"
-                                                IsEnabled="{Binding IsNotBusy}"
-                                                Click="OnBackupToGoogleDriveClick">
-                                            <TextBlock Text="{DynamicResource Loc.Backup.BackupToGoogleDrive}" />
-                                        </Button>
-                                        <Button Classes="backup-action"
-                                                IsEnabled="{Binding IsNotBusy}"
-                                                Click="OnRestoreFromGoogleDriveClick">
-                                            <TextBlock Text="{DynamicResource Loc.Backup.RestoreFromGoogleDrive}" />
-                                        </Button>
-                                    </StackPanel>
+                            <Border Classes="preference-row last">
+                                <Grid Classes="backup-actions-grid"
+                                      ColumnDefinitions="*,*"
+                                      RowDefinitions="Auto,Auto"
+                                      ColumnSpacing="8"
+                                      RowSpacing="8">
+                                    <Button Classes="backup-action primary"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnCreateLocalBackupClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="ArrowDownload"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.CreateLocalBackup}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.CreateLocalBackupDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Column="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnRestoreFromBackupClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="ArrowUpload"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.RestoreFromBackup}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.RestoreFromBackupDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Row="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnExportDatabaseClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="ArrowDownload"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.ExportDatabase}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.ExportDatabaseDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnImportDatabaseClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="ArrowUpload"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.ImportDatabase}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.ImportDatabaseDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
                                 </Grid>
                             </Border>
                         </StackPanel>
                     </Border>
-                </Grid>
 
-                <Border Grid.Row="2"
-                        Classes="floating-panel"
-                        IsVisible="{Binding IsAboutSectionVisible}">
-                    <StackPanel Spacing="16">
-                        <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="8">
-                            <ic:FluentIcon Icon="Info"
-                                           IconVariant="Regular"
-                                           IconSize="Size20"
-                                           VerticalAlignment="Center" />
-                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Preferences.TabAbout}" />
+                    <Border Classes="section-card">
+                        <StackPanel>
+                            <Border Classes="section-head">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="10">
+                                        <ic:FluentIcon Icon="Cloud"
+                                                       IconVariant="Regular"
+                                                       IconSize="Size16"
+                                                       VerticalAlignment="Top" />
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.CloudBackup}" />
+                                            <TextBlock Classes="section-subtitle"
+                                                       Text="{DynamicResource Loc.Backup.CloudBackupDescription}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Spacing="6"
+                                                VerticalAlignment="Center">
+                                        <Border Classes="cloud-status-dot"
+                                                Classes.connected="{Binding IsCloudConnected}"
+                                                Classes.disconnected="{Binding IsCloudDisconnected}" />
+                                        <TextBlock Text="{Binding CloudProviderStatus}"
+                                                   Classes="cloud-status-text"
+                                                   Classes.connected="{Binding IsCloudConnected}"
+                                                   Classes.disconnected="{Binding IsCloudDisconnected}"
+                                                   FontSize="11"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <StackPanel>
+                                <Border Classes="backup-field-row">
+                                    <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                                        <TextBlock Classes="backup-field-label" Text="{DynamicResource Loc.Backup.Provider}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Classes="info-value"
+                                                   Text="{Binding CloudProviderName}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="backup-field-row">
+                                    <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                                        <TextBlock Classes="backup-field-label" Text="{DynamicResource Loc.Backup.LastCloudBackup}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Classes="info-value"
+                                                   Text="{Binding LastCloudBackup}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="backup-field-row">
+                                    <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                                        <TextBlock Classes="backup-field-label"
+                                                   Text="{DynamicResource Loc.Backup.GoogleClientId}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBox Grid.Column="1"
+                                                 Classes="field"
+                                                 Text="{Binding GoogleDriveClientId, Mode=TwoWay}"
+                                                 PlaceholderText="{DynamicResource Loc.Backup.GoogleClientIdWatermark}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="backup-field-row last">
+                                    <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                                        <TextBlock Classes="backup-field-label"
+                                                   Text="{DynamicResource Loc.Backup.GoogleClientSecret}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBox Grid.Column="1"
+                                                 Classes="field"
+                                                 Text="{Binding GoogleDriveClientSecret, Mode=TwoWay}"
+                                                 PlaceholderText="{DynamicResource Loc.Backup.GoogleClientSecretWatermark}"
+                                                 PasswordChar="*" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+
+                            <Border Classes="preference-row last">
+                                <Grid Classes="backup-actions-grid"
+                                      ColumnDefinitions="*,*"
+                                      RowDefinitions="Auto,Auto"
+                                      ColumnSpacing="8"
+                                      RowSpacing="8">
+                                    <Button Classes="backup-action primary"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnBackupToGoogleDriveClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="Cloud"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.BackupToGoogleDrive}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.BackupToGoogleDriveDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Column="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnRestoreFromGoogleDriveClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="Cloud"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.RestoreFromGoogleDrive}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.RestoreFromGoogleDriveDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Row="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnConnectGoogleDriveClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="Cloud"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.ConnectGoogleDrive}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.ConnectGoogleDriveDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action danger"
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnDisconnectGoogleDriveClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="Delete"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.DisconnectGoogleDrive}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.DisconnectGoogleDriveDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                </Grid>
+                            </Border>
                         </StackPanel>
-                        <TextBlock Classes="row-description"
-                                   Text="{DynamicResource Loc.Preferences.AboutDescription}" />
+                    </Border>
+                </StackPanel>
 
-                        <Grid ColumnDefinitions="*,*,*"
-                              RowDefinitions="Auto,Auto"
-                              ColumnSpacing="14"
-                              RowSpacing="14">
-                            <Border Classes="preference-row">
-                                <StackPanel Spacing="8">
-                                    <TextBlock Classes="row-description"
-                                               Text="{DynamicResource Loc.Preferences.AboutVersion}" />
-                                    <TextBlock Classes="info-value"
+                <Border Classes="section-card"
+                        IsVisible="{Binding IsAboutSectionVisible}">
+                    <StackPanel>
+                        <Border Classes="about-hero">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                                <Image Source="/Organizer.Application/Assets/Icons/organizer.png"
+                                       Width="48"
+                                       Height="48"
+                                       Stretch="Uniform"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+
+                                <StackPanel Grid.Column="1"
+                                            Spacing="3"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="Organizer"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                FontSize="16"
-                                               FontWeight="SemiBold"
-                                               Text="{Binding AppVersion}" />
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{DynamicResource Loc.Preferences.AboutDescription}"
+                                               Foreground="{DynamicResource TextSubtleBrush}"
+                                               FontSize="12"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2"
+                                            Spacing="4"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center">
+                                    <Border Classes="about-version-badge"
+                                            HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding AppVersion, StringFormat='v{0}'}"
+                                                   Foreground="{DynamicResource PrimaryBrush}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold" />
+                                    </Border>
+                                    <TextBlock Text="{Binding BuildNumber, StringFormat='build {0}'}"
+                                               Foreground="{DynamicResource TextSubtleBrush}"
+                                               FontFamily="monospace"
+                                               FontSize="10"
+                                               HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*,*">
+                            <Border Classes="about-stat-cell">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Classes="about-label"
+                                               Text="{DynamicResource Loc.Preferences.AboutImagesLabel}" />
+                                    <TextBlock Classes="about-stat-value"
+                                               Text="{Binding AboutImageCount}" />
+                                    <TextBlock Classes="about-stat-sub"
+                                               Text="{DynamicResource Loc.Preferences.AboutImagesSub}" />
                                 </StackPanel>
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Classes="preference-row">
-                                <StackPanel Spacing="8">
-                                    <TextBlock Classes="row-description"
-                                               Text="{DynamicResource Loc.Preferences.AboutBuild}" />
-                                    <TextBlock Classes="info-value"
-                                               FontSize="16"
-                                               FontWeight="SemiBold"
-                                               Text="{Binding BuildNumber}" />
+                                    Classes="about-stat-cell">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Classes="about-label"
+                                               Text="{DynamicResource Loc.Preferences.AboutWorkspacesLabel}" />
+                                    <TextBlock Classes="about-stat-value"
+                                               Text="{Binding AboutWorkspaceCount}" />
+                                    <TextBlock Classes="about-stat-sub"
+                                               Text="{DynamicResource Loc.Preferences.AboutWorkspacesSub}" />
                                 </StackPanel>
                             </Border>
 
                             <Border Grid.Column="2"
-                                    Classes="preference-row">
-                                <StackPanel Spacing="8">
-                                    <TextBlock Classes="row-description"
-                                               Text="{DynamicResource Loc.Preferences.AboutTechnology}" />
-                                    <TextBlock Classes="info-value"
-                                               FontSize="13"
-                                               FontWeight="SemiBold"
-                                               Text="{Binding TechnologyStackText}" />
+                                    Classes="about-stat-cell last">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Classes="about-label"
+                                               Text="{DynamicResource Loc.Preferences.AboutTagsLabel}" />
+                                    <TextBlock Classes="about-stat-value"
+                                               Text="{Binding AboutTagCount}" />
+                                    <TextBlock Classes="about-stat-sub"
+                                               Text="{DynamicResource Loc.Preferences.AboutTagsSub}" />
                                 </StackPanel>
                             </Border>
+                        </Grid>
 
-                            <Border Grid.Row="1"
-                                    Classes="preference-row">
-                                <TextBlock Classes="info-value"
-                                           FontSize="16"
-                                           FontWeight="SemiBold"
-                                           Text="{Binding AboutImagesText}" />
+                        <Border Classes="about-tech-section">
+                            <StackPanel Spacing="10">
+                                <TextBlock Classes="about-label"
+                                           Text="{DynamicResource Loc.Preferences.AboutTechnology}" />
+                                <WrapPanel>
+                                    <Border Classes="about-chip"
+                                            Margin="0 0 6 6">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <ic:FluentIcon Icon="Info"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}" />
+                                            <TextBlock Text=".NET 10"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Classes="about-chip"
+                                            Margin="0 0 6 6">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <ic:FluentIcon Icon="Grid"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}" />
+                                            <TextBlock Text="Avalonia"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Classes="about-chip"
+                                            Margin="0 0 6 6">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <ic:FluentIcon Icon="Database"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}" />
+                                            <TextBlock Text="EF Core"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Classes="about-chip"
+                                            Margin="0 0 6 6">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <ic:FluentIcon Icon="Database"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}" />
+                                            <TextBlock Text="SQLite"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*"
+                              RowDefinitions="Auto,Auto">
+                            <Border Classes="about-link">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <ic:FluentIcon Icon="Grid"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="1">
+                                        <TextBlock Classes="about-link-title"
+                                                   Text="{DynamicResource Loc.Preferences.AboutRepository}" />
+                                        <TextBlock Classes="about-link-sub"
+                                                   Text="{DynamicResource Loc.Preferences.AboutRepositorySub}" />
+                                    </StackPanel>
+                                    <ic:FluentIcon Grid.Column="2"
+                                                   Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                </Grid>
                             </Border>
-
+                            <Border Grid.Column="1"
+                                    Classes="about-link right">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <ic:FluentIcon Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="1">
+                                        <TextBlock Classes="about-link-title"
+                                                   Text="{DynamicResource Loc.Preferences.AboutReportBug}" />
+                                        <TextBlock Classes="about-link-sub"
+                                                   Text="{DynamicResource Loc.Preferences.AboutReportBugSub}" />
+                                    </StackPanel>
+                                    <ic:FluentIcon Grid.Column="2"
+                                                   Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="1"
+                                    Classes="about-link bottom">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <ic:FluentIcon Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="1">
+                                        <TextBlock Classes="about-link-title"
+                                                   Text="{DynamicResource Loc.Preferences.AboutLicense}" />
+                                        <TextBlock Classes="about-link-sub"
+                                                   Text="{DynamicResource Loc.Preferences.AboutLicenseSub}" />
+                                    </StackPanel>
+                                    <ic:FluentIcon Grid.Column="2"
+                                                   Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
                             <Border Grid.Row="1"
                                     Grid.Column="1"
-                                    Classes="preference-row">
-                                <TextBlock Classes="info-value"
-                                           FontSize="16"
-                                           FontWeight="SemiBold"
-                                           Text="{Binding AboutWorkspacesText}" />
-                            </Border>
-
-                            <Border Grid.Row="1"
-                                    Grid.Column="2"
-                                    Classes="preference-row">
-                                <TextBlock Classes="info-value"
-                                           FontSize="16"
-                                           FontWeight="SemiBold"
-                                           Text="{Binding AboutTagsText}" />
+                                    Classes="about-link right bottom">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <ic:FluentIcon Icon="Cloud"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="1">
+                                        <TextBlock Classes="about-link-title"
+                                                   Text="{DynamicResource Loc.Preferences.AboutUpdates}" />
+                                        <TextBlock Classes="about-link-sub"
+                                                   Text="{DynamicResource Loc.Preferences.AboutUpdatesSub}" />
+                                    </StackPanel>
+                                    <ic:FluentIcon Grid.Column="2"
+                                                   Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                </Grid>
                             </Border>
                         </Grid>
                     </StackPanel>
                 </Border>
             </Grid>
         </ScrollViewer>
+
+        <Border Grid.Row="3"
+                Classes="autosave-hint">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Width="6"
+                        Height="6"
+                        Background="{DynamicResource SuccessBrush}"
+                        CornerRadius="3"
+                        VerticalAlignment="Center" />
+                <TextBlock Text="{DynamicResource Loc.Common.SaveAuto}"
+                           Foreground="{DynamicResource SuccessBrush}"
+                           FontSize="11"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

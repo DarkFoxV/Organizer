@@ -1491,23 +1491,11 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     private (string Viewport, string Board, string Border) GetWorkspacePalette()
     {
-        var light = _preferencesService.Current.Theme == AppThemePreference.Light;
-
-        if (light)
-        {
-            return _preferencesService.Current.WorkspaceBackground switch
-            {
-                WorkspaceBackgroundPreference.Neutral => ("#e5e7eb", "#f8fafc", "#cbd5e1"),
-                WorkspaceBackgroundPreference.Black => ("#171717", "#262626", "#525252"),
-                _ => ("#dbeafe", "#eff6ff", "#93c5fd")
-            };
-        }
-
         return _preferencesService.Current.WorkspaceBackground switch
         {
-            WorkspaceBackgroundPreference.Neutral => ("#111827", "#1f2937", "#374151"),
-            WorkspaceBackgroundPreference.Black => ("#000000", "#171717", "#404040"),
-            _ => ("#06152f", "#0b2142", "#1d4ed8")
+            WorkspaceBackgroundPreference.Light => ("#F5F7FA", "#FFFFFF", "#E4E8EF"),
+            WorkspaceBackgroundPreference.Gray => ("#1c1c1e", "#242426", "#333336"),
+            _ => ("#080b10", "#0d1219", "#1a2030")
         };
     }
 

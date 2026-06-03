@@ -22,7 +22,7 @@
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="13" />
             <Setter Property="Padding" Value="22" />
             <Setter Property="MinWidth" Value="320" />
             <Setter Property="MaxWidth" Value="360" />

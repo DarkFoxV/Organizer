@@ -27,7 +27,12 @@ public partial class TagRowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsUnused))]
+    [NotifyPropertyChangedFor(nameof(UsageBarWidth))]
     private int _usageCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UsageBarWidth))]
+    private int _maxUsageCount = 1;
 
     [ObservableProperty] private string _usageText = string.Empty;
 
@@ -50,6 +55,10 @@ public partial class TagRowViewModel : ObservableObject
     public bool IsNotEditing => !IsEditing;
 
     public bool IsUnused => UsageCount == 0;
+
+    public double UsageBarWidth => MaxUsageCount <= 0
+        ? 0
+        : Math.Clamp(UsageCount / (double)MaxUsageCount, 0, 1) * 90;
 
     // ── Cor visual ────────────────────────────────────────────────────────────
 

@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:Organizer.Application.ViewModels"
              xmlns:cvm="using:Organizer.Application.ViewModels.Components"
              xmlns:components="using:Organizer.Application.Components"
@@ -9,29 +10,45 @@
 
     <UserControl.Styles>
         <Style Selector="Border.floating-panel">
-            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SearchControlBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SearchControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="22" />
-            <Setter Property="BoxShadow" Value="0 18 50 #77000000" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
         </Style>
 
         <Style Selector="Border.search-shell">
-            <Setter Property="Padding" Value="14" />
-            <Setter Property="MaxWidth" Value="1080" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Padding" Value="0" />
         </Style>
 
         <Style Selector="Border.tags-shell">
-            <Setter Property="Padding" Value="18 14 18 10" />
-            <Setter Property="MaxWidth" Value="1080" />
+            <Setter Property="Padding" Value="14 10 14 4" />
         </Style>
 
         <Style Selector="Border.pagination-shell">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
-            <Setter Property="Padding" Value="10 0" />
-            <Setter Property="MaxWidth" Value="760" />
+            <Setter Property="Padding" Value="6 0" />
+        </Style>
+
+        <Style Selector="TextBlock.results-info">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource SearchMutedBrush}" />
+        </Style>
+
+        <Style Selector="ic|FluentIcon.empty-icon">
+            <Setter Property="IconVariant" Value="Regular" />
+            <Setter Property="IconSize" Value="Size48" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+        </Style>
+
+        <Style Selector="ic|FluentIcon.loading-icon">
+            <Setter Property="IconVariant" Value="Regular" />
+            <Setter Property="IconSize" Value="Size32" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
         </Style>
 
         <Style Selector="Button.confirm-action">
@@ -55,60 +72,71 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid Background="{DynamicResource AppBackgroundBrush}">
+    <Grid Background="{DynamicResource SearchBackgroundBrush}">
 
-        <Panel IsHitTestVisible="False">
-            <Ellipse Width="520"
-                     Height="520"
-                     Fill="#182A3F"
-                     Opacity="0.28"
-                     HorizontalAlignment="Left"
-                     VerticalAlignment="Top"
-                     Margin="-160 -210 0 0" />
-            <Ellipse Width="440"
-                     Height="440"
-                     Fill="#123528"
-                     Opacity="0.18"
-                     HorizontalAlignment="Right"
-                     VerticalAlignment="Bottom"
-                     Margin="0 0 -130 -170" />
-        </Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto"
+              RowSpacing="14"
+              Margin="20 20 20 18"
+              MaxWidth="1180"
+              HorizontalAlignment="Stretch">
 
-        <Grid>
+            <Border Classes="floating-panel search-shell"
+                    HorizontalAlignment="Stretch">
+                <components:SearchBar
+                    DataContext="{Binding SearchBar}" />
+            </Border>
 
-            <StackPanel IsVisible="{Binding IsLoading}"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Spacing="12">
-                <TextBlock Text="⏳" FontSize="32" HorizontalAlignment="Center" />
-                <TextBlock Text="{DynamicResource Loc.Common.Loading}"
-                           FontSize="14"
-                           Foreground="{DynamicResource TextMutedBrush}"
-                           HorizontalAlignment="Center" />
-            </StackPanel>
+            <Border Grid.Row="1"
+                    Classes="floating-panel tags-shell"
+                    HorizontalAlignment="Stretch">
+                <components:TagSelector
+                    DataContext="{Binding TagSelector}" />
+            </Border>
 
-            <StackPanel IsVisible="{Binding IsEmpty}"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Spacing="12"
-                        Margin="0 76 0 0">
-                <TextBlock Text="🔍" FontSize="48" HorizontalAlignment="Center" />
-                <TextBlock Text="{DynamicResource Loc.Search.EmptyTitle}"
-                           FontSize="16"
-                           Foreground="{DynamicResource TextMutedBrush}"
-                           HorizontalAlignment="Center" />
-                <TextBlock Text="{DynamicResource Loc.Search.EmptySubtitle}"
-                           FontSize="13"
-                           Foreground="{DynamicResource TextSubtleBrush}"
-                           HorizontalAlignment="Center" />
-            </StackPanel>
+            <Grid Grid.Row="2"
+                  ColumnDefinitions="*,Auto">
+                <TextBlock Classes="results-info"
+                           Text="{Binding ResultSummary}"
+                           VerticalAlignment="Center" />
+            </Grid>
 
-            <Border Padding="20 184 20 92">
+            <Grid Grid.Row="3">
+                <StackPanel IsVisible="{Binding IsLoading}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="12">
+                    <ic:FluentIcon Classes="loading-icon"
+                                   Icon="ArrowClockwise"
+                                   HorizontalAlignment="Center" />
+                    <TextBlock Text="{DynamicResource Loc.Common.Loading}"
+                               FontSize="14"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding IsEmpty}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="12"
+                            Margin="0 24 0 0">
+                    <ic:FluentIcon Classes="empty-icon"
+                                   Icon="ImageSearch"
+                                   HorizontalAlignment="Center" />
+                    <TextBlock Text="{DynamicResource Loc.Search.EmptyTitle}"
+                               FontSize="16"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="{DynamicResource Loc.Search.EmptySubtitle}"
+                               FontSize="13"
+                               Foreground="{DynamicResource TextSubtleBrush}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+
                 <ScrollViewer IsVisible="{Binding !IsEmpty}"
                               HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Auto">
 
-                    <ItemsControl HorizontalAlignment="Center" ItemsSource="{Binding Cards}">
+                    <ItemsControl ItemsSource="{Binding Cards}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel Orientation="Horizontal" />
@@ -117,47 +145,25 @@
 
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="cvm:CardItemViewModel">
-                                <components:ImageContainer DataContext="{Binding}" Margin="10" />
+                                <components:ImageContainer DataContext="{Binding}" Margin="0 0 10 10" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
 
                     </ItemsControl>
                 </ScrollViewer>
+            </Grid>
+
+            <Border Grid.Row="4"
+                    Classes="floating-panel pagination-shell"
+                    HorizontalAlignment="Center">
+
+                <components:Pagination
+                    DataContext="{Binding Pagination}"
+                    HorizontalAlignment="Center" />
+
             </Border>
 
         </Grid>
-
-        <StackPanel ZIndex="20"
-                    VerticalAlignment="Top"
-                    HorizontalAlignment="Stretch"
-                    Margin="24 18"
-                    Spacing="10">
-
-            <Border Classes="floating-panel search-shell"
-                    HorizontalAlignment="Stretch">
-                <components:SearchBar
-                    DataContext="{Binding SearchBar}" />
-            </Border>
-
-            <Border Classes="floating-panel tags-shell"
-                    HorizontalAlignment="Stretch">
-                <components:TagSelector
-                    DataContext="{Binding TagSelector}" />
-            </Border>
-
-        </StackPanel>
-
-        <Border ZIndex="20"
-                Classes="floating-panel pagination-shell"
-                VerticalAlignment="Bottom"
-                HorizontalAlignment="Center"
-                Margin="24 0 24 18">
-
-            <components:Pagination
-                DataContext="{Binding Pagination}"
-                HorizontalAlignment="Center" />
-
-        </Border>
 
         <components:ImagePreviewModal
             ZIndex="100"

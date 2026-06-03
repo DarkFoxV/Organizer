@@ -38,6 +38,12 @@ public sealed class GoogleDriveOAuthService(
         }
     }
 
+    public async Task DisconnectAsync()
+    {
+        await tokenStorage.ClearAsync();
+        logger.Info("Google Drive tokens cleared.");
+    }
+
     public async Task<DriveService> CreateDriveServiceAsync(CancellationToken cancellationToken = default)
     {
         var credential = await AuthorizeAsync(cancellationToken);

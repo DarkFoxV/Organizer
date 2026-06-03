@@ -67,11 +67,17 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     public bool IsGeneralSelected => SelectedSection == PreferencesSection.General;
     public bool IsDataBackupSelected => SelectedSection == PreferencesSection.DataBackup;
     public bool IsAboutSelected => SelectedSection == PreferencesSection.About;
+    public bool IsSystemThemeSelected => SelectedTheme?.Value == AppThemePreference.System;
+    public bool IsDarkThemeSelected => SelectedTheme?.Value == AppThemePreference.Dark;
+    public bool IsLightThemeSelected => SelectedTheme?.Value == AppThemePreference.Light;
+    public bool IsGrayThemeSelected => SelectedTheme?.Value == AppThemePreference.Gray;
 
     public string CloudProviderName => "Google Drive";
     public string CloudProviderStatus => _googleDriveOAuthService.IsConnected
         ? _preferencesService.T("Loc.Backup.CloudStatusConnected")
         : _preferencesService.T("Loc.Backup.CloudStatusNotConnected");
+    public bool IsCloudConnected => _googleDriveOAuthService.IsConnected;
+    public bool IsCloudDisconnected => !IsCloudConnected;
     public string AppVersion => GetAppVersion();
     public string BuildNumber => Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "1.0.0";
     public string AboutImagesText => _preferencesService.T("Loc.Preferences.AboutImages", AboutImageCount);
@@ -109,6 +115,11 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedThemeChanged(PreferenceOption<AppThemePreference>? value)
     {
+        OnPropertyChanged(nameof(IsSystemThemeSelected));
+        OnPropertyChanged(nameof(IsDarkThemeSelected));
+        OnPropertyChanged(nameof(IsLightThemeSelected));
+        OnPropertyChanged(nameof(IsGrayThemeSelected));
+
         if (!_isRefreshingOptions && value is not null)
             SavePreference(preferences => preferences.Theme = value.Value);
     }
@@ -229,6 +240,26 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         SelectedSection = PreferencesSection.About;
     }
 
+    public void SelectSystemTheme()
+    {
+        SelectedTheme = FindOption(ThemeOptions, AppThemePreference.System);
+    }
+
+    public void SelectDarkTheme()
+    {
+        SelectedTheme = FindOption(ThemeOptions, AppThemePreference.Dark);
+    }
+
+    public void SelectLightTheme()
+    {
+        SelectedTheme = FindOption(ThemeOptions, AppThemePreference.Light);
+    }
+
+    public void SelectGrayTheme()
+    {
+        SelectedTheme = FindOption(ThemeOptions, AppThemePreference.Gray);
+    }
+
     public async Task CreateLocalBackupAsync(string destinationPath)
     {
         await RunBackupActionAsync(
@@ -312,11 +343,29 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
             {
                 await _googleDriveOAuthService.ConnectAsync();
                 OnPropertyChanged(nameof(CloudProviderStatus));
+                OnPropertyChanged(nameof(IsCloudConnected));
+                OnPropertyChanged(nameof(IsCloudDisconnected));
                 _toastService.Success(
                     _preferencesService.T("Loc.Backup.ToastGoogleDriveConnectedTitle"),
                     _preferencesService.T("Loc.Backup.ToastGoogleDriveConnectedMessage"));
             },
             _preferencesService.T("Loc.Backup.ToastGoogleDriveConnectFailedTitle"));
+    }
+
+    public async Task DisconnectGoogleDriveAsync()
+    {
+        await RunBackupActionAsync(
+            async () =>
+            {
+                await _googleDriveOAuthService.DisconnectAsync();
+                OnPropertyChanged(nameof(CloudProviderStatus));
+                OnPropertyChanged(nameof(IsCloudConnected));
+                OnPropertyChanged(nameof(IsCloudDisconnected));
+                _toastService.Success(
+                    _preferencesService.T("Loc.Backup.ToastGoogleDriveDisconnectedTitle"),
+                    _preferencesService.T("Loc.Backup.ToastGoogleDriveDisconnectedMessage"));
+            },
+            _preferencesService.T("Loc.Backup.ToastGoogleDriveDisconnectFailedTitle"));
     }
 
     public async Task BackupToGoogleDriveAsync(CancellationToken cancellationToken = default)
@@ -411,6 +460,8 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         RefreshOptions();
         RefreshDatabaseInfo();
         OnPropertyChanged(nameof(CloudProviderStatus));
+        OnPropertyChanged(nameof(IsCloudConnected));
+        OnPropertyChanged(nameof(IsCloudDisconnected));
         OnPropertyChanged(nameof(AboutImagesText));
         OnPropertyChanged(nameof(AboutWorkspacesText));
         OnPropertyChanged(nameof(AboutTagsText));
@@ -495,6 +546,7 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         ThemeOptions.Add(new(_preferencesService.T("Loc.Preferences.Theme.System"), AppThemePreference.System));
         ThemeOptions.Add(new(_preferencesService.T("Loc.Preferences.Theme.Dark"), AppThemePreference.Dark));
         ThemeOptions.Add(new(_preferencesService.T("Loc.Preferences.Theme.Light"), AppThemePreference.Light));
+        ThemeOptions.Add(new(_preferencesService.T("Loc.Preferences.Theme.Gray"), AppThemePreference.Gray));
 
         ItemsPerPageOptions.Clear();
         foreach (var count in new[] { 10, 20, 30, 50, 100 })
@@ -510,9 +562,9 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         WorkspacePasteOptions.Add(new(_preferencesService.T("Loc.Preferences.Paste.Cascade"), WorkspacePastePreference.Cascade));
 
         WorkspaceBackgroundOptions.Clear();
+        WorkspaceBackgroundOptions.Add(new(_preferencesService.T("Loc.Preferences.Background.Light"), WorkspaceBackgroundPreference.Light));
         WorkspaceBackgroundOptions.Add(new(_preferencesService.T("Loc.Preferences.Background.Dark"), WorkspaceBackgroundPreference.Dark));
-        WorkspaceBackgroundOptions.Add(new(_preferencesService.T("Loc.Preferences.Background.Neutral"), WorkspaceBackgroundPreference.Neutral));
-        WorkspaceBackgroundOptions.Add(new(_preferencesService.T("Loc.Preferences.Background.Black"), WorkspaceBackgroundPreference.Black));
+        WorkspaceBackgroundOptions.Add(new(_preferencesService.T("Loc.Preferences.Background.Gray"), WorkspaceBackgroundPreference.Gray));
 
         var preferences = _preferencesService.Current;
         SelectedTheme = FindOption(ThemeOptions, preferences.Theme);

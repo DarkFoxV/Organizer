@@ -7,37 +7,100 @@
              x:DataType="vm:ManageTagsViewModel">
 
     <UserControl.Styles>
+        <Style Selector="Border.float-card">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+        </Style>
 
-        <Style Selector="TextBox.field">
-            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        <Style Selector="TextBlock.page-title">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+
+        <Style Selector="TextBlock.stat-label">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="TextBlock.stat-value">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+
+        <Style Selector="TextBlock.stat-sub">
+            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+
+        <Style Selector="TextBlock.section-label">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="TextBlock.section-info">
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+
+        <Style Selector="TextBox.filter-input">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBox.create-input">
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12 8" />
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontSize" Value="13" />
             <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}" />
         </Style>
-        <Style Selector="TextBox.field:focus">
+
+        <Style Selector="TextBox.create-input:focus">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
         </Style>
 
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12 8" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
         <Style Selector="ComboBox.color-picker">
-            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12 0" />
-            <Setter Property="Height" Value="40" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="MinWidth" Value="130" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="MinWidth" Value="126" />
         </Style>
 
         <Style Selector="Button.btn">
-            <Setter Property="Height" Value="40" />
+            <Setter Property="Height" Value="36" />
             <Setter Property="Padding" Value="14 0" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="Medium" />
         </Style>
 
@@ -47,21 +110,23 @@
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
+
         <Style Selector="Button.btn-ghost:pointerover">
             <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
         </Style>
 
         <Style Selector="Button.icon-btn">
-            <Setter Property="Width" Value="34" />
-            <Setter Property="Height" Value="34" />
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
+
         <Style Selector="Button.icon-btn:pointerover">
             <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
@@ -71,138 +136,118 @@
             <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
         </Style>
 
-        <Style Selector="ic|FluentIcon.section-icon">
+        <Style Selector="ic|FluentIcon.muted-icon">
             <Setter Property="IconVariant" Value="Regular" />
-            <Setter Property="IconSize" Value="Size20" />
-            <Setter Property="Foreground" Value="{DynamicResource AccentSoftTextBrush}" />
+            <Setter Property="IconSize" Value="Size16" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSubtleBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-
-        <Style Selector="Border.floating-panel">
-            <Setter Property="Background" Value="{DynamicResource SurfaceSoftBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource FloatingBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="22" />
-            <Setter Property="BoxShadow" Value="0 18 50 #77000000" />
-        </Style>
-
-        <Style Selector="Border.tag-card">
-            <Setter Property="Background" Value="{DynamicResource SurfaceSoftAltBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="Padding" Value="18 14" />
-            <Setter Property="BoxShadow" Value="0 10 28 #44000000" />
-        </Style>
-        <Style Selector="Border.tag-card:pointerover">
-            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
-            <Setter Property="BoxShadow" Value="0 16 36 #5A000000" />
-        </Style>
-
-        <Style Selector="Border.unused-badge">
-            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="999" />
-            <Setter Property="Padding" Value="8 3" />
-        </Style>
-
     </UserControl.Styles>
 
     <Grid Background="{DynamicResource AppBackgroundBrush}">
 
-        <Panel IsHitTestVisible="False">
-            <Ellipse Width="560"
-                     Height="560"
-                     Fill="#163047"
-                     Opacity="0.28"
-                     HorizontalAlignment="Left"
-                     VerticalAlignment="Top"
-                     Margin="-180 -220 0 0" />
-            <Ellipse Width="420"
-                     Height="420"
-                     Fill="#153321"
-                     Opacity="0.2"
-                     HorizontalAlignment="Right"
-                     VerticalAlignment="Bottom"
-                     Margin="0 0 -140 -160" />
-        </Panel>
-
         <ScrollViewer VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
 
-            <StackPanel Margin="28"
+            <StackPanel Margin="20 20 20 28"
                         Spacing="16"
                         MaxWidth="1040"
                         HorizontalAlignment="Stretch">
 
-                <!-- Header -->
-                <Border Classes="floating-panel"
-                        Padding="24 20">
-                    <StackPanel Spacing="5">
-                        <StackPanel Orientation="Horizontal" Spacing="9">
-                            <ic:FluentIcon Classes="section-icon"
-                                           Icon="TagMultiple"
-                                           IconSize="Size24" />
-                            <TextBlock Text="{DynamicResource Loc.Tags.ManageTitle}"
-                                       FontSize="22"
-                                       FontWeight="Bold"
-                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                <Grid>
+                    <TextBlock Classes="page-title"
+                               Text="{DynamicResource Loc.Tags.ManageTitle}"
+                               VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="*,*,*"
+                      ColumnSpacing="10">
+                    <Border Classes="float-card"
+                            Padding="16 14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="stat-label"
+                                       Text="{DynamicResource Loc.Tags.StatTotal}" />
+                            <TextBlock Classes="stat-value"
+                                       Text="{Binding TagCount}" />
+                            <TextBlock Classes="stat-sub"
+                                       Text="{Binding ActiveTagSummaryText}" />
                         </StackPanel>
-                        <TextBlock Text="{DynamicResource Loc.Tags.ManageSubtitle}"
-                                   FontSize="13"
-                                   Foreground="{DynamicResource TextMutedBrush}" />
-                        <TextBlock Text="{Binding CollectionStatsText}"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource AccentSoftTextBrush}" />
-                        <TextBlock Text="{Binding CollectionHealthText}"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource TextMutedBrush}" />
-                    </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1"
+                            Classes="float-card"
+                            Padding="16 14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="stat-label"
+                                       Text="{DynamicResource Loc.Tags.StatTaggedImages}" />
+                            <TextBlock Classes="stat-value"
+                                       Text="{Binding TaggedImageCount}" />
+                            <TextBlock Classes="stat-sub"
+                                       Foreground="{DynamicResource SuccessTextBrush}"
+                                       Text="{Binding CoverageText}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2"
+                            Classes="float-card"
+                            Padding="16 14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="stat-label"
+                                       Text="{DynamicResource Loc.Tags.StatUnused}" />
+                            <TextBlock Classes="stat-value"
+                                       Text="{Binding UnusedTagCount}" />
+                            <TextBlock Classes="stat-sub"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Text="{Binding UnusedTagSummaryText}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Classes="float-card"
+                        CornerRadius="13"
+                        Padding="16 14">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                          ColumnSpacing="10"
+                          VerticalAlignment="Center">
+                        <ic:FluentIcon Classes="muted-icon"
+                                       Icon="Tag" />
+
+                        <TextBox Grid.Column="1"
+                                 Classes="create-input"
+                                 Text="{Binding NewTagName}"
+                                 PlaceholderText="{DynamicResource Loc.Tags.NamePlaceholder}" />
+
+                        <ComboBox Grid.Column="2"
+                                  Classes="color-picker"
+                                  ItemsSource="{Binding ColorOptions}"
+                                  SelectedItem="{Binding NewTagColor}" />
+
+                        <Button Grid.Column="3"
+                                Classes="btn btn-primary"
+                                Command="{Binding CreateTagCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <ic:FluentIcon Icon="Add"
+                                               IconVariant="Regular"
+                                               IconSize="Size16"
+                                               VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource Loc.Tags.Create}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
                 </Border>
 
-                <!-- Formulário de nova tag -->
-                <Border Classes="floating-panel"
-                        Padding="22 18">
-                    <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="section-label"
+                               Text="{Binding TagSectionTitle}"
+                               VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1"
+                               Classes="section-info"
+                               Text="{DynamicResource Loc.Tags.SortedByUsage}"
+                               VerticalAlignment="Center" />
+                </Grid>
 
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ic:FluentIcon Classes="section-icon"
-                                           Icon="TagAdd" />
-                            <TextBlock Text="{DynamicResource Loc.Tags.New}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextPrimaryBrush}" />
-                        </StackPanel>
-
-                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
-                            <TextBox Grid.Column="0"
-                                     Classes="field"
-                                     Text="{Binding NewTagName}"
-                                     PlaceholderText="{DynamicResource Loc.Tags.NamePlaceholder}" />
-
-                            <ComboBox Grid.Column="1"
-                                      Classes="color-picker"
-                                      ItemsSource="{Binding ColorOptions}"
-                                      SelectedItem="{Binding NewTagColor}" />
-
-                            <Button Grid.Column="2"
-                                    Classes="btn btn-success"
-                                    Command="{Binding CreateTagCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <ic:FluentIcon Icon="AddSquare"
-                                                   IconVariant="Regular"
-                                                   IconSize="Size20"
-                                                   VerticalAlignment="Center" />
-                                    <TextBlock Text="{DynamicResource Loc.Tags.Create}" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-
-                    </StackPanel>
-                </Border>
-
-                <Border Classes="floating-panel"
+                <Border Classes="float-card"
                         IsVisible="{Binding !HasTags}"
                         Padding="32">
                     <StackPanel HorizontalAlignment="Center"
@@ -226,44 +271,54 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Lista de tags -->
-                <ItemsControl ItemsSource="{Binding Tags}"
-                              IsVisible="{Binding HasTags}">
+                <Border Classes="float-card"
+                        IsVisible="{Binding ShowFilterEmpty}"
+                        Padding="24"
+                        HorizontalAlignment="Stretch">
+                    <StackPanel HorizontalAlignment="Center"
+                                Spacing="8">
+                        <TextBlock Text="{DynamicResource Loc.Tags.FilterEmptyTitle}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Loc.Tags.FilterEmptySubtitle}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding VisibleTags}"
+                              IsVisible="{Binding HasVisibleTags}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="cvm:TagRowViewModel">
+                            <Border Classes="float-card"
+                                    CornerRadius="11"
+                                    Padding="14 11"
+                                    Margin="0 0 0 6">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                                      ColumnSpacing="12"
+                                      VerticalAlignment="Center">
+                                    <Border Width="10"
+                                            Height="10"
+                                            CornerRadius="5"
+                                            Background="{Binding ColorHex}"
+                                            VerticalAlignment="Center" />
 
-                            <Border Classes="tag-card"
-                                    Margin="0 0 0 10">
-
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
-
-                                    <!-- Nome -->
-                                    <Panel Grid.Column="0" VerticalAlignment="Center">
+                                    <Panel Grid.Column="1"
+                                           VerticalAlignment="Center">
                                         <StackPanel IsVisible="{Binding IsNotEditing}"
-                                                    Spacing="4">
-                                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <Border Width="12" Height="12"
-                                                        CornerRadius="6"
-                                                        Background="{Binding ColorHex}"
-                                                        VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding Name}"
-                                                           FontSize="14"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                                           VerticalAlignment="Center" />
-                                                <Border IsVisible="{Binding IsUnused}"
-                                                        Classes="unused-badge">
-                                                    <TextBlock Text="{Binding UsageBadgeText}"
-                                                               FontSize="11"
-                                                               FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextMutedBrush}" />
-                                                </Border>
-                                            </StackPanel>
+                                                    Spacing="1">
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontSize="13"
+                                                       FontWeight="Medium"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}" />
                                             <TextBlock Text="{Binding UsageText}"
-                                                       Margin="22 0 0 0"
-                                                       FontSize="12"
-                                                       Foreground="{DynamicResource TextMutedBrush}" />
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextSubtleBrush}" />
                                         </StackPanel>
+
                                         <Grid IsVisible="{Binding IsEditing}"
                                               ColumnDefinitions="*,Auto"
                                               ColumnSpacing="10">
@@ -277,8 +332,21 @@
                                         </Grid>
                                     </Panel>
 
-                                    <!-- Ações -->
-                                    <Panel Grid.Column="1" VerticalAlignment="Center">
+                                    <Border Grid.Column="2"
+                                            Width="90"
+                                            Height="3"
+                                            Background="{DynamicResource SurfaceSoftAltBrush}"
+                                            CornerRadius="2"
+                                            ClipToBounds="True"
+                                            VerticalAlignment="Center">
+                                        <Border Width="{Binding UsageBarWidth}"
+                                                HorizontalAlignment="Left"
+                                                Background="{Binding ColorHex}"
+                                                CornerRadius="2" />
+                                    </Border>
+
+                                    <Panel Grid.Column="3"
+                                           VerticalAlignment="Center">
                                         <Button IsVisible="{Binding IsNotEditing}"
                                                 Classes="icon-btn"
                                                 ToolTip.Tip="{DynamicResource Loc.Tags.ActionsMenu}">
@@ -294,9 +362,11 @@
                                                 </MenuFlyout>
                                             </Button.Flyout>
                                         </Button>
+
                                         <StackPanel IsVisible="{Binding IsEditing}"
-                                                    Orientation="Horizontal" Spacing="8">
-                                            <Button Classes="btn btn-success"
+                                                    Orientation="Horizontal"
+                                                    Spacing="8">
+                                            <Button Classes="btn btn-primary"
                                                     Command="{Binding SaveCommand}">
                                                 <TextBlock Text="{DynamicResource Loc.Tags.Save}" />
                                             </Button>
@@ -306,10 +376,8 @@
                                             </Button>
                                         </StackPanel>
                                     </Panel>
-
                                 </Grid>
                             </Border>
-
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -331,7 +399,7 @@
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="22"
-                        BoxShadow="0 24 60 #99000000">
+                        BoxShadow="0 0 0 0 Transparent">
                     <StackPanel Spacing="18">
                         <StackPanel Spacing="8">
                             <TextBlock Text="{Binding DeleteConfirmationTitle}"

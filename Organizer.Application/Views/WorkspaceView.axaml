@@ -153,7 +153,7 @@
                 Background="{DynamicResource SurfaceSoftBrush}"
                 BorderBrush="{DynamicResource FloatingBorderBrush}"
                 BorderThickness="1"
-                CornerRadius="999"
+                CornerRadius="7"
                 Padding="10 6"
                 IsHitTestVisible="False"
                 ZIndex="10">

@@ -29,6 +29,12 @@ public partial class ManageTagsViewModel : ObservableObject
 
     [ObservableProperty] private TagRowViewModel? _pendingDeleteTag;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VisibleTags))]
+    [NotifyPropertyChangedFor(nameof(HasVisibleTags))]
+    [NotifyPropertyChangedFor(nameof(ShowFilterEmpty))]
+    private string _filterText = string.Empty;
+
     // ── Nova tag ──────────────────────────────────────────────────────────────
 
     [ObservableProperty] private string _newTagName = string.Empty;
@@ -53,12 +59,46 @@ public partial class ManageTagsViewModel : ObservableObject
 
     public bool HasTags => Tags.Count > 0;
 
+    public IEnumerable<TagRowViewModel> VisibleTags
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(FilterText))
+                return Tags;
+
+            return Tags.Where(tag =>
+                tag.Name.Contains(FilterText, StringComparison.CurrentCultureIgnoreCase));
+        }
+    }
+
+    public bool HasVisibleTags => VisibleTags.Any();
+
+    public bool ShowFilterEmpty => HasTags && !HasVisibleTags;
+
+    public int ActiveTagCount => Tags.Count(tag => !tag.IsUnused);
+
+    public int UnusedTagCount => Tags.Count(tag => tag.IsUnused);
+
     public string CollectionStatsText => _preferencesService.T("Loc.Tags.CollectionStats", TagCount, TaggedImageCount);
 
     public string CollectionHealthText => _preferencesService.T(
         "Loc.Tags.CollectionHealth",
         Tags.Count(tag => !tag.IsUnused),
         Tags.Count(tag => tag.IsUnused));
+
+    public string ActiveTagSummaryText => ActiveTagCount == TagCount
+        ? _preferencesService.T("Loc.Tags.AllActive")
+        : _preferencesService.T("Loc.Tags.ActiveCount", ActiveTagCount);
+
+    public string CoverageText => TaggedImageCount == 0
+        ? _preferencesService.T("Loc.Tags.NoTaggedImages")
+        : _preferencesService.T("Loc.Tags.TaggedImagesSummary");
+
+    public string UnusedTagSummaryText => UnusedTagCount == 0
+        ? _preferencesService.T("Loc.Tags.NoUnused")
+        : _preferencesService.T("Loc.Tags.UnusedCount", UnusedTagCount);
+
+    public string TagSectionTitle => _preferencesService.T("Loc.Tags.SectionCount", TagCount);
 
     public string DeleteConfirmationTitle => PendingDeleteTag is null
         ? string.Empty
@@ -128,6 +168,9 @@ public partial class ManageTagsViewModel : ObservableObject
 
         row.Name = updated.Name;
         row.Color = updated.Color;
+        OnPropertyChanged(nameof(VisibleTags));
+        OnPropertyChanged(nameof(HasVisibleTags));
+        OnPropertyChanged(nameof(ShowFilterEmpty));
     }
 
     private async void OnDeleteTag(TagRowViewModel row)
@@ -184,14 +227,24 @@ public partial class ManageTagsViewModel : ObservableObject
     {
         TagCount = Tags.Count;
         OnPropertyChanged(nameof(HasTags));
+        OnPropertyChanged(nameof(VisibleTags));
+        OnPropertyChanged(nameof(HasVisibleTags));
+        OnPropertyChanged(nameof(ShowFilterEmpty));
+        OnPropertyChanged(nameof(ActiveTagCount));
+        OnPropertyChanged(nameof(UnusedTagCount));
         OnPropertyChanged(nameof(CollectionStatsText));
         OnPropertyChanged(nameof(CollectionHealthText));
+        OnPropertyChanged(nameof(ActiveTagSummaryText));
+        OnPropertyChanged(nameof(CoverageText));
+        OnPropertyChanged(nameof(UnusedTagSummaryText));
+        OnPropertyChanged(nameof(TagSectionTitle));
     }
 
     private async Task RefreshTaggedImageCountAsync()
     {
         TaggedImageCount = await _tagService.CountTaggedImagesAsync();
         OnPropertyChanged(nameof(CollectionStatsText));
+        OnPropertyChanged(nameof(CoverageText));
     }
 
     private void UpdateUsageText(TagRowViewModel row)
@@ -217,6 +270,10 @@ public partial class ManageTagsViewModel : ObservableObject
             if (currentIndex >= 0 && currentIndex != targetIndex)
                 Tags.Move(currentIndex, targetIndex);
         }
+
+        var maxUsageCount = Math.Max(1, Tags.Count == 0 ? 1 : Tags.Max(tag => tag.UsageCount));
+        foreach (var tag in Tags)
+            tag.MaxUsageCount = maxUsageCount;
     }
 
     private void OnPreferencesChanged()
@@ -226,6 +283,10 @@ public partial class ManageTagsViewModel : ObservableObject
 
         OnPropertyChanged(nameof(CollectionStatsText));
         OnPropertyChanged(nameof(CollectionHealthText));
+        OnPropertyChanged(nameof(ActiveTagSummaryText));
+        OnPropertyChanged(nameof(CoverageText));
+        OnPropertyChanged(nameof(UnusedTagSummaryText));
+        OnPropertyChanged(nameof(TagSectionTitle));
         OnPropertyChanged(nameof(DeleteConfirmationTitle));
         OnPropertyChanged(nameof(DeleteConfirmationUsageText));
     }

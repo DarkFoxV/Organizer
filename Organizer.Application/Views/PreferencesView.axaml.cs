@@ -36,6 +36,26 @@ public partial class PreferencesView : UserControl
         VM.SelectAbout();
     }
 
+    private void OnSystemThemeClick(object? sender, RoutedEventArgs e)
+    {
+        VM.SelectSystemTheme();
+    }
+
+    private void OnDarkThemeClick(object? sender, RoutedEventArgs e)
+    {
+        VM.SelectDarkTheme();
+    }
+
+    private void OnLightThemeClick(object? sender, RoutedEventArgs e)
+    {
+        VM.SelectLightTheme();
+    }
+
+    private void OnGrayThemeClick(object? sender, RoutedEventArgs e)
+    {
+        VM.SelectGrayTheme();
+    }
+
     private async void OnCreateLocalBackupClick(object? sender, RoutedEventArgs e)
     {
         if (TopLevel.GetTopLevel(this)?.StorageProvider is not { } storage)
@@ -142,5 +162,10 @@ public partial class PreferencesView : UserControl
 
         if (confirmed)
             await VM.RestoreLatestFromGoogleDriveAsync();
+    }
+
+    private async void OnDisconnectGoogleDriveClick(object? sender, RoutedEventArgs e)
+    {
+        await VM.DisconnectGoogleDriveAsync();
     }
 }

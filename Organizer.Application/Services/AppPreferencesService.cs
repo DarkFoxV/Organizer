@@ -37,14 +37,28 @@ public sealed class AppPreferencesService
 
     public void Update(Action<AppPreferences> update)
     {
+        bool shouldApplyTheme;
+        bool shouldApplyLanguage;
+
         lock (_preferencesLock)
         {
+            var previousTheme = _preferences.Theme;
+            var previousLanguage = _preferences.Language;
+            var previousWorkspaceBackground = _preferences.WorkspaceBackground;
+
             update(_preferences);
+            shouldApplyTheme = _preferences.Theme != previousTheme ||
+                _preferences.WorkspaceBackground != previousWorkspaceBackground;
+            shouldApplyLanguage = _preferences.Language != previousLanguage;
             Save();
         }
 
-        ApplyTheme();
-        ApplyLanguage();
+        if (shouldApplyTheme)
+            ApplyTheme();
+
+        if (shouldApplyLanguage)
+            ApplyLanguage();
+
         PreferencesChanged?.Invoke();
     }
 

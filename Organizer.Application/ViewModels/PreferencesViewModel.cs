@@ -21,7 +21,10 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     private readonly HomeWorkspaceCacheService _homeWorkspaceCacheService;
     private readonly IToastService _toastService;
     private readonly DispatcherTimer _saveIndicatorTimer;
+    private readonly DispatcherTimer _workspacePreferenceSaveTimer;
     private bool _isRefreshingOptions;
+    private bool _isSavingPreference;
+    private bool _hasPendingWorkspacePreferences;
 
     public ObservableCollection<PreferenceOption<AppThemePreference>> ThemeOptions { get; } =
         new();
@@ -106,6 +109,11 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
             Interval = TimeSpan.FromSeconds(2.5)
         };
         _saveIndicatorTimer.Tick += OnSaveIndicatorTimerTick;
+        _workspacePreferenceSaveTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(250)
+        };
+        _workspacePreferenceSaveTimer.Tick += OnWorkspacePreferenceSaveTimerTick;
 
         RefreshOptions();
         RefreshDatabaseInfo();
@@ -157,19 +165,13 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     partial void OnWorkspaceDefaultZoomPercentChanged(double value)
     {
         if (!_isRefreshingOptions)
-            SavePreference(preferences => preferences.WorkspaceDefaultZoomPercent = (int)value);
+            ScheduleWorkspacePreferenceSave();
     }
 
     partial void OnWorkspaceHistoryLimitChanged(double value)
     {
         if (!_isRefreshingOptions)
-        {
-            SavePreference(preferences =>
-                preferences.WorkspaceHistoryLimit = Math.Clamp(
-                    (int)value,
-                    AppPreferences.MinWorkspaceHistoryLimit,
-                    AppPreferences.MaxWorkspaceHistoryLimit));
-        }
+            ScheduleWorkspacePreferenceSave();
     }
 
     partial void OnGoogleDriveClientIdChanged(string value)
@@ -450,14 +452,19 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        FlushWorkspacePreferenceSave();
         _preferencesService.PreferencesChanged -= OnPreferencesChanged;
         _saveIndicatorTimer.Stop();
         _saveIndicatorTimer.Tick -= OnSaveIndicatorTimerTick;
+        _workspacePreferenceSaveTimer.Stop();
+        _workspacePreferenceSaveTimer.Tick -= OnWorkspacePreferenceSaveTimerTick;
     }
 
     private void OnPreferencesChanged()
     {
-        RefreshOptions();
+        if (!_isSavingPreference)
+            RefreshOptions();
+
         RefreshDatabaseInfo();
         OnPropertyChanged(nameof(CloudProviderStatus));
         OnPropertyChanged(nameof(IsCloudConnected));
@@ -469,7 +476,16 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
 
     private void SavePreference(Action<AppPreferences> update)
     {
-        _preferencesService.Update(update);
+        _isSavingPreference = true;
+        try
+        {
+            _preferencesService.Update(update);
+        }
+        finally
+        {
+            _isSavingPreference = false;
+        }
+
         ShowSaveIndicator();
     }
 
@@ -484,6 +500,40 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     {
         _saveIndicatorTimer.Stop();
         IsSaveIndicatorVisible = false;
+    }
+
+    private void ScheduleWorkspacePreferenceSave()
+    {
+        _hasPendingWorkspacePreferences = true;
+        ShowSaveIndicator();
+        _workspacePreferenceSaveTimer.Stop();
+        _workspacePreferenceSaveTimer.Start();
+    }
+
+    private void OnWorkspacePreferenceSaveTimerTick(object? sender, EventArgs e)
+    {
+        FlushWorkspacePreferenceSave();
+    }
+
+    private void FlushWorkspacePreferenceSave()
+    {
+        if (!_hasPendingWorkspacePreferences)
+            return;
+
+        _workspacePreferenceSaveTimer.Stop();
+        _hasPendingWorkspacePreferences = false;
+
+        var zoomPercent = (int)Math.Round(WorkspaceDefaultZoomPercent);
+        var historyLimit = Math.Clamp(
+            (int)Math.Round(WorkspaceHistoryLimit),
+            AppPreferences.MinWorkspaceHistoryLimit,
+            AppPreferences.MaxWorkspaceHistoryLimit);
+
+        SavePreference(preferences =>
+        {
+            preferences.WorkspaceDefaultZoomPercent = zoomPercent;
+            preferences.WorkspaceHistoryLimit = historyLimit;
+        });
     }
 
     private async Task RunBackupActionAsync(Func<Task> action, string errorTitle)

@@ -222,54 +222,60 @@
 
                                 <Border Grid.Row="1"
                                         Classes="preference-tile">
-                                    <Grid ColumnDefinitions="*,220" ColumnSpacing="18">
+                                    <Grid ColumnDefinitions="*,260" ColumnSpacing="18">
                                         <StackPanel Spacing="3">
-                                            <Grid ColumnDefinitions="*,Auto">
-                                                <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.InitialZoom}" />
-                                                <TextBlock Grid.Column="1"
-                                                           Text="{Binding WorkspaceDefaultZoomPercent, StringFormat='{}{0:0}%'}"
-                                                           Foreground="{DynamicResource AccentSoftTextBrush}"
-                                                           FontSize="12"
-                                                           FontWeight="SemiBold"
-                                                           VerticalAlignment="Center" />
-                                            </Grid>
+                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.InitialZoom}" />
                                             <TextBlock Classes="row-description"
                                                        Text="{DynamicResource Loc.Preferences.InitialZoomDescription}" />
                                         </StackPanel>
-                                        <Slider Grid.Column="1"
-                                                Minimum="10"
-                                                Maximum="200"
-                                                TickFrequency="10"
-                                                IsSnapToTickEnabled="True"
-                                                VerticalAlignment="Center"
-                                                Value="{Binding WorkspaceDefaultZoomPercent}" />
+                                        <Grid Grid.Column="1"
+                                              ColumnDefinitions="*,48"
+                                              ColumnSpacing="10"
+                                              VerticalAlignment="Center">
+                                            <Slider Minimum="10"
+                                                    Maximum="200"
+                                                    TickFrequency="10"
+                                                    IsSnapToTickEnabled="True"
+                                                    VerticalAlignment="Center"
+                                                    Value="{Binding WorkspaceDefaultZoomPercent}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding WorkspaceDefaultZoomPercent, StringFormat='{}{0:0}%'}"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       HorizontalAlignment="Right"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
                                     </Grid>
                                 </Border>
 
                                 <Border Grid.Row="1"
                                         Grid.Column="1"
                                         Classes="preference-tile last">
-                                    <Grid ColumnDefinitions="*,220" ColumnSpacing="18">
+                                    <Grid ColumnDefinitions="*,260" ColumnSpacing="18">
                                         <StackPanel Spacing="3">
-                                            <Grid ColumnDefinitions="*,Auto">
-                                                <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.HistoryLimit}" />
-                                                <TextBlock Grid.Column="1"
-                                                           Text="{Binding WorkspaceHistoryLimit, StringFormat='{}{0:0}'}"
-                                                           Foreground="{DynamicResource AccentSoftTextBrush}"
-                                                           FontSize="12"
-                                                           FontWeight="SemiBold"
-                                                           VerticalAlignment="Center" />
-                                            </Grid>
+                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.HistoryLimit}" />
                                             <TextBlock Classes="row-description"
                                                        Text="{DynamicResource Loc.Preferences.HistoryLimitDescription}" />
                                         </StackPanel>
-                                        <Slider Grid.Column="1"
-                                                Minimum="0"
-                                                Maximum="200"
-                                                TickFrequency="10"
-                                                IsSnapToTickEnabled="True"
-                                                VerticalAlignment="Center"
-                                                Value="{Binding WorkspaceHistoryLimit}" />
+                                        <Grid Grid.Column="1"
+                                              ColumnDefinitions="*,48"
+                                              ColumnSpacing="10"
+                                              VerticalAlignment="Center">
+                                            <Slider Minimum="0"
+                                                    Maximum="200"
+                                                    TickFrequency="10"
+                                                    IsSnapToTickEnabled="True"
+                                                    VerticalAlignment="Center"
+                                                    Value="{Binding WorkspaceHistoryLimit}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding WorkspaceHistoryLimit, StringFormat='{}{0:0}'}"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       HorizontalAlignment="Right"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
                                     </Grid>
                                 </Border>
                             </Grid>

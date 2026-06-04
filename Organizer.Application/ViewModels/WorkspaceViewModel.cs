@@ -50,6 +50,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     private int _nextZIndex;
     private IStorageFile? _workspaceFile;
     private byte[]? _workspaceThumbnailData;
+    private WorkspaceArchiveCamera? _cameraState;
 
     private sealed record PendingWorkspaceImage(
         Bitmap Bitmap,
@@ -63,7 +64,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         IReadOnlyList<WorkspaceSnapshotItem> Items,
         double NextFallbackPasteX,
         double NextFallbackPasteY,
-        int NextZIndex);
+        int NextZIndex,
+        bool IsGrayscale);
 
     private sealed record WorkspaceSnapshotItem(
         string Label,
@@ -89,6 +91,9 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     [ObservableProperty] private double _boardStartY;
 
     [ObservableProperty] private bool _hasUnsavedChanges;
+    [ObservableProperty] private bool _hasUnsavedCameraChanges;
+
+    [ObservableProperty] private bool _isGrayscale;
 
     public event Action<double, double>? BoardOriginShifted;
     public event Action? WorkspacePreferencesChanged;
@@ -133,6 +138,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
     public double BoardWidth => _boardWidth;
 
     public double BoardHeight => _boardHeight;
+
+    public WorkspaceArchiveCamera? CameraState => _cameraState;
 
     public WorkspaceViewModel(
         IClipboardService clipboardService,
@@ -229,8 +236,15 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
                 return false;
             }
 
-            await _workspaceArchiveService.SaveAsync(output, archiveItems, GetWorkspaceName(), _workspaceThumbnailData);
+            await _workspaceArchiveService.SaveAsync(
+                output,
+                archiveItems,
+                GetWorkspaceName(),
+                _workspaceThumbnailData,
+                _cameraState,
+                IsGrayscale);
             HasUnsavedChanges = false;
+            HasUnsavedCameraChanges = false;
             return true;
         }
         catch (Exception ex)
@@ -251,6 +265,32 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         }
 
         return await SaveToFileCoreAsync(_workspaceFile, rememberFile: false, showToast);
+    }
+
+    public async Task<bool> OpenWorkspaceFileAsync(IStorageFile file)
+    {
+        var loaded = false;
+
+        try
+        {
+            ErrorMessage = null;
+            await using var stream = await file.OpenReadAsync();
+            loaded = await LoadAsync(stream);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = AppPreferencesService.Translate("Loc.Home.ErrorOpen", ex.Message);
+        }
+
+        if (!loaded)
+        {
+            file.Dispose();
+            return false;
+        }
+
+        SetWorkspaceFile(file);
+        await RememberWorkspaceFileAsync(file);
+        return true;
     }
 
     public async Task<bool> SaveToFileAsync(IStorageFile file, bool showToast = false)
@@ -414,11 +454,14 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
                 path,
                 archiveItems,
                 Path.GetFileNameWithoutExtension(path),
-                _workspaceThumbnailData);
+                _workspaceThumbnailData,
+                _cameraState,
+                IsGrayscale);
 
-            HasUnsavedChanges = false;
-            await _homeWorkspaceCacheService.RememberAsync(path);
-            return true;
+                HasUnsavedChanges = false;
+                HasUnsavedCameraChanges = false;
+                await _homeWorkspaceCacheService.RememberAsync(path);
+                return true;
         }
         catch (Exception ex)
         {
@@ -472,10 +515,14 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         {
             ErrorMessage = null;
             _workspaceThumbnailData = null;
-            var archiveItems = await _workspaceArchiveService.LoadAsync(input);
+            var workspace = await _workspaceArchiveService.LoadWorkspaceAsync(input);
+            var archiveItems = workspace.Items;
 
             ClearAllCore();
             ClearHistory();
+            _cameraState = workspace.Camera;
+            IsGrayscale = workspace.IsGrayscale;
+            OnPropertyChanged(nameof(CameraState));
 
             foreach (var item in archiveItems.OrderBy(item => item.ZIndex))
                 AddArchiveItem(item);
@@ -483,6 +530,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             ClearSelection();
             NotifyBoardStateChanged();
             HasUnsavedChanges = false;
+            HasUnsavedCameraChanges = false;
             if (archiveItems.Any(item => item.IsMissingOrCorrupted))
                 ErrorMessage = "Workspace aberto com imagens ausentes ou corrompidas.";
             return true;
@@ -499,7 +547,38 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         ClearAllCore();
         ClearHistory();
         ClearWorkspaceFile();
+        _cameraState = null;
+        IsGrayscale = false;
+        OnPropertyChanged(nameof(CameraState));
         HasUnsavedChanges = false;
+        HasUnsavedCameraChanges = false;
+        WorkspaceChanged?.Invoke();
+    }
+
+    public void UpdateCameraState(double zoom, Point center, bool markDirty, bool markCameraDirty)
+    {
+        if (!HasImages)
+        {
+            if (_cameraState is null)
+                return;
+
+            _cameraState = null;
+            OnPropertyChanged(nameof(CameraState));
+            HasUnsavedCameraChanges = false;
+            return;
+        }
+
+        var cameraState = new WorkspaceArchiveCamera(zoom, center.X, center.Y);
+        if (CameraStatesEqual(_cameraState, cameraState))
+            return;
+
+        _cameraState = cameraState;
+        OnPropertyChanged(nameof(CameraState));
+
+        if (markDirty)
+            MarkDirty();
+        else if (markCameraDirty)
+            HasUnsavedCameraChanges = true;
     }
 
     public async Task<bool> CopySelectedImageAsync(IClipboard clipboard)
@@ -634,6 +713,79 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
         _selectedItem = Items.LastOrDefault(i => i.IsSelected && ReferenceEquals(i, selectedItem))
             ?? Items.LastOrDefault(i => i.IsSelected);
+    }
+
+    public bool SelectAllItems()
+    {
+        if (Items.Count == 0)
+            return false;
+
+        foreach (var item in Items)
+            item.IsSelected = true;
+
+        _selectedItem = Items.LastOrDefault();
+        return true;
+    }
+
+    public bool ArrangeSelectedItemsBySize()
+    {
+        var selectedItems = Items
+            .Where(item => item.IsSelected)
+            .OrderByDescending(item => item.Width * item.Height)
+            .ThenByDescending(item => item.Width)
+            .ThenByDescending(item => item.Height)
+            .ThenBy(item => item.ZIndex)
+            .ToList();
+
+        if (selectedItems.Count < 2)
+            return false;
+
+        var undoSnapshot = CaptureWorkspaceSnapshot();
+        var startX = selectedItems.Min(item => item.X);
+        var startY = selectedItems.Min(item => item.Y);
+        var columns = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(selectedItems.Count)));
+        var positions = GetArrangementPositions(selectedItems, columns, new Point(startX, startY));
+
+        _isInteractiveItemUpdate = true;
+
+        try
+        {
+            for (var i = 0; i < selectedItems.Count; i++)
+            {
+                var item = selectedItems[i];
+                item.X = positions[i].X;
+                item.Y = positions[i].Y;
+                UpdateDisplayPosition(item);
+            }
+        }
+        finally
+        {
+            _isInteractiveItemUpdate = false;
+        }
+
+        if (WorkspaceSnapshotsEqual(undoSnapshot, CaptureWorkspaceSnapshot()))
+            return false;
+
+        NotifyBoardStateChanged();
+        PushUndoSnapshot(undoSnapshot);
+        MarkDirty();
+        return true;
+    }
+
+    public bool ToggleWorkspaceGrayscale()
+    {
+        if (!HasImages)
+            return false;
+
+        var undoSnapshot = CaptureWorkspaceSnapshot();
+        IsGrayscale = !IsGrayscale;
+
+        if (WorkspaceSnapshotsEqual(undoSnapshot, CaptureWorkspaceSnapshot()))
+            return false;
+
+        PushUndoSnapshot(undoSnapshot);
+        MarkDirty();
+        return true;
     }
 
     private void SelectItems(IReadOnlyList<WorkspaceCanvasItemViewModel> items)
@@ -982,7 +1134,8 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             Items.Select(ToSnapshotItem).ToList(),
             _nextFallbackPasteX,
             _nextFallbackPasteY,
-            _nextZIndex);
+            _nextZIndex,
+            IsGrayscale);
     }
 
     private static WorkspaceSnapshotItem ToSnapshotItem(WorkspaceCanvasItemViewModel item)
@@ -1014,6 +1167,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         _nextFallbackPasteX = snapshot.NextFallbackPasteX;
         _nextFallbackPasteY = snapshot.NextFallbackPasteY;
         _nextZIndex = snapshot.NextZIndex;
+        IsGrayscale = snapshot.IsGrayscale;
 
         foreach (var snapshotItem in snapshot.Items)
             AddSnapshotItem(snapshotItem);
@@ -1165,6 +1319,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         if (left.NextZIndex != right.NextZIndex
             || !DoubleEquals(left.NextFallbackPasteX, right.NextFallbackPasteX)
             || !DoubleEquals(left.NextFallbackPasteY, right.NextFallbackPasteY)
+            || left.IsGrayscale != right.IsGrayscale
             || left.Items.Count != right.Items.Count)
         {
             return false;
@@ -1194,6 +1349,16 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
             && left.IsSelected == right.IsSelected
             && left.IsMissingOrCorrupted == right.IsMissingOrCorrupted
             && left.ValidationMessage == right.ValidationMessage;
+    }
+
+    private static bool CameraStatesEqual(WorkspaceArchiveCamera? left, WorkspaceArchiveCamera? right)
+    {
+        if (left is null || right is null)
+            return left is null && right is null;
+
+        return DoubleEquals(left.Zoom, right.Zoom)
+            && DoubleEquals(left.CenterX, right.CenterX)
+            && DoubleEquals(left.CenterY, right.CenterY);
     }
 
     private static bool Intersects(Rect a, Rect b)
@@ -1444,6 +1609,36 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         return positions;
     }
 
+    private static Point[] GetArrangementPositions(
+        IReadOnlyList<WorkspaceCanvasItemViewModel> items,
+        int columns,
+        Point topLeft)
+    {
+        var positions = new Point[items.Count];
+        var y = topLeft.Y;
+
+        for (var start = 0; start < items.Count; start += columns)
+        {
+            var count = Math.Min(columns, items.Count - start);
+            var rowHeight = 0d;
+            var x = topLeft.X;
+
+            for (var i = start; i < start + count; i++)
+                rowHeight = Math.Max(rowHeight, items[i].Height);
+
+            for (var i = start; i < start + count; i++)
+            {
+                var item = items[i];
+                positions[i] = new Point(x, y + ((rowHeight - item.Height) / 2));
+                x += item.Width + BatchPasteGap;
+            }
+
+            y += rowHeight + BatchPasteGap;
+        }
+
+        return positions;
+    }
+
     private void AdvanceFallbackPastePosition(double width, double height)
     {
         _nextFallbackPasteX += PasteOffsetStep;
@@ -1491,7 +1686,7 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
 
     private (string Viewport, string Board, string Border) GetWorkspacePalette()
     {
-        return _preferencesService.Current.WorkspaceBackground switch
+        return _preferencesService.ResolveWorkspaceBackground() switch
         {
             WorkspaceBackgroundPreference.Light => ("#F5F7FA", "#FFFFFF", "#E4E8EF"),
             WorkspaceBackgroundPreference.Gray => ("#1c1c1e", "#242426", "#333336"),

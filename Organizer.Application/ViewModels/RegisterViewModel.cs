@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Input.Platform;
@@ -84,7 +84,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         ImageOrder = new ImageOrderListViewModel(_preferencesService);
         TagSelector = new TagSelectorViewModel(_tagService, _preferencesService, showAddButton: true);
 
-        ImageOrder.Items.CollectionChanged += OnImagesChanged;
+        ImageOrder.PropertyChanged += OnImageOrderPropertyChanged;
 
         TagSelector.SelectionChanged += NotifyReady;
 
@@ -149,14 +149,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
 
             try
             {
-                foreach (var file in files)
-                {
-                    if (_isDisposed)
-                        return;
-
-                    unownedFiles.Remove(file);
-                    await ImageOrder.AddImageAsync(file);
-                }
+                await ImageOrder.AddImagesAsync(files, file => unownedFiles.Remove(file));
             }
             finally
             {
@@ -197,16 +190,10 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
                 return false;
             }
 
-            foreach (var image in images)
-            {
-                if (_isDisposed)
-                    return false;
-
-                await ImageOrder.AddImageAsync(
-                    filename: image.Filename,
-                    mimeType: image.MimeType,
-                    data: image.Data);
-            }
+            await ImageOrder.AddImagesAsync(images.Select(image => (
+                image.Filename,
+                image.MimeType,
+                image.Data)));
 
             return true;
         }
@@ -374,7 +361,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         BusyStateChanged?.Invoke(false, string.Empty);
 
         TagSelector.SelectionChanged -= NotifyReady;
-        ImageOrder.Items.CollectionChanged -= OnImagesChanged;
+        ImageOrder.PropertyChanged -= OnImageOrderPropertyChanged;
         ImageOrder.ClearItems();
         TagSelector.Dispose();
         ImageOrder.Dispose();
@@ -387,9 +374,10 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
             MemoryCleanupService.QueueLargeImageMemoryCompaction();
     }
 
-    private void OnImagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnImageOrderPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        NotifyReady();
+        if (e.PropertyName is nameof(ImageOrder.IsEmpty) or nameof(ImageOrder.Items) or nameof(ImageOrder.CountLabel))
+            NotifyReady();
     }
 
     private string GetStatusText()

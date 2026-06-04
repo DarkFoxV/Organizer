@@ -17,8 +17,9 @@ public enum SortOrder
     AlfabeticoZA
 }
 
-public partial class SearchBarViewModel : ObservableObject
+public partial class SearchBarViewModel : ObservableObject, IDisposable
 {
+    private const int SearchDebounceMilliseconds = 300;
     private CancellationTokenSource? _searchCts;
 
     [ObservableProperty] private string _query = string.Empty;
@@ -39,12 +40,12 @@ public partial class SearchBarViewModel : ObservableObject
 
     partial void OnQueryChanged(string value)
     {
-        DebounceSearch();
+        ScheduleSearch();
     }
 
     partial void OnSelectedSortChanged(SortOrder value)
     {
-        DebounceSearch();
+        ScheduleSearch();
     }
 
     partial void OnSelectedSortOptionChanged(SortOptionViewModel? value)
@@ -68,27 +69,36 @@ public partial class SearchBarViewModel : ObservableObject
         SelectedSortOption = SortOptions.FirstOrDefault(option => option.Value == selected) ?? SortOptions.FirstOrDefault();
     }
 
-    private async void DebounceSearch()
+    private async void ScheduleSearch()
     {
-        _searchCts?.Cancel();
-
+        var previousCts = _searchCts;
         var cts = new CancellationTokenSource();
-
         _searchCts = cts;
+        previousCts?.Cancel();
 
         try
         {
-            await Task.Delay(400, cts.Token);
+            await Task.Delay(SearchDebounceMilliseconds, cts.Token);
 
-            if (cts.IsCancellationRequested)
-                return;
-
-            SearchRequested?.Invoke(Query, SelectedSort);
+            if (ReferenceEquals(_searchCts, cts))
+                SearchRequested?.Invoke(Query, SelectedSort);
         }
         catch (TaskCanceledException)
         {
             // ignorado
         }
+        finally
+        {
+            if (!ReferenceEquals(_searchCts, cts))
+                cts.Dispose();
+        }
+    }
+
+    public void Dispose()
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = null;
     }
 
     [RelayCommand]

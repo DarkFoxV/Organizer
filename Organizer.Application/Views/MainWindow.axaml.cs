@@ -53,7 +53,12 @@ public partial class MainWindow : Window
         }
 
         if (!vm.HasUnsavedWorkspaceChanges)
+        {
+            if (vm.HasFileBackedWorkspace && vm.HasUnsavedWorkspaceCameraChanges)
+                await vm.SaveWorkspaceToCurrentFileAsync();
+
             return;
+        }
 
         e.Cancel = true;
         _isClosing = true;

@@ -67,5 +67,6 @@ public partial class WorkspaceCanvasItemViewModel : ObservableObject, IDisposabl
         var quarter = QuarterBitmap;
         QuarterBitmap = null;
         quarter?.Dispose();
+
     }
 }

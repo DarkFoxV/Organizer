@@ -10,5 +10,20 @@ public enum TagColor
     Pink,
     Indigo,
     Teal,
-    Gray
+    Gray,
+    Yellow,
+    Lime,
+    Emerald,
+    Cyan,
+    Sky,
+    Violet,
+    Fuchsia,
+    Rose,
+    Amber,
+    Slate,
+    Zinc,
+    Stone,
+    Brown,
+    Coral,
+    Mint
 }

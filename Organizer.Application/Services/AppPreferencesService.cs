@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Organize.Organizer.Core.Enums;
 
 namespace Organizer.Application.Services;
 
@@ -210,6 +211,7 @@ public sealed class AppPreferencesService
             SetBrush(resources, "AccentSoftBrush", "#EEF4FF");
             SetBrush(resources, "AccentSoftTextBrush", "#2563EB");
             SetImageBadgePalette(resources, light, gray);
+            SetTagPalette(resources, light);
             SetSearchPalette(resources, light, gray);
             ApplyWorkspacePalette(resources, workspaceBackground, light, gray);
             SetBrush(resources, "OverlayBrush", "#660f172a");
@@ -242,6 +244,7 @@ public sealed class AppPreferencesService
             SetBrush(resources, "AccentSoftBrush", "#2e2e32");
             SetBrush(resources, "AccentSoftTextBrush", "#c8c8ce");
             SetImageBadgePalette(resources, light, gray);
+            SetTagPalette(resources, light);
             SetSearchPalette(resources, light, gray);
             ApplyWorkspacePalette(resources, workspaceBackground, light, gray);
             SetBrush(resources, "OverlayBrush", "#99000000");
@@ -272,6 +275,7 @@ public sealed class AppPreferencesService
         SetBrush(resources, "AccentSoftBrush", "#10151e");
         SetBrush(resources, "AccentSoftTextBrush", "#c8d0df");
         SetImageBadgePalette(resources, light, gray);
+        SetTagPalette(resources, light);
         SetSearchPalette(resources, light, gray);
         ApplyWorkspacePalette(resources, workspaceBackground, light, gray);
         SetBrush(resources, "OverlayBrush", "#99000000");
@@ -339,12 +343,26 @@ public sealed class AppPreferencesService
         SetBrush(resources, "ImageBadgeTextBrush", "#dde3ed");
     }
 
+    private static void SetTagPalette(IResourceDictionary resources, bool light)
+    {
+        foreach (var (color, entry) in TagColorPalette.All)
+        {
+            var name = Enum.GetName(color) ?? nameof(TagColor.Blue);
+            SetBrush(resources, $"Tag{name}SelectedBrush", entry.SelectedBackground);
+            SetBrush(resources, $"Tag{name}DimBackgroundBrush", light ? entry.LightDimBackground : entry.DarkDimBackground);
+            SetBrush(resources, $"Tag{name}DimForegroundBrush", light ? entry.LightDimForeground : entry.DarkDimForeground);
+            SetBrush(resources, $"Tag{name}DimBorderBrush", light ? entry.LightDimBorder : entry.DarkDimBackground);
+        }
+    }
+
     private static void ApplyWorkspacePalette(
         IResourceDictionary resources,
         WorkspaceBackgroundPreference workspaceBackground,
         bool light,
         bool gray)
     {
+        workspaceBackground = ResolveWorkspaceBackground(workspaceBackground, light, gray);
+
         switch (workspaceBackground)
         {
             case WorkspaceBackgroundPreference.Light:
@@ -363,6 +381,30 @@ public sealed class AppPreferencesService
                 SetBrush(resources, "WorkspaceBoardBorderBrush", "#1a2030");
                 return;
         }
+    }
+
+    public WorkspaceBackgroundPreference ResolveWorkspaceBackground()
+    {
+        var light = _preferences.Theme == AppThemePreference.Light;
+        var gray = _preferences.Theme == AppThemePreference.Gray;
+        return ResolveWorkspaceBackground(_preferences.WorkspaceBackground, light, gray);
+    }
+
+    private static WorkspaceBackgroundPreference ResolveWorkspaceBackground(
+        WorkspaceBackgroundPreference workspaceBackground,
+        bool light,
+        bool gray)
+    {
+        if (workspaceBackground != WorkspaceBackgroundPreference.Theme)
+            return workspaceBackground;
+
+        if (light)
+            return WorkspaceBackgroundPreference.Light;
+
+        if (gray)
+            return WorkspaceBackgroundPreference.Gray;
+
+        return WorkspaceBackgroundPreference.Dark;
     }
 
     private static void SetBrush(IResourceDictionary resources, string key, string color)
@@ -452,7 +494,8 @@ public enum WorkspaceBackgroundPreference
 {
     Dark,
     Gray,
-    Light
+    Light,
+    Theme
 }
 
 public enum HomeWorkspaceViewPreference

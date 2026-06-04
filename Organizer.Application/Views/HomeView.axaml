@@ -79,6 +79,11 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
+        <Style Selector="Border.workspace-card:pointerover Border.workspace-card-surface">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+        </Style>
+
         <Style Selector="Button.card-action">
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="8" />
@@ -275,7 +280,8 @@
                                         <Border Classes="workspace-card"
                                                 Margin="0 0 16 16"
                                                 PointerReleased="OnWorkspaceCardClick">
-                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                            <Border Classes="workspace-card-surface"
+                                                    Background="{DynamicResource SurfaceBrush}"
                                                     BorderBrush="{DynamicResource FloatingBorderBrush}"
                                                     BorderThickness="1"
                                                     CornerRadius="13"
@@ -352,7 +358,8 @@
                                     <DataTemplate x:DataType="vm:HomeWorkspaceItemViewModel">
                                         <Border Classes="workspace-card"
                                                 PointerReleased="OnWorkspaceCardClick">
-                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                            <Border Classes="workspace-card-surface"
+                                                    Background="{DynamicResource SurfaceBrush}"
                                                     BorderBrush="{DynamicResource FloatingBorderBrush}"
                                                     BorderThickness="1"
                                                     CornerRadius="13"

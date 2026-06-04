@@ -1,4 +1,5 @@
 using System;
+using Organizer.Application.Services;
 using Organizer.Application.Views;
 using Organizer.Application.ViewModels;
 
@@ -23,10 +24,15 @@ public class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var vm = Services.GetRequiredService<MainWindowViewModel>();
+            var startupService = Services.GetRequiredService<IWorkspaceStartupService>();
+            var mainWindow = new MainWindow(vm);
 
-            desktop.MainWindow = new MainWindow(vm);
+            desktop.MainWindow = mainWindow;
+            _ = startupService.ApplyAsync(desktop.Args, mainWindow, vm);
         }
-
+        #if DEBUG
+                this.AttachDeveloperTools();
+        #endif
         base.OnFrameworkInitializationCompleted();
     }
 }

@@ -2,6 +2,7 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Organize.Organizer.Core.Enums;
+using Organizer.Application.Services;
 
 namespace Organizer.Application.ViewModels.Components;
 
@@ -62,19 +63,7 @@ public partial class TagRowViewModel : ObservableObject
 
     // ── Cor visual ────────────────────────────────────────────────────────────
 
-    public string ColorHex => DisplayColor switch
-    {
-        TagColor.Red => "#dc2626",
-        TagColor.Green => "#16a34a",
-        TagColor.Blue => "#3b82f6",
-        TagColor.Orange => "#d97706",
-        TagColor.Purple => "#9333ea",
-        TagColor.Pink => "#db2777",
-        TagColor.Indigo => "#4f46e5",
-        TagColor.Teal => "#0d9488",
-        TagColor.Gray => "#6b7280",
-        _ => "#3b82f6"
-    };
+    public string ColorHex => TagColorPalette.Get(DisplayColor).SelectedBackground;
 
     // ── Eventos ───────────────────────────────────────────────────────────────
 

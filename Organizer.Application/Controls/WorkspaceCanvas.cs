@@ -9,7 +9,10 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Rendering;
+using Avalonia.Rendering.SceneGraph;
+using Avalonia.Skia;
 using Organizer.Application.ViewModels;
+using SkiaSharp;
 
 namespace Organizer.Application.Controls;
 
@@ -88,6 +91,15 @@ public class WorkspaceCanvas : Control, ICustomHitTest
         set => SetValue(ItemsProperty, value);
     }
 
+    public static readonly StyledProperty<bool> IsGrayscaleProperty =
+        AvaloniaProperty.Register<WorkspaceCanvas, bool>(nameof(IsGrayscale));
+
+    public bool IsGrayscale
+    {
+        get => GetValue(IsGrayscaleProperty);
+        set => SetValue(IsGrayscaleProperty, value);
+    }
+
     public void SetViewportBounds(Rect viewportBounds)
     {
         _viewportBounds = viewportBounds;
@@ -126,6 +138,8 @@ public class WorkspaceCanvas : Control, ICustomHitTest
 
         if (change.Property == ItemsProperty)
             RefreshItemSubscriptions();
+        else if (change.Property == IsGrayscaleProperty)
+            InvalidateVisual();
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -163,7 +177,7 @@ public class WorkspaceCanvas : Control, ICustomHitTest
             if (item.IsMissingOrCorrupted)
                 DrawMissingItem(context, item, itemRect);
             else if (GetBitmap(item) is { } bitmap)
-                context.DrawImage(bitmap, itemRect);
+                DrawImage(context, bitmap, itemRect);
 
             if (item.IsSelected)
                 DrawSelection(context, itemRect);
@@ -198,6 +212,17 @@ public class WorkspaceCanvas : Control, ICustomHitTest
             return item.HalfBitmap ?? item.QuarterBitmap ?? item.ThumbnailBitmap ?? item.Bitmap;
 
         return item.Bitmap;
+    }
+
+    private void DrawImage(DrawingContext context, Bitmap bitmap, Rect itemRect)
+    {
+        if (!IsGrayscale)
+        {
+            context.DrawImage(bitmap, itemRect);
+            return;
+        }
+
+        context.Custom(new GrayscaleImageDrawOperation(bitmap, itemRect));
     }
 
     private static void DrawSelection(DrawingContext context, Rect itemRect)
@@ -876,6 +901,66 @@ public class WorkspaceCanvas : Control, ICustomHitTest
             or nameof(WorkspaceCanvasItemViewModel.QuarterBitmap))
         {
             InvalidateVisual();
+        }
+    }
+
+    private sealed class GrayscaleImageDrawOperation : ICustomDrawOperation
+    {
+        private static readonly float[] GrayscaleMatrix =
+        [
+            0.299f, 0.587f, 0.114f, 0, 0,
+            0.299f, 0.587f, 0.114f, 0, 0,
+            0.299f, 0.587f, 0.114f, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        private readonly Bitmap _bitmap;
+
+        public GrayscaleImageDrawOperation(Bitmap bitmap, Rect bounds)
+        {
+            _bitmap = bitmap;
+            Bounds = bounds;
+        }
+
+        public Rect Bounds { get; }
+
+        public bool HitTest(Point p) => Bounds.Contains(p);
+
+        public bool Equals(ICustomDrawOperation? other)
+        {
+            return other is GrayscaleImageDrawOperation operation
+                && ReferenceEquals(_bitmap, operation._bitmap)
+                && Bounds == operation.Bounds;
+        }
+
+        public void Render(ImmediateDrawingContext context)
+        {
+            if (context.TryGetFeature(typeof(ISkiaSharpApiLeaseFeature)) is not ISkiaSharpApiLeaseFeature feature)
+            {
+                context.DrawBitmap(_bitmap, Bounds);
+                return;
+            }
+
+            using var colorFilter = SKColorFilter.CreateColorMatrix(GrayscaleMatrix);
+            using var paint = new SKPaint { ColorFilter = colorFilter };
+
+            var rect = new SKRect(
+                (float)Bounds.X,
+                (float)Bounds.Y,
+                (float)Bounds.Right,
+                (float)Bounds.Bottom);
+
+            using (var lease = feature.Lease())
+                lease.SkCanvas.SaveLayer(rect, paint);
+
+            context.DrawBitmap(_bitmap, Bounds);
+
+            using (var lease = feature.Lease())
+                lease.SkCanvas.Restore();
+        }
+
+        public void Dispose()
+        {
         }
     }
 

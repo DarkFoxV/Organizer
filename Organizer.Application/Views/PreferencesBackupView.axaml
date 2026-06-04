@@ -1,0 +1,280 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="Organizer.Organizer.Application.Views.PreferencesBackupView"
+             x:DataType="vm:PreferencesViewModel">
+
+<StackPanel IsVisible="{Binding IsDataBackupSectionVisible}"
+                            HorizontalAlignment="Stretch"
+                            Spacing="12">
+                    <Border Classes="section-card">
+                        <StackPanel>
+                            <Border Classes="section-head">
+                                <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="10">
+                                    <ic:FluentIcon Icon="Database"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   VerticalAlignment="Top" />
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.Database}" />
+                                        <TextBlock Classes="section-subtitle"
+                                                   Text="{DynamicResource Loc.Backup.DatabaseDescription}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Grid ColumnDefinitions="*,*,*">
+                                <Border Classes="backup-stat-cell">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="backup-stat-label" Text="{DynamicResource Loc.Backup.DatabaseSize}" />
+                                        <TextBlock Classes="backup-stat-value" Text="{Binding DatabaseSize}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="1"
+                                        Classes="backup-stat-cell">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="backup-stat-label" Text="{DynamicResource Loc.Backup.LastLocalBackup}" />
+                                        <TextBlock Classes="backup-stat-value" Text="{Binding LastLocalBackup}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2"
+                                        Classes="backup-stat-cell last">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="backup-stat-label" Text="{DynamicResource Loc.Backup.CurrentLocation}" />
+                                        <TextBlock Classes="backup-stat-value"
+                                                   FontFamily="monospace"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                   Text="{Binding DatabaseLocation}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <Border Classes="preference-row last">
+                                <Grid Classes="backup-actions-grid"
+                                      ColumnDefinitions="*,*"
+                                      RowDefinitions="Auto,Auto"
+                                      ColumnSpacing="8"
+                                      RowSpacing="8">
+                                    <Button Classes="backup-action primary"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnCreateLocalBackupClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="ArrowDownload"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.CreateLocalBackup}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.CreateLocalBackupDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Column="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnRestoreFromBackupClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="ArrowUpload"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.RestoreFromBackup}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.RestoreFromBackupDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Row="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnExportDatabaseClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="ArrowDownload"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.ExportDatabase}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.ExportDatabaseDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnImportDatabaseClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="ArrowUpload"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.ImportDatabase}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.ImportDatabaseDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="section-card">
+                        <StackPanel>
+                            <Border Classes="section-head">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Classes="section-heading" Orientation="Horizontal" Spacing="10">
+                                        <ic:FluentIcon Icon="Cloud"
+                                                       IconVariant="Regular"
+                                                       IconSize="Size16"
+                                                       VerticalAlignment="Top" />
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Classes="section-title" Text="{DynamicResource Loc.Backup.CloudBackup}" />
+                                            <TextBlock Classes="section-subtitle"
+                                                       Text="{DynamicResource Loc.Backup.CloudBackupDescription}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Spacing="6"
+                                                VerticalAlignment="Center">
+                                        <Border Classes="cloud-status-dot"
+                                                Classes.connected="{Binding IsCloudConnected}"
+                                                Classes.disconnected="{Binding IsCloudDisconnected}" />
+                                        <TextBlock Text="{Binding CloudProviderStatus}"
+                                                   Classes="cloud-status-text"
+                                                   Classes.connected="{Binding IsCloudConnected}"
+                                                   Classes.disconnected="{Binding IsCloudDisconnected}"
+                                                   FontSize="11"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <StackPanel>
+                                <Border Classes="backup-field-row">
+                                    <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                                        <TextBlock Classes="backup-field-label" Text="{DynamicResource Loc.Backup.Provider}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Classes="info-value"
+                                                   Text="{Binding CloudProviderName}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="backup-field-row">
+                                    <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                                        <TextBlock Classes="backup-field-label" Text="{DynamicResource Loc.Backup.LastCloudBackup}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Classes="info-value"
+                                                   Text="{Binding LastCloudBackup}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="backup-field-row">
+                                    <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                                        <TextBlock Classes="backup-field-label"
+                                                   Text="{DynamicResource Loc.Backup.GoogleClientId}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBox Grid.Column="1"
+                                                 Classes="field"
+                                                 Text="{Binding GoogleDriveClientId, Mode=TwoWay}"
+                                                 PlaceholderText="{DynamicResource Loc.Backup.GoogleClientIdWatermark}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="backup-field-row last">
+                                    <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                                        <TextBlock Classes="backup-field-label"
+                                                   Text="{DynamicResource Loc.Backup.GoogleClientSecret}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBox Grid.Column="1"
+                                                 Classes="field"
+                                                 Text="{Binding GoogleDriveClientSecret, Mode=TwoWay}"
+                                                 PlaceholderText="{DynamicResource Loc.Backup.GoogleClientSecretWatermark}"
+                                                 PasswordChar="*" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+
+                            <Border Classes="preference-row last">
+                                <Grid Classes="backup-actions-grid"
+                                      ColumnDefinitions="*,*"
+                                      RowDefinitions="Auto,Auto"
+                                      ColumnSpacing="8"
+                                      RowSpacing="8">
+                                    <Button Classes="backup-action primary"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnBackupToGoogleDriveClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="Cloud"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.BackupToGoogleDrive}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.BackupToGoogleDriveDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Column="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnRestoreFromGoogleDriveClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="Cloud"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.RestoreFromGoogleDrive}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.RestoreFromGoogleDriveDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action"
+                                            Grid.Row="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnConnectGoogleDriveClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="Cloud"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.ConnectGoogleDrive}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.ConnectGoogleDriveDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Classes="backup-action danger"
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            IsEnabled="{Binding IsNotBusy}"
+                                            Click="OnDisconnectGoogleDriveClick">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
+                                            <ic:FluentIcon Icon="Delete"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Spacing="1">
+                                                <TextBlock Classes="backup-action-title" Text="{DynamicResource Loc.Backup.DisconnectGoogleDrive}" />
+                                                <TextBlock Classes="backup-action-desc" Text="{DynamicResource Loc.Backup.DisconnectGoogleDriveDescription}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+</UserControl>

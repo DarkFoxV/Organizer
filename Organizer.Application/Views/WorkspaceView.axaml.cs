@@ -32,6 +32,7 @@ public partial class WorkspaceView : UserControl
     private Point _lastPointerPositionInViewport;
     private bool _hasLastPointerPosition;
     private bool _isVisibleItemsUpdateQueued;
+    private bool _hasPendingSavedCameraState;
     private double _zoom = 1.0;
     private bool _isSavingWorkspace;
     private bool _isClosingWorkspace;
@@ -78,7 +79,7 @@ public partial class WorkspaceView : UserControl
             SubscribeToViewModel();
             Viewport.Focus();
             UpdateZoomLabel();
-            TryInitializeCamera();
+            QueueApplyWorkspaceCameraState();
         };
 
         DetachedFromVisualTree += (_, _) =>
@@ -165,6 +166,18 @@ public partial class WorkspaceView : UserControl
             return;
         }
 
+        if (e.Key == Key.A)
+        {
+            e.Handled = VM.SelectAllItems();
+            return;
+        }
+
+        if (e.Key == Key.G && e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+        {
+            e.Handled = VM.ToggleWorkspaceGrayscale();
+            return;
+        }
+
         if (e.Key == Key.S)
         {
             await SaveWorkspaceFromShortcutAsync();
@@ -211,6 +224,7 @@ public partial class WorkspaceView : UserControl
         _zoomQualityTimer.Start();
 
         ApplyZoomKeepingViewportCenter(newZoom);
+        PersistCurrentCameraState(markDirty: false);
         e.Handled = true;
     }
 
@@ -253,6 +267,7 @@ public partial class WorkspaceView : UserControl
         WorkspaceSurface.SetUseLowResBitmaps(false);
         RenderOptions.SetBitmapInterpolationMode(BoardRoot, BitmapInterpolationMode.HighQuality);
         QueueVisibleItemsUpdate();
+        PersistCurrentCameraState(markDirty: false);
         e.Handled = true;
     }
 
@@ -318,31 +333,31 @@ public partial class WorkspaceView : UserControl
 
     private async Task LoadWorkspaceFileAsync(IStorageFile file)
     {
-        var loaded = false;
-
-        try
+        if (await VM.OpenWorkspaceFileAsync(file))
         {
-            await using var stream = await file.OpenReadAsync();
-            loaded = await VM.LoadAsync(stream);
-        }
-        catch (Exception ex)
-        {
-            VM.ErrorMessage = $"Erro ao abrir workspace: {ex.Message}";
-        }
-
-        if (loaded)
-        {
-            VM.SetWorkspaceFile(file);
-            await VM.RememberWorkspaceFileAsync(file);
+            QueueApplyWorkspaceCameraState();
             return;
         }
-
-        file.Dispose();
     }
 
     private async void OnSaveWorkspace(object? sender, RoutedEventArgs e)
     {
         await SaveWorkspaceFromShortcutAsync();
+    }
+
+    private void OnArrangeSelectedImagesBySize(object? sender, RoutedEventArgs e)
+    {
+        VM.ArrangeSelectedItemsBySize();
+    }
+
+    private void OnToggleSelectedImagesGrayscale(object? sender, RoutedEventArgs e)
+    {
+        VM.ToggleWorkspaceGrayscale();
+    }
+
+    private void OnSelectAllWorkspaceImages(object? sender, RoutedEventArgs e)
+    {
+        VM.SelectAllItems();
     }
 
     private async void OnCloseWorkspace(object? sender, RoutedEventArgs e)
@@ -354,6 +369,7 @@ public partial class WorkspaceView : UserControl
     {
         if (VM.HasWorkspaceFile)
         {
+            PersistCurrentCameraState(markDirty: false, markCameraDirty: false);
             VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
             return await VM.SaveToCurrentFileAsync();
         }
@@ -364,6 +380,7 @@ public partial class WorkspaceView : UserControl
         if (file is null)
             return false;
 
+        PersistCurrentCameraState(markDirty: false, markCameraDirty: false);
         VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
         return await VM.SaveToFileAsync(file);
     }
@@ -379,6 +396,7 @@ public partial class WorkspaceView : UserControl
         if (file is null)
             return;
 
+        PersistCurrentCameraState(markDirty: false, markCameraDirty: false);
         VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
         await VM.SaveToFileAsync(file, showToast: true);
     }
@@ -390,6 +408,9 @@ public partial class WorkspaceView : UserControl
 
         if (!VM.HasUnsavedChanges)
         {
+            if (VM.HasWorkspaceFile && VM.HasUnsavedCameraChanges)
+                await SaveCameraStateToCurrentFileAsync();
+
             VM.CloseWorkspace();
             _autosaveTimer.Stop();
             return;
@@ -429,8 +450,32 @@ public partial class WorkspaceView : UserControl
         }
     }
 
+    private async Task SaveCameraStateToCurrentFileAsync()
+    {
+        if (!VM.HasWorkspaceFile || _isSavingWorkspace)
+            return;
+
+        try
+        {
+            _isSavingWorkspace = true;
+            PersistCurrentCameraState(markDirty: false, markCameraDirty: false);
+            VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
+            await VM.SaveToCurrentFileAsync();
+        }
+        finally
+        {
+            _isSavingWorkspace = false;
+        }
+    }
+
     private void OnWorkspaceChanged()
     {
+        if (!VM.HasImages)
+        {
+            _hasInitializedCamera = false;
+            QueueApplyWorkspaceCameraState();
+        }
+
         QueueVisibleItemsUpdate();
 
         if (!VM.HasWorkspaceFile || _isSavingWorkspace || !VM.HasUnsavedChanges)
@@ -450,6 +495,7 @@ public partial class WorkspaceView : UserControl
         try
         {
             _isSavingWorkspace = true;
+            PersistCurrentCameraState(markDirty: false, markCameraDirty: false);
             VM.SetWorkspaceThumbnail(VM.CreateWorkspaceThumbnail());
             await VM.SaveToCurrentFileAsync();
         }
@@ -479,6 +525,7 @@ public partial class WorkspaceView : UserControl
     {
         if (e.Property == BoundsProperty)
         {
+            TryApplyWorkspaceCameraState();
             TryInitializeCamera();
             QueueVisibleItemsUpdate();
         }
@@ -488,6 +535,7 @@ public partial class WorkspaceView : UserControl
     {
         if (e.Property == BoundsProperty)
         {
+            TryApplyWorkspaceCameraState();
             TryInitializeCamera();
             QueueVisibleItemsUpdate();
         }
@@ -514,8 +562,13 @@ public partial class WorkspaceView : UserControl
     }
     private void TryInitializeCamera()
     {
-        if (_hasInitializedCamera || Viewport.Bounds.Width <= 0 || Viewport.Bounds.Height <= 0)
+        if (_hasPendingSavedCameraState
+            || _hasInitializedCamera
+            || Viewport.Bounds.Width <= 0
+            || Viewport.Bounds.Height <= 0)
+        {
             return;
+        }
 
         if (BoardRoot.Bounds.Width <= 0 || BoardRoot.Bounds.Height <= 0)
             return;
@@ -524,6 +577,7 @@ public partial class WorkspaceView : UserControl
         _translateTransform.X = (Viewport.Bounds.Width - BoardRoot.Bounds.Width * _zoom) / 2;
         _translateTransform.Y = (Viewport.Bounds.Height - BoardRoot.Bounds.Height * _zoom) / 2;
         _hasInitializedCamera = true;
+        PersistCurrentCameraState(markDirty: false, markCameraDirty: false);
         QueueVisibleItemsUpdate();
     }
 
@@ -576,6 +630,55 @@ public partial class WorkspaceView : UserControl
         _translateTransform.X = viewportCenter.X - boardX * newZoom;
         _translateTransform.Y = viewportCenter.Y - boardY * newZoom;
         UpdateWorkspaceSurfaceViewport();
+    }
+
+    private void QueueApplyWorkspaceCameraState()
+    {
+        _hasPendingSavedCameraState = true;
+        Dispatcher.UIThread.Post(TryApplyWorkspaceCameraState, DispatcherPriority.Render);
+    }
+
+    private void TryApplyWorkspaceCameraState()
+    {
+        if (!_hasPendingSavedCameraState)
+            return;
+
+        if (Viewport.Bounds.Width <= 0 || Viewport.Bounds.Height <= 0)
+            return;
+
+        if (VM.CameraState is { } camera)
+        {
+            SetZoom(camera.Zoom);
+            _translateTransform.X = (Viewport.Bounds.Width / 2) - ((camera.CenterX - VM.BoardStartX) * _zoom);
+            _translateTransform.Y = (Viewport.Bounds.Height / 2) - ((camera.CenterY - VM.BoardStartY) * _zoom);
+            _hasInitializedCamera = true;
+            _hasPendingSavedCameraState = false;
+            UpdateWorkspaceSurfaceViewport();
+            return;
+        }
+
+        if (BoardRoot.Bounds.Width <= 0 || BoardRoot.Bounds.Height <= 0)
+            return;
+
+        SetZoom(VM.InitialZoom);
+        _translateTransform.X = (Viewport.Bounds.Width - BoardRoot.Bounds.Width * _zoom) / 2;
+        _translateTransform.Y = (Viewport.Bounds.Height - BoardRoot.Bounds.Height * _zoom) / 2;
+        _hasInitializedCamera = true;
+        _hasPendingSavedCameraState = false;
+        PersistCurrentCameraState(markDirty: false, markCameraDirty: false);
+        UpdateWorkspaceSurfaceViewport();
+    }
+
+    private void PersistCurrentCameraState(bool markDirty, bool markCameraDirty = true)
+    {
+        if (Viewport.Bounds.Width <= 0 || Viewport.Bounds.Height <= 0)
+            return;
+
+        var center = ViewportPointToWorldPoint(new Point(
+            Viewport.Bounds.Width / 2,
+            Viewport.Bounds.Height / 2));
+
+        VM.UpdateCameraState(_zoom, center, markDirty, markCameraDirty);
     }
 
     private void SetZoom(double zoom)

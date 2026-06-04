@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,6 +17,7 @@ public partial class ImageOrderListViewModel : ObservableObject, System.IDisposa
     private bool _isDisposed;
 
     [ObservableProperty] private bool _isEmpty = true;
+    [ObservableProperty] private ObservableCollection<ImageOrderItemViewModel> _items = [];
 
     public ImageOrderListViewModel(AppPreferencesService preferencesService)
     {
@@ -22,8 +25,6 @@ public partial class ImageOrderListViewModel : ObservableObject, System.IDisposa
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
         Items.CollectionChanged += OnItemsChanged;
     }
-
-    public ObservableCollection<ImageOrderItemViewModel> Items { get; } = [];
 
     public string CountLabel => _preferencesService.T("Loc.ImageOrder.Count", Items.Count);
 
@@ -54,10 +55,92 @@ public partial class ImageOrderListViewModel : ObservableObject, System.IDisposa
 
     private async Task AddImageAsync(ImageOrderItemViewModel vm)
     {
+        if (!await PrepareImageAsync(vm))
+            return;
+
         if (_isDisposed)
         {
             vm.Dispose();
             return;
+        }
+
+        Items.Add(vm);
+    }
+
+    public async Task AddImagesAsync(
+        IEnumerable<IStorageFile> files,
+        Action<IStorageFile>? ownershipTransferred = null)
+    {
+        var loadedItems = new List<ImageOrderItemViewModel>();
+
+        try
+        {
+            foreach (var file in files)
+            {
+                if (_isDisposed)
+                    break;
+
+                var vm = new ImageOrderItemViewModel
+                {
+                    Filename = file.Name,
+                    MimeType = DetectMime(file.Name),
+                    SourceFile = file
+                };
+
+                ownershipTransferred?.Invoke(file);
+
+                if (await PrepareImageAsync(vm))
+                    loadedItems.Add(vm);
+            }
+
+            AddLoadedItems(loadedItems);
+            loadedItems.Clear();
+        }
+        finally
+        {
+            foreach (var item in loadedItems)
+                item.Dispose();
+        }
+    }
+
+    public async Task AddImagesAsync(IEnumerable<(string Filename, string MimeType, byte[] Data)> images)
+    {
+        var loadedItems = new List<ImageOrderItemViewModel>();
+
+        try
+        {
+            foreach (var image in images)
+            {
+                if (_isDisposed)
+                    break;
+
+                var vm = new ImageOrderItemViewModel
+                {
+                    Filename = image.Filename,
+                    MimeType = image.MimeType,
+                    SourceData = image.Data
+                };
+
+                if (await PrepareImageAsync(vm))
+                    loadedItems.Add(vm);
+            }
+
+            AddLoadedItems(loadedItems);
+            loadedItems.Clear();
+        }
+        finally
+        {
+            foreach (var item in loadedItems)
+                item.Dispose();
+        }
+    }
+
+    private async Task<bool> PrepareImageAsync(ImageOrderItemViewModel vm)
+    {
+        if (_isDisposed)
+        {
+            vm.Dispose();
+            return false;
         }
 
         vm.RemoveRequested += Remove;
@@ -68,17 +151,25 @@ public partial class ImageOrderListViewModel : ObservableObject, System.IDisposa
         }
         catch
         {
+            vm.RemoveRequested -= Remove;
             vm.Dispose();
             throw;
         }
 
-        if (_isDisposed)
-        {
-            vm.Dispose();
-            return;
-        }
+        if (!_isDisposed)
+            return true;
 
-        Items.Add(vm);
+        vm.RemoveRequested -= Remove;
+        vm.Dispose();
+        return false;
+    }
+
+    private void AddLoadedItems(List<ImageOrderItemViewModel> loadedItems)
+    {
+        if (_isDisposed || loadedItems.Count == 0)
+            return;
+
+        ReplaceItems(Items.Concat(loadedItems));
     }
 
     public void Remove(ImageOrderItemViewModel item)
@@ -115,16 +206,33 @@ public partial class ImageOrderListViewModel : ObservableObject, System.IDisposa
         OnPropertyChanged(nameof(CountLabel));
     }
 
-    private void OnItemsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void OnItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         IsEmpty = Items.Count == 0;
         OnPropertyChanged(nameof(CountLabel));
     }
 
+    partial void OnItemsChanging(ObservableCollection<ImageOrderItemViewModel> value)
+    {
+        value.CollectionChanged -= OnItemsChanged;
+    }
+
+    partial void OnItemsChanged(ObservableCollection<ImageOrderItemViewModel> value)
+    {
+        value.CollectionChanged += OnItemsChanged;
+        IsEmpty = value.Count == 0;
+        OnPropertyChanged(nameof(CountLabel));
+    }
+
+    private void ReplaceItems(IEnumerable<ImageOrderItemViewModel> items)
+    {
+        Items = new ObservableCollection<ImageOrderItemViewModel>(items);
+    }
+
     public void ClearItems()
     {
         var items = Items.ToList();
-        Items.Clear();
+        ReplaceItems([]);
 
         foreach (var item in items)
         {

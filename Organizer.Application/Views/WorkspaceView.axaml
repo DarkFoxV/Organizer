@@ -40,13 +40,22 @@
           Focusable="True">
         <Grid.ContextMenu>
             <ContextMenu>
-                <MenuItem Header="Abrir"
+                <MenuItem Header="{DynamicResource Loc.Workspace.Context.Open}"
                           Click="OnOpenWorkspace" />
-                <MenuItem Header="Salvar"
+                <MenuItem Header="{DynamicResource Loc.Workspace.Context.Save}"
                           IsEnabled="{Binding HasImages}"
                           Click="OnSaveWorkspace" />
+                <MenuItem Header="{DynamicResource Loc.Workspace.Context.Image}"
+                          IsEnabled="{Binding HasImages}">
+                    <MenuItem Header="{DynamicResource Loc.Workspace.Context.ToggleGrayscale}"
+                              Click="OnToggleSelectedImagesGrayscale" />
+                    <MenuItem Header="{DynamicResource Loc.Workspace.Context.ArrangeBySize}"
+                              Click="OnArrangeSelectedImagesBySize" />
+                    <MenuItem Header="{DynamicResource Loc.Workspace.Context.SelectAll}"
+                              Click="OnSelectAllWorkspaceImages" />
+                </MenuItem>
                 <Separator />
-                <MenuItem Header="Fechar workspace"
+                <MenuItem Header="{DynamicResource Loc.Workspace.Context.Close}"
                           IsEnabled="{Binding HasImages}"
                           Click="OnCloseWorkspace" />
             </ContextMenu>
@@ -65,6 +74,7 @@
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Stretch"
                                       Focusable="True"
+                                      IsGrayscale="{Binding IsGrayscale}"
                                       Items="{Binding Items}" />
         </Border>
 

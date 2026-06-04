@@ -562,6 +562,7 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         WorkspacePasteOptions.Add(new(_preferencesService.T("Loc.Preferences.Paste.Cascade"), WorkspacePastePreference.Cascade));
 
         WorkspaceBackgroundOptions.Clear();
+        WorkspaceBackgroundOptions.Add(new(_preferencesService.T("Loc.Preferences.Background.Theme"), WorkspaceBackgroundPreference.Theme));
         WorkspaceBackgroundOptions.Add(new(_preferencesService.T("Loc.Preferences.Background.Light"), WorkspaceBackgroundPreference.Light));
         WorkspaceBackgroundOptions.Add(new(_preferencesService.T("Loc.Preferences.Background.Dark"), WorkspaceBackgroundPreference.Dark));
         WorkspaceBackgroundOptions.Add(new(_preferencesService.T("Loc.Preferences.Background.Gray"), WorkspaceBackgroundPreference.Gray));

@@ -34,6 +34,8 @@ internal class Program
         services.AddSingleton<IAppLogger, TraceAppLogger>();
         services.AddSingleton<ITokenStorage, PreferencesTokenStorage>();
         services.AddSingleton<WorkspaceArchiveService>();
+        services.AddSingleton<IStartupFileService, StartupFileService>();
+        services.AddSingleton<IWorkspaceStartupService, WorkspaceStartupService>();
         services.AddSingleton<HomeWorkspaceCacheService>();
         services.AddSingleton<DatabaseFileService>();
         services.AddSingleton<BackupService>();
@@ -100,9 +102,10 @@ internal class Program
     private static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
-#if DEBUG
-            .WithDeveloperTools()
-#endif
             .WithInterFont()
-            .LogToTrace();
+            .LogToTrace()
+            .With(new SkiaOptions
+            {
+                MaxGpuResourceSizeBytes = 512 * 1024 * 1024
+            });
 }

@@ -29,7 +29,9 @@ public sealed class WorkspaceArchiveService
         string path,
         IReadOnlyList<WorkspaceArchiveItem> items,
         string name,
-        byte[]? thumbnailData)
+        byte[]? thumbnailData,
+        WorkspaceArchiveCamera? camera = null,
+        bool isGrayscale = false)
     {
         if (string.IsNullOrWhiteSpace(path))
             throw new InvalidDataException("Workspace path is empty.");
@@ -46,7 +48,7 @@ public sealed class WorkspaceArchiveService
         try
         {
             await using (var stream = File.Create(tmpPath))
-                await SaveAsync(stream, items, name, thumbnailData);
+                await SaveAsync(stream, items, name, thumbnailData, camera, isGrayscale);
 
             await ValidateStrictAsync(tmpPath);
 
@@ -77,7 +79,9 @@ public sealed class WorkspaceArchiveService
         Stream output,
         IReadOnlyList<WorkspaceArchiveItem> items,
         string name,
-        byte[]? thumbnailData)
+        byte[]? thumbnailData,
+        WorkspaceArchiveCamera? camera = null,
+        bool isGrayscale = false)
     {
         if (output.CanSeek)
             output.SetLength(0);
@@ -127,6 +131,8 @@ public sealed class WorkspaceArchiveService
             Name = string.IsNullOrWhiteSpace(name) ? "Workspace" : name.Trim(),
             CreatedAt = now,
             UpdatedAt = now,
+            Camera = NormalizeCamera(camera),
+            IsGrayscale = isGrayscale,
             Items = manifestItems
         };
 
@@ -136,6 +142,11 @@ public sealed class WorkspaceArchiveService
     }
 
     public async Task<IReadOnlyList<WorkspaceArchiveItem>> LoadAsync(Stream input)
+    {
+        return (await LoadWorkspaceAsync(input)).Items;
+    }
+
+    public async Task<WorkspaceArchiveDocument> LoadWorkspaceAsync(Stream input)
     {
         using var archive = new ZipArchive(input, ZipArchiveMode.Read, leaveOpen: true);
         var manifest = await ReadManifestAsync(archive);
@@ -147,7 +158,10 @@ public sealed class WorkspaceArchiveService
         foreach (var item in manifest.Items)
             items.Add(await ReadItemAsync(archive, item, strict: false));
 
-        return items;
+        return new WorkspaceArchiveDocument(
+            items,
+            NormalizeCamera(manifest.Camera),
+            manifest.IsGrayscale || manifest.Items.Any(item => item.IsGrayscale));
     }
 
     public async Task<WorkspaceArchiveSummary> ReadSummaryAsync(string path)
@@ -266,6 +280,27 @@ public sealed class WorkspaceArchiveService
         }
     }
 
+    private static WorkspaceArchiveCamera? NormalizeCamera(WorkspaceArchiveCamera? camera)
+    {
+        if (camera is null)
+            return null;
+
+        if (!IsFinite(camera.Zoom)
+            || !IsFinite(camera.CenterX)
+            || !IsFinite(camera.CenterY)
+            || camera.Zoom <= 0)
+        {
+            return null;
+        }
+
+        return camera;
+    }
+
+    private static bool IsFinite(double value)
+    {
+        return !double.IsNaN(value) && !double.IsInfinity(value);
+    }
+
     private static void ValidateAssetPath(string path)
     {
         if (!path.StartsWith(AssetsPrefix, StringComparison.Ordinal)
@@ -349,6 +384,8 @@ public sealed class WorkspaceArchiveService
         public string Name { get; set; } = string.Empty;
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+        public WorkspaceArchiveCamera? Camera { get; set; }
+        public bool IsGrayscale { get; set; }
         public List<WorkspaceManifestItem> Items { get; set; } = [];
     }
 
@@ -366,6 +403,7 @@ public sealed class WorkspaceArchiveService
         public double OriginalWidth { get; set; }
         public double OriginalHeight { get; set; }
         public int ZIndex { get; set; }
+        public bool IsGrayscale { get; set; }
     }
 }
 
@@ -374,6 +412,16 @@ public sealed record WorkspaceArchiveSummary(
     int ImageCount,
     byte[]? ThumbnailData,
     DateTimeOffset? UpdatedAt);
+
+public sealed record WorkspaceArchiveDocument(
+    IReadOnlyList<WorkspaceArchiveItem> Items,
+    WorkspaceArchiveCamera? Camera,
+    bool IsGrayscale);
+
+public sealed record WorkspaceArchiveCamera(
+    double Zoom,
+    double CenterX,
+    double CenterY);
 
 public sealed record WorkspaceArchiveItem(
     string Label,

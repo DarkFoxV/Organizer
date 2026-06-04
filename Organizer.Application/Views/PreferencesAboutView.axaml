@@ -1,0 +1,282 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="Organizer.Organizer.Application.Views.PreferencesAboutView"
+             x:DataType="vm:PreferencesViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Button.about-link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
+            <Setter Property="BorderThickness" Value="0 0 1 1" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="18 13" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.about-link:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        </Style>
+
+        <Style Selector="Button.about-link.right">
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+        </Style>
+
+        <Style Selector="Button.about-link.bottom">
+            <Setter Property="BorderThickness" Value="0 0 1 0" />
+        </Style>
+    </UserControl.Styles>
+
+<Border Classes="section-card"
+                        IsVisible="{Binding IsAboutSectionVisible}">
+                    <StackPanel>
+                        <Border Classes="about-hero">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                                <Image Source="/Organizer.Application/Assets/Icons/organizer.png"
+                                       Width="48"
+                                       Height="48"
+                                       Stretch="Uniform"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+
+                                <StackPanel Grid.Column="1"
+                                            Spacing="3"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="Organizer"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               FontSize="16"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{DynamicResource Loc.Preferences.AboutDescription}"
+                                               Foreground="{DynamicResource TextSubtleBrush}"
+                                               FontSize="12"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2"
+                                            Spacing="4"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center">
+                                    <Border Classes="about-version-badge"
+                                            HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding AppVersion, StringFormat='v{0}'}"
+                                                   Foreground="{DynamicResource PrimaryBrush}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold" />
+                                    </Border>
+                                    <TextBlock Text="{Binding BuildNumber, StringFormat='build {0}'}"
+                                               Foreground="{DynamicResource TextSubtleBrush}"
+                                               FontFamily="monospace"
+                                               FontSize="10"
+                                               HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*,*">
+                            <Border Classes="about-stat-cell">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Classes="about-label"
+                                               Text="{DynamicResource Loc.Preferences.AboutImagesLabel}" />
+                                    <TextBlock Classes="about-stat-value"
+                                               Text="{Binding AboutImageCount}" />
+                                    <TextBlock Classes="about-stat-sub"
+                                               Text="{DynamicResource Loc.Preferences.AboutImagesSub}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Classes="about-stat-cell">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Classes="about-label"
+                                               Text="{DynamicResource Loc.Preferences.AboutWorkspacesLabel}" />
+                                    <TextBlock Classes="about-stat-value"
+                                               Text="{Binding AboutWorkspaceCount}" />
+                                    <TextBlock Classes="about-stat-sub"
+                                               Text="{DynamicResource Loc.Preferences.AboutWorkspacesSub}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2"
+                                    Classes="about-stat-cell last">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Classes="about-label"
+                                               Text="{DynamicResource Loc.Preferences.AboutTagsLabel}" />
+                                    <TextBlock Classes="about-stat-value"
+                                               Text="{Binding AboutTagCount}" />
+                                    <TextBlock Classes="about-stat-sub"
+                                               Text="{DynamicResource Loc.Preferences.AboutTagsSub}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Classes="about-tech-section">
+                            <StackPanel Spacing="10">
+                                <TextBlock Classes="about-label"
+                                           Text="{DynamicResource Loc.Preferences.AboutTechnology}" />
+                                <WrapPanel>
+                                    <Border Classes="about-chip"
+                                            Margin="0 0 6 6">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <ic:FluentIcon Icon="Info"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}" />
+                                            <TextBlock Text=".NET 10"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Classes="about-chip"
+                                            Margin="0 0 6 6">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <ic:FluentIcon Icon="Grid"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}" />
+                                            <TextBlock Text="Avalonia"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Classes="about-chip"
+                                            Margin="0 0 6 6">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <ic:FluentIcon Icon="Database"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}" />
+                                            <TextBlock Text="EF Core"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Classes="about-chip"
+                                            Margin="0 0 6 6">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <ic:FluentIcon Icon="Database"
+                                                           IconVariant="Regular"
+                                                           IconSize="Size16"
+                                                           Foreground="{DynamicResource AccentSoftTextBrush}" />
+                                            <TextBlock Text="SQLite"
+                                                       Foreground="{DynamicResource AccentSoftTextBrush}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*"
+                              RowDefinitions="Auto,Auto">
+                            <Button Classes="about-link"
+                                    Click="OnRepositoryClick">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <ic:FluentIcon Icon="Grid"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="1">
+                                        <TextBlock Classes="about-link-title"
+                                                   Text="{DynamicResource Loc.Preferences.AboutRepository}" />
+                                        <TextBlock Classes="about-link-sub"
+                                                   Text="{DynamicResource Loc.Preferences.AboutRepositorySub}" />
+                                    </StackPanel>
+                                    <ic:FluentIcon Grid.Column="2"
+                                                   Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Button Grid.Column="1"
+                                    Classes="about-link right"
+                                    Click="OnReportBugClick">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <ic:FluentIcon Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="1">
+                                        <TextBlock Classes="about-link-title"
+                                                   Text="{DynamicResource Loc.Preferences.AboutReportBug}" />
+                                        <TextBlock Classes="about-link-sub"
+                                                   Text="{DynamicResource Loc.Preferences.AboutReportBugSub}" />
+                                    </StackPanel>
+                                    <ic:FluentIcon Grid.Column="2"
+                                                   Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Button Grid.Row="1"
+                                    Classes="about-link bottom"
+                                    Click="OnLicenseClick">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <ic:FluentIcon Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="1">
+                                        <TextBlock Classes="about-link-title"
+                                                   Text="{DynamicResource Loc.Preferences.AboutLicense}" />
+                                        <TextBlock Classes="about-link-sub"
+                                                   Text="{DynamicResource Loc.Preferences.AboutLicenseSub}" />
+                                    </StackPanel>
+                                    <ic:FluentIcon Grid.Column="2"
+                                                   Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Border Grid.Row="1"
+                                    Grid.Column="1"
+                                    Classes="about-link right bottom">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <ic:FluentIcon Icon="Cloud"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="1">
+                                        <TextBlock Classes="about-link-title"
+                                                   Text="{DynamicResource Loc.Preferences.AboutUpdates}" />
+                                        <TextBlock Classes="about-link-sub"
+                                                   Text="{DynamicResource Loc.Preferences.AboutUpdatesSub}" />
+                                    </StackPanel>
+                                    <ic:FluentIcon Grid.Column="2"
+                                                   Icon="Info"
+                                                   IconVariant="Regular"
+                                                   IconSize="Size16"
+                                                   Foreground="{DynamicResource TextSubtleBrush}"
+                                                   VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+</UserControl>

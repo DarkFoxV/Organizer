@@ -26,6 +26,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     public bool HasUnsavedWorkspaceChanges => _workspaceViewModel.HasUnsavedChanges;
 
+    public bool HasUnsavedWorkspaceCameraChanges => _workspaceViewModel.HasUnsavedCameraChanges;
+
     public bool HasFileBackedWorkspace => _workspaceViewModel.HasWorkspaceFile;
 
     // Guarda a SearchView pra reutilizar ao voltar
@@ -133,6 +135,11 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     private void GoToWorkspace()
+    {
+        ShowWorkspace();
+    }
+
+    public void ShowWorkspace()
     {
         DetachHome();
         Navbar.Selected = NavButton.Workspace;

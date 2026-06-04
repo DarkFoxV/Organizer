@@ -467,5 +467,6 @@ public partial class SearchViewModel : ObservableObject, IDisposable
         Preview.Dispose();
         CopyPicker.Dispose();
         TagSelector.Dispose();
+        SearchBar.Dispose();
     }
 }

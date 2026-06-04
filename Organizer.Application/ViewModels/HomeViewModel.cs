@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,12 +13,14 @@ namespace Organizer.Application.ViewModels;
 
 public sealed partial class HomeViewModel : ObservableObject, IDisposable
 {
+    private const int SearchDebounceMilliseconds = 300;
     private readonly HomeWorkspaceCacheService _homeWorkspaceCacheService;
     private readonly AppDbContextFactory _dbContextFactory;
     private readonly WorkspaceViewModel _workspaceViewModel;
     private readonly AppPreferencesService _preferencesService;
     private readonly IToastService _toastService;
     private readonly List<HomeWorkspaceItemViewModel> _allWorkspaces = [];
+    private CancellationTokenSource? _filterCts;
     private bool _isDisposed;
 
     [ObservableProperty] private string _searchText = string.Empty;
@@ -68,7 +71,7 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
 
     partial void OnSearchTextChanged(string value)
     {
-        ApplyFilter();
+        ScheduleFilter();
     }
 
     public async Task RefreshAsync()
@@ -106,27 +109,12 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var loaded = false;
-
-        try
+        if (!await _workspaceViewModel.OpenWorkspaceFileAsync(file))
         {
-            await using var stream = await file.OpenReadAsync();
-            loaded = await _workspaceViewModel.LoadAsync(stream);
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = AppPreferencesService.Translate("Loc.Home.ErrorOpen", ex.Message);
-        }
-
-        if (!loaded)
-        {
-            file.Dispose();
             ErrorMessage = _workspaceViewModel.ErrorMessage;
             return;
         }
 
-        _workspaceViewModel.SetWorkspaceFile(file);
-        await _homeWorkspaceCacheService.RememberAsync(workspace.Path);
         WorkspaceOpened?.Invoke();
     }
 
@@ -180,6 +168,9 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
             return;
 
         _isDisposed = true;
+        _filterCts?.Cancel();
+        _filterCts?.Dispose();
+        _filterCts = null;
         _homeWorkspaceCacheService.Changed -= OnHomeWorkspaceCacheChanged;
         _preferencesService.PreferencesChanged -= OnPreferencesChanged;
         ClearWorkspaceItems();
@@ -218,6 +209,31 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
         WorkspaceTotal = _allWorkspaces.Count;
         OnPropertyChanged(nameof(WorkspaceTotalText));
         ApplyFilter();
+    }
+
+    private async void ScheduleFilter()
+    {
+        var previousCts = _filterCts;
+        var cts = new CancellationTokenSource();
+        _filterCts = cts;
+        previousCts?.Cancel();
+
+        try
+        {
+            await Task.Delay(SearchDebounceMilliseconds, cts.Token);
+
+            if (!_isDisposed && ReferenceEquals(_filterCts, cts))
+                ApplyFilter();
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignored because newer input replaced this filter request.
+        }
+        finally
+        {
+            if (!ReferenceEquals(_filterCts, cts))
+                cts.Dispose();
+        }
     }
 
     private void ClearWorkspaceItems()

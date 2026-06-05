@@ -98,7 +98,7 @@
   "Loc.Preferences.ConfirmDeletion": "Confirm deletion",
   "Loc.Preferences.ConfirmDeletionDescription": "Ask for confirmation before deleting cards, images, or tags.",
   "Loc.Preferences.Workspace": "Workspace",
-  "Loc.Preferences.WorkspaceDescription": "Canvas and paste flow preferences",
+  "Loc.Preferences.WorkspaceDescription": "Zoom and history preferences",
   "Loc.Preferences.PasteMode": "Image paste",
   "Loc.Preferences.PasteModeDescription": "Where new images are placed",
   "Loc.Preferences.CanvasBackground": "Canvas background",

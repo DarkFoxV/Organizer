@@ -187,41 +187,8 @@
                                 </StackPanel>
                             </Border>
 
-                            <Grid ColumnDefinitions="*,*"
-                                  RowDefinitions="Auto,Auto">
+                            <Grid ColumnDefinitions="*,*">
                                 <Border Classes="preference-tile">
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
-                                        <StackPanel Spacing="3">
-                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.PasteMode}" />
-                                            <TextBlock Classes="row-description"
-                                                       Text="{DynamicResource Loc.Preferences.PasteModeDescription}" />
-                                        </StackPanel>
-                                        <ComboBox Grid.Column="1"
-                                                  Classes="preference-select"
-                                                  ItemsSource="{Binding WorkspacePasteOptions}"
-                                                  ItemTemplate="{StaticResource PreferenceOptionTemplate}"
-                                                  SelectedItem="{Binding SelectedWorkspacePasteMode}" />
-                                    </Grid>
-                                </Border>
-
-                                <Border Grid.Column="1"
-                                        Classes="preference-tile last">
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
-                                        <StackPanel Spacing="3">
-                                            <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.CanvasBackground}" />
-                                            <TextBlock Classes="row-description"
-                                                       Text="{DynamicResource Loc.Preferences.CanvasBackgroundDescription}" />
-                                        </StackPanel>
-                                        <ComboBox Grid.Column="1"
-                                                  Classes="preference-select"
-                                                  ItemsSource="{Binding WorkspaceBackgroundOptions}"
-                                                  ItemTemplate="{StaticResource PreferenceOptionTemplate}"
-                                                  SelectedItem="{Binding SelectedWorkspaceBackground}" />
-                                    </Grid>
-                                </Border>
-
-                                <Border Grid.Row="1"
-                                        Classes="preference-tile">
                                     <Grid ColumnDefinitions="*,260" ColumnSpacing="18">
                                         <StackPanel Spacing="3">
                                             <TextBlock Classes="row-title" Text="{DynamicResource Loc.Preferences.InitialZoom}" />
@@ -249,8 +216,7 @@
                                     </Grid>
                                 </Border>
 
-                                <Border Grid.Row="1"
-                                        Grid.Column="1"
+                                <Border Grid.Column="1"
                                         Classes="preference-tile last">
                                     <Grid ColumnDefinitions="*,260" ColumnSpacing="18">
                                         <StackPanel Spacing="3">

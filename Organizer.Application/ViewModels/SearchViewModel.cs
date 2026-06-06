@@ -1,22 +1,17 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using Organizer.Application.ViewModels.Components;
-using Organize.Organizer.Core;
 using Organize.Organizer.Core.Enums;
 using Organize.Organizer.Core.Interfaces;
 using Organizer.Application.Services;
-using Organizer.Core.Helpers;
 
 namespace Organizer.Application.ViewModels;
 
 public partial class SearchViewModel : ObservableObject, IDisposable
 {
-    private readonly ICardService _cardService;
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
     private readonly AppPreferencesService _preferencesService;
@@ -24,17 +19,7 @@ public partial class SearchViewModel : ObservableObject, IDisposable
     private int _loadVersion;
     private bool _isDisposed;
 
-    [ObservableProperty] private bool _isEmpty;
-    [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _tagsLoaded;
-    [ObservableProperty] private bool _isDeleteConfirmationVisible;
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ResultSummary))]
-    private int _totalResults;
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DeleteConfirmationTitle))]
-    [NotifyPropertyChangedFor(nameof(DeleteConfirmationMessage))]
-    private CardItemViewModel? _pendingDeleteCard;
 
     // ── Componentes ───────────────────────────────────────────────────────────
     public SearchBarViewModel SearchBar { get; } = new();
@@ -42,33 +27,13 @@ public partial class SearchViewModel : ObservableObject, IDisposable
     public ImagePreviewViewModel Preview { get; } = new();
     public GroupCopyPickerViewModel CopyPicker { get; }
     public TagSelectorViewModel TagSelector { get; }
+    public SearchResultsViewModel Results { get; }
+    public DeleteConfirmationViewModel DeleteConfirmation { get; }
 
     // ── Estado ────────────────────────────────────────────────────────────────
-    public ObservableCollection<CardItemViewModel> Cards { get; } = [];
-
-    public string ResultSummary => TotalResults == 1
+    public string ResultSummary => Results.TotalResults == 1
         ? _preferencesService.T("Loc.Search.ResultCountOne")
-        : _preferencesService.T("Loc.Search.ResultCountMany", TotalResults);
-
-    public string DeleteConfirmationTitle => PendingDeleteCard?.IsGroup == true
-        ? _preferencesService.T("Loc.Search.DeleteGroupTitle")
-        : _preferencesService.T("Loc.Search.DeleteImageTitle");
-
-    public string DeleteConfirmationMessage
-    {
-        get
-        {
-            if (PendingDeleteCard is null)
-                return string.Empty;
-
-            return PendingDeleteCard.IsGroup
-                ? _preferencesService.T(
-                    "Loc.Search.DeleteGroupMessage",
-                    PendingDeleteCard.Filename,
-                    PendingDeleteCard.ImageCount)
-                : _preferencesService.T("Loc.Search.DeleteImageMessage", PendingDeleteCard.Filename);
-        }
-    }
+        : _preferencesService.T("Loc.Search.ResultCountMany", Results.TotalResults);
 
     // ── Evento de navegação ───────────────────────────────────────────────────
     public event Action? RegisterRequested;
@@ -76,28 +41,36 @@ public partial class SearchViewModel : ObservableObject, IDisposable
 
     // ── Init ──────────────────────────────────────────────────────────────────
     public SearchViewModel(
-        ICardService cardService,
         IImageService imageService,
         ITagService tagService,
         AppPreferencesService preferencesService,
-        IToastService toastService)
+        IToastService toastService,
+        SearchResultsViewModel results,
+        DeleteConfirmationViewModel deleteConfirmation)
     {
-        _cardService = cardService;
         _imageService = imageService;
         _tagService = tagService;
         _preferencesService = preferencesService;
         _toastService = toastService;
+        Results = results;
+        DeleteConfirmation = deleteConfirmation;
 
         CopyPicker = new GroupCopyPickerViewModel(_preferencesService);
         TagSelector = new TagSelectorViewModel(_tagService, _preferencesService, showAddButton: false);
 
+        Results.ViewRequested += OnViewCard;
+        Results.EditRequested += OnEditCard;
+        Results.DeleteRequested += OnDeleteCard;
+        Results.CopyRequested += OnCopyCard;
+        Results.PropertyChanged += OnResultsPropertyChanged;
+        DeleteConfirmation.Confirmed += OnDeleteConfirmed;
         SearchBar.SearchRequested += OnSearch;
         SearchBar.RegisterRequested += OnRegister;
         Pagination.PageChanged += OnPageChanged;
         TagSelector.SelectionChanged += OnTagSelectionChanged;
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
 
-        _ = LoadCardsAsync();
+        _ = LoadResultsAsync();
         _ = LoadTagsAsync();
     }
 
@@ -124,24 +97,16 @@ public partial class SearchViewModel : ObservableObject, IDisposable
             return;
 
         await LoadTagsAsync();
-        await LoadCardsAsync(SearchBar.Query, Pagination.CurrentPage, SearchBar.SelectedSort);
+        await LoadResultsAsync(SearchBar.Query, Pagination.CurrentPage, SearchBar.SelectedSort);
     }
 
     public void Deactivate()
     {
-        var hadImageResources = Cards.Count > 0 || Preview.IsVisible || CopyPicker.IsVisible;
-
         _loadVersion++;
+        Results.Clear();
         Preview.CloseWithoutMemoryCompaction();
         CopyPicker.CloseWithoutMemoryCompaction();
-        PendingDeleteCard = null;
-        IsDeleteConfirmationVisible = false;
-        ClearCards();
-        IsEmpty = true;
-        IsLoading = false;
-
-        if (hadImageResources)
-            MemoryCleanupService.QueueLargeImageMemoryCompaction();
+        DeleteConfirmation.Cancel();
     }
 
     // ── Handlers ─────────────────────────────────────────────────────────────
@@ -151,7 +116,7 @@ public partial class SearchViewModel : ObservableObject, IDisposable
             return;
 
         Pagination.CurrentPage = 0;
-        _ = LoadCardsAsync(query, 0, sort);
+        _ = LoadResultsAsync(query, 0, sort);
     }
 
     private void OnTagSelectionChanged()
@@ -160,7 +125,7 @@ public partial class SearchViewModel : ObservableObject, IDisposable
             return;
 
         Pagination.CurrentPage = 0;
-        _ = LoadCardsAsync(SearchBar.Query, 0, SearchBar.SelectedSort);
+        _ = LoadResultsAsync(SearchBar.Query, 0, SearchBar.SelectedSort);
     }
 
     private void OnPageChanged(int page)
@@ -168,42 +133,35 @@ public partial class SearchViewModel : ObservableObject, IDisposable
         if (_isDisposed)
             return;
 
-        _ = LoadCardsAsync(SearchBar.Query, page, SearchBar.SelectedSort);
+        _ = LoadResultsAsync(SearchBar.Query, page, SearchBar.SelectedSort);
     }
 
     private void OnRegister() => RegisterRequested?.Invoke();
 
-    private void OnPreferencesChanged()
+    private void OnPreferencesChanged(
+        object? sender,
+        AppPreferencesChangedEventArgs e)
     {
         if (_isDisposed)
             return;
 
-        OnPropertyChanged(nameof(DeleteConfirmationTitle));
-        OnPropertyChanged(nameof(DeleteConfirmationMessage));
-        OnPropertyChanged(nameof(ResultSummary));
-        SearchBar.RefreshSortOptions();
-        Pagination.CurrentPage = 0;
-        _ = LoadCardsAsync(SearchBar.Query, 0, SearchBar.SelectedSort);
+        if (e.LanguageChanged)
+        {
+            OnPropertyChanged(nameof(ResultSummary));
+            SearchBar.RefreshSortOptions();
+        }
+
+        if (e.SearchItemsPerPageChanged)
+        {
+            Pagination.CurrentPage = 0;
+            _ = LoadResultsAsync(SearchBar.Query, 0, SearchBar.SelectedSort);
+        }
     }
 
     // ── Card actions ──────────────────────────────────────────────────────────
-    private void SubscribeCard(CardItemViewModel card)
-    {
-        card.ViewRequested += OnViewCard;
-        card.EditRequested += OnEditCard;
-        card.DeleteRequested += OnDeleteCard;
-        card.CopyRequested += OnCopyCard;
-    }
+    private void OnViewCard(CardItemViewModel card) => _ = ViewCardAsync(card);
 
-    private void UnsubscribeCard(CardItemViewModel card)
-    {
-        card.ViewRequested -= OnViewCard;
-        card.EditRequested -= OnEditCard;
-        card.DeleteRequested -= OnDeleteCard;
-        card.CopyRequested -= OnCopyCard;
-    }
-
-    private async void OnViewCard(CardItemViewModel card)
+    private async Task ViewCardAsync(CardItemViewModel card)
     {
         var loadVersion = _loadVersion;
 
@@ -231,71 +189,24 @@ public partial class SearchViewModel : ObservableObject, IDisposable
         EditRequested?.Invoke(card);
     }
 
-    private async void OnDeleteCard(CardItemViewModel card)
+    private void OnDeleteCard(CardItemViewModel card)
     {
         if (_preferencesService.Current.ConfirmDeletion)
         {
-            PendingDeleteCard = card;
-            IsDeleteConfirmationVisible = true;
+            DeleteConfirmation.Request(card);
             return;
         }
 
-        await DeleteCardAsync(card);
+        _ = DeleteCardAsync(card);
     }
 
-    [RelayCommand]
-    private async Task ConfirmDelete()
-    {
-        if (PendingDeleteCard is null)
-            return;
+    private void OnDeleteConfirmed(CardItemViewModel card) => _ = DeleteCardAsync(card);
 
-        var card = PendingDeleteCard;
-        PendingDeleteCard = null;
-        IsDeleteConfirmationVisible = false;
+    private Task DeleteCardAsync(CardItemViewModel card) => Results.DeleteAsync(card);
 
-        await DeleteCardAsync(card);
-    }
+    private void OnCopyCard(CardItemViewModel card) => _ = CopyCardAsync(card);
 
-    [RelayCommand]
-    private void CancelDelete()
-    {
-        PendingDeleteCard = null;
-        IsDeleteConfirmationVisible = false;
-    }
-
-    private async Task DeleteCardAsync(CardItemViewModel card)
-    {
-        try
-        {
-            await _cardService.DeleteAsync(card.CardId);
-
-            var hadLargeImageResources = card.IsGroup || card.ImageData is { Length: >= 85_000 };
-
-            Cards.Remove(card);
-            UnsubscribeCard(card);
-            card.ReleaseResources();
-            TotalResults = Math.Max(0, TotalResults - 1);
-            IsEmpty = Cards.Count == 0;
-
-            if (hadLargeImageResources)
-                MemoryCleanupService.QueueLargeImageMemoryCompaction();
-
-            _toastService.Success(
-                _preferencesService.T("Loc.Search.ToastCardDeletedTitle"),
-                card.IsGroup
-                    ? _preferencesService.T("Loc.Search.ToastGroupDeletedMessage")
-                    : _preferencesService.T("Loc.Search.ToastImageDeletedMessage"));
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[DeleteCardAsync] {ex}");
-            _toastService.Error(
-                _preferencesService.T("Loc.Search.ToastDeleteFailedTitle"),
-                _preferencesService.T("Loc.Search.ToastDeleteFailedMessage"));
-        }
-    }
-
-    private async void OnCopyCard(CardItemViewModel card)
+    private async Task CopyCardAsync(CardItemViewModel card)
     {
         var loadVersion = _loadVersion;
 
@@ -328,7 +239,7 @@ public partial class SearchViewModel : ObservableObject, IDisposable
     }
 
     // ── Carga de dados ────────────────────────────────────────────────────────
-    private async Task LoadCardsAsync(
+    private async Task LoadResultsAsync(
         string query = "",
         int page = 0,
         SortOrder sort = SortOrder.MaisRecente)
@@ -337,114 +248,30 @@ public partial class SearchViewModel : ObservableObject, IDisposable
             return;
 
         var loadVersion = ++_loadVersion;
-        IsLoading = true;
+        var itemsPerPage = _preferencesService.Current.SearchItemsPerPage;
+        var result = await Results.LoadAsync(
+            query,
+            page,
+            sort,
+            itemsPerPage,
+            TagSelector.SelectedTags.Select(tag => tag.Id).ToArray());
 
-        try
-        {
-            var selectedTagIds = TagSelector.SelectedTags
-                .Select(tag => tag.Id)
-                .ToArray();
+        if (result is null || _isDisposed || loadVersion != _loadVersion)
+            return;
 
-            var (cards, total) =
-                await _imageService.SearchCardsAsync(
-                    query,
-                    selectedTagIds,
-                    sort,
-                    page,
-                    _preferencesService.Current.SearchItemsPerPage);
-
-            if (loadVersion != _loadVersion)
-                return;
-
-            Pagination.TotalPages =
-                (int)Math.Ceiling(total / (double)_preferencesService.Current.SearchItemsPerPage);
-
-            Pagination.CurrentPage = page;
-            TotalResults = total;
-
-            var cardViewModels = await Task.Run(() => CreateCardViewModels(cards));
-
-            if (loadVersion != _loadVersion)
-            {
-                foreach (var vm in cardViewModels)
-                    vm.ReleaseResources();
-
-                return;
-            }
-
-            ClearCards();
-
-            foreach (var vm in cardViewModels)
-            {
-                SubscribeCard(vm);
-                Cards.Add(vm);
-            }
-
-            IsEmpty = Cards.Count == 0;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[LoadCardsAsync] {ex}");
-
-            TotalResults = 0;
-            IsEmpty = true;
-        }
-        finally
-        {
-            if (!_isDisposed && loadVersion == _loadVersion)
-                IsLoading = false;
-        }
+        UpdatePagination(page, result);
     }
 
-    private void ClearCards()
+    private void UpdatePagination(int page, SearchResultsLoadResult result)
     {
-        var existingCards = Cards.ToList();
-        Cards.Clear();
-
-        foreach (var existingCard in existingCards)
-        {
-            UnsubscribeCard(existingCard);
-            existingCard.ReleaseResources();
-        }
+        Pagination.TotalPages = result.TotalPages;
+        Pagination.CurrentPage = page;
     }
 
-    private List<CardItemViewModel> CreateCardViewModels(IEnumerable<SearchCardResult> cards)
+    private void OnResultsPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        var viewModels = new List<CardItemViewModel>();
-
-        try
-        {
-            foreach (var card in cards)
-            {
-                var thumbnail = ImageHelper.ToBitmap(card.CoverThumbnail, maxWidth: 204, maxHeight: 164);
-
-                viewModels.Add(new CardItemViewModel
-                {
-                    Id = card.CoverImageId ?? 0,
-                    CardId = card.CardId,
-                    Thumbnail = thumbnail,
-                    Filename = card.CoverFilename,
-                    MimeType = card.CoverMimeType ?? "application/octet-stream",
-                    Description = card.CoverDescription,
-                    CreatedAt = card.CreatedAt.ToString("dd/MM/yyyy"),
-                    LoadImageDataStreamAsync = card.CoverImageId is null
-                        ? null
-                        : () => _imageService.GetDataAsync(card.CoverImageId.Value),
-                    IsGroup = card.CardType == CardType.Group,
-                    ImageCount = card.ImageCount,
-                    IsLoaded = thumbnail is not null
-                });
-            }
-
-            return viewModels;
-        }
-        catch
-        {
-            foreach (var viewModel in viewModels)
-                viewModel.ReleaseResources();
-
-            throw;
-        }
+        if (e.PropertyName == nameof(SearchResultsViewModel.TotalResults))
+            OnPropertyChanged(nameof(ResultSummary));
     }
 
     public void Dispose()
@@ -455,15 +282,20 @@ public partial class SearchViewModel : ObservableObject, IDisposable
         _isDisposed = true;
         _loadVersion++;
 
+        Results.ViewRequested -= OnViewCard;
+        Results.EditRequested -= OnEditCard;
+        Results.DeleteRequested -= OnDeleteCard;
+        Results.CopyRequested -= OnCopyCard;
+        Results.PropertyChanged -= OnResultsPropertyChanged;
+        DeleteConfirmation.Confirmed -= OnDeleteConfirmed;
         SearchBar.SearchRequested -= OnSearch;
         SearchBar.RegisterRequested -= OnRegister;
         Pagination.PageChanged -= OnPageChanged;
         TagSelector.SelectionChanged -= OnTagSelectionChanged;
         _preferencesService.PreferencesChanged -= OnPreferencesChanged;
 
-        PendingDeleteCard = null;
-        IsDeleteConfirmationVisible = false;
-        ClearCards();
+        Results.Dispose();
+        DeleteConfirmation.Dispose();
         Preview.Dispose();
         CopyPicker.Dispose();
         TagSelector.Dispose();

@@ -5,7 +5,6 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Organizer.Application.Services;
 
 namespace Organizer.Application.ViewModels.Components;
 
@@ -19,55 +18,35 @@ public partial class ImageOrderItemViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] private Bitmap? _thumbnail;
 
-    public string Filename { get; init; } = string.Empty;
+    public string Filename { get; }
 
-    public string MimeType { get; init; } = "application/octet-stream";
+    public string MimeType { get; }
 
-    public IStorageFile? SourceFile { get; set; }
+    public IStorageFile? SourceFile { get; private set; }
 
-    public byte[]? SourceData { get; set; }
+    public byte[]? SourceData { get; private set; }
 
     public byte[]? ThumbnailData { get; private set; }
 
     public bool HasFileSource => SourceFile is not null;
 
-    public async Task LoadThumbnailAsync()
+    public ImageOrderItemViewModel(
+        string filename,
+        string mimeType,
+        IStorageFile? sourceFile,
+        byte[]? sourceData,
+        Bitmap thumbnail,
+        byte[] thumbnailData)
     {
-        if (_isDisposed)
-            return;
+        if ((sourceFile is null) == (sourceData is null))
+            throw new ArgumentException("Exactly one image source must be provided.");
 
-        await using var sourceStream = await OpenReadAsync();
-
-        byte[] thumbnailData;
-        try
-        {
-            thumbnailData = await Task.Run(() =>
-                ImageThumbnailService.CreateThumbnail(sourceStream));
-        }
-        catch
-        {
-            if (!_isDisposed)
-                Dispose();
-
-            throw;
-        }
-
-        if (_isDisposed)
-            return;
-
-        using var thumbnailStream = new MemoryStream(thumbnailData, writable: false);
-        var thumbnail = new Bitmap(thumbnailStream);
-
-        if (_isDisposed)
-        {
-            thumbnail.Dispose();
-            return;
-        }
-
-        var previousThumbnail = Thumbnail;
-        ThumbnailData = thumbnailData;
+        Filename = filename;
+        MimeType = mimeType;
+        SourceFile = sourceFile;
+        SourceData = sourceData;
         Thumbnail = thumbnail;
-        DisposeBitmap(previousThumbnail);
+        ThumbnailData = thumbnailData;
     }
 
     public async Task<byte[]> ReadDataAsync()

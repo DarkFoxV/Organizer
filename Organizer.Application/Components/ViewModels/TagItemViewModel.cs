@@ -78,8 +78,13 @@ public partial class TagItemViewModel : ObservableObject, IDisposable
         Toggled?.Invoke(this);
     }
 
-    private void OnPreferencesChanged()
+    private void OnPreferencesChanged(
+        object? sender,
+        AppPreferencesChangedEventArgs e)
     {
+        if (!e.ThemeChanged)
+            return;
+
         OnPropertyChanged(nameof(BackgroundColor));
         OnPropertyChanged(nameof(ForegroundColor));
         OnPropertyChanged(nameof(BorderColor));

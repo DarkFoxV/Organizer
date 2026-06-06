@@ -276,8 +276,13 @@ public partial class ManageTagsViewModel : ObservableObject
             tag.MaxUsageCount = maxUsageCount;
     }
 
-    private void OnPreferencesChanged()
+    private void OnPreferencesChanged(
+        object? sender,
+        AppPreferencesChangedEventArgs e)
     {
+        if (!e.LanguageChanged)
+            return;
+
         foreach (var row in Tags)
             UpdateUsageText(row);
 

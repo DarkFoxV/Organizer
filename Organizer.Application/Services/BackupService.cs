@@ -53,7 +53,13 @@ public sealed class BackupService(
                 AppVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? string.Empty
             };
 
-            CreateBackupArchive(destinationPath, snapshotPath, metadata);
+            await CreateBackupArchiveAsync(
+                destinationPath,
+                snapshotPath,
+                metadata,
+                cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (recordLocalBackup)
                 preferencesService.Update(preferences => preferences.LastLocalBackupAt = metadata.CreatedAt);
 
@@ -100,10 +106,11 @@ public sealed class BackupService(
         return databaseFileService.ReplaceDatabaseAsync(databasePath, cancellationToken);
     }
 
-    private static void CreateBackupArchive(
+    private static async Task CreateBackupArchiveAsync(
         string destinationPath,
         string databasePath,
-        BackupMetadata metadata)
+        BackupMetadata metadata,
+        CancellationToken cancellationToken)
     {
         EnsureParentDirectory(destinationPath);
 
@@ -112,16 +119,24 @@ public sealed class BackupService(
 
         try
         {
-            using (var output = File.Create(tempPath))
-            using (var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: false))
+            await using (var output = File.Create(tempPath))
+            using (var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
             {
-                archive.CreateEntryFromFile(databasePath, DatabaseEntryName, CompressionLevel.Optimal);
+                var databaseEntry = archive.CreateEntry(DatabaseEntryName, CompressionLevel.Optimal);
+                await using (var databaseInput = File.OpenRead(databasePath))
+                await using (var databaseOutput = databaseEntry.Open())
+                    await databaseInput.CopyToAsync(databaseOutput, cancellationToken);
 
                 var metadataEntry = archive.CreateEntry(MetadataEntryName, CompressionLevel.Optimal);
-                using var metadataStream = metadataEntry.Open();
-                JsonSerializer.Serialize(metadataStream, metadata, JsonOptions);
+                await using var metadataStream = metadataEntry.Open();
+                await JsonSerializer.SerializeAsync(
+                    metadataStream,
+                    metadata,
+                    JsonOptions,
+                    cancellationToken);
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             DeleteIfExists(destinationPath);
             File.Move(tempPath, destinationPath);
         }

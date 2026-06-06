@@ -93,11 +93,15 @@
             </Grid>
         </Border>
 
-        <components:ToastHost Grid.ColumnSpan="2"
-                              ZIndex="1100"
-                              HorizontalAlignment="Right"
-                              VerticalAlignment="Bottom"
-                              Margin="0,0,24,24" />
+        <StackPanel Grid.ColumnSpan="2"
+                    ZIndex="1100"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Spacing="10"
+                    Margin="0,0,24,24">
+            <components:ToastHost />
+            <components:BackgroundOperationHost />
+        </StackPanel>
 
     </Grid>
 

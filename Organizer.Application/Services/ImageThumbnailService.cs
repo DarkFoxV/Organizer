@@ -35,8 +35,10 @@ public static class ImageThumbnailService
     private static byte[] CreateThumbnail(Bitmap full)
     {
         var ratio = Math.Min(
-            ThumbnailWidth / (double)full.PixelSize.Width,
-            ThumbnailHeight / (double)full.PixelSize.Height);
+            1.0,
+            Math.Min(
+                ThumbnailWidth / (double)full.PixelSize.Width,
+                ThumbnailHeight / (double)full.PixelSize.Height));
 
         var width = Math.Max(1, (int)Math.Round(full.PixelSize.Width * ratio));
         var height = Math.Max(1, (int)Math.Round(full.PixelSize.Height * ratio));

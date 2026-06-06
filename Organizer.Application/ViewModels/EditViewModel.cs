@@ -156,8 +156,13 @@ public partial class EditViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Close() => CloseRequested?.Invoke();
 
-    private void OnPreferencesChanged()
+    private void OnPreferencesChanged(
+        object? sender,
+        AppPreferencesChangedEventArgs e)
     {
+        if (!e.LanguageChanged)
+            return;
+
         Title = _preferencesService.T("Loc.Edit.Title");
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusIsReady));

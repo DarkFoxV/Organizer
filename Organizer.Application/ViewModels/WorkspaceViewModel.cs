@@ -1654,34 +1654,53 @@ public partial class WorkspaceViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void OnPreferencesChanged()
+    private void OnPreferencesChanged(
+        object? sender,
+        AppPreferencesChangedEventArgs e)
     {
-        var historyLimit = HistoryLimit;
-        var undoCount = _undoStack.Count;
-        var redoCount = _redoStack.Count;
-
-        if (historyLimit == 0)
+        if (e.WorkspaceHistoryLimitChanged)
         {
-            ClearHistory();
-        }
-        else
-        {
-            TrimHistory(_undoStack, historyLimit);
-            TrimHistory(_redoStack, historyLimit);
+            var historyLimit = HistoryLimit;
+            var undoCount = _undoStack.Count;
+            var redoCount = _redoStack.Count;
 
-            if (_undoStack.Count != undoCount || _redoStack.Count != redoCount)
+            if (historyLimit == 0)
             {
-                NotifyHistoryStateChanged();
-                MemoryCleanupService.QueueLargeImageMemoryCompaction();
+                ClearHistory();
+            }
+            else
+            {
+                TrimHistory(_undoStack, historyLimit);
+                TrimHistory(_redoStack, historyLimit);
+
+                if (_undoStack.Count != undoCount || _redoStack.Count != redoCount)
+                {
+                    NotifyHistoryStateChanged();
+                    MemoryCleanupService.QueueLargeImageMemoryCompaction();
+                }
             }
         }
 
-        OnPropertyChanged(nameof(WorkspaceViewportBackground));
-        OnPropertyChanged(nameof(WorkspaceBoardBackground));
-        OnPropertyChanged(nameof(WorkspaceBoardBorderBrush));
-        OnPropertyChanged(nameof(InitialZoom));
-        OnPropertyChanged(nameof(PasteMode));
-        WorkspacePreferencesChanged?.Invoke();
+        if (e.ThemeChanged || e.WorkspaceBackgroundChanged)
+        {
+            OnPropertyChanged(nameof(WorkspaceViewportBackground));
+            OnPropertyChanged(nameof(WorkspaceBoardBackground));
+            OnPropertyChanged(nameof(WorkspaceBoardBorderBrush));
+        }
+
+        if (e.WorkspaceDefaultZoomChanged)
+            OnPropertyChanged(nameof(InitialZoom));
+
+        if (e.WorkspacePasteModeChanged)
+            OnPropertyChanged(nameof(PasteMode));
+
+        if (e.ThemeChanged ||
+            e.WorkspaceBackgroundChanged ||
+            e.WorkspaceDefaultZoomChanged ||
+            e.WorkspacePasteModeChanged)
+        {
+            WorkspacePreferencesChanged?.Invoke();
+        }
     }
 
     private (string Viewport, string Board, string Border) GetWorkspacePalette()

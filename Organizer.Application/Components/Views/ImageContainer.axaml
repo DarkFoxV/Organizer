@@ -15,6 +15,12 @@
             <Setter Property="Padding" Value="4" />
             <Setter Property="ClipToBounds" Value="True" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush"
+                                     Duration="0:0:0.18" />
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="Border.image-card:pointerover">

@@ -30,36 +30,34 @@ public sealed class AppPreferencesService
         ApplyLanguage();
     }
 
-    public event Action? PreferencesChanged;
+    public event EventHandler<AppPreferencesChangedEventArgs>? PreferencesChanged;
     public event Action? RecentWorkspacesChanged;
 
     public AppPreferences Current => _preferences;
 
     public void Update(Action<AppPreferences> update)
     {
-        bool shouldApplyTheme;
-        bool shouldApplyLanguage;
+        AppPreferencesChangedEventArgs changes;
 
         lock (_preferencesLock)
         {
-            var previousTheme = _preferences.Theme;
-            var previousLanguage = _preferences.Language;
-            var previousWorkspaceBackground = _preferences.WorkspaceBackground;
-
+            var previous = AppPreferencesSnapshot.Create(_preferences);
             update(_preferences);
-            shouldApplyTheme = _preferences.Theme != previousTheme ||
-                _preferences.WorkspaceBackground != previousWorkspaceBackground;
-            shouldApplyLanguage = _preferences.Language != previousLanguage;
+            changes = previous.CompareTo(_preferences);
+
+            if (!changes.HasAnyChange())
+                return;
+
             Save();
         }
 
-        if (shouldApplyTheme)
+        if (changes.ThemeChanged || changes.WorkspaceBackgroundChanged)
             ApplyTheme();
 
-        if (shouldApplyLanguage)
+        if (changes.LanguageChanged)
             ApplyLanguage();
 
-        PreferencesChanged?.Invoke();
+        PreferencesChanged?.Invoke(this, changes);
     }
 
     public void UpdateStoredData(Action<AppPreferences> update)
@@ -448,6 +446,58 @@ public sealed class AppPreferencesService
         var json = reader.ReadToEnd();
 
         return JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? [];
+    }
+
+    private sealed record AppPreferencesSnapshot(
+        AppThemePreference Theme,
+        int SearchItemsPerPage,
+        AppLanguagePreference Language,
+        bool ConfirmDeletion,
+        WorkspacePastePreference WorkspacePasteMode,
+        WorkspaceBackgroundPreference WorkspaceBackground,
+        HomeWorkspaceViewPreference HomeWorkspaceViewMode,
+        int WorkspaceDefaultZoomPercent,
+        int WorkspaceHistoryLimit,
+        DateTimeOffset? LastLocalBackupAt,
+        DateTimeOffset? LastCloudBackupAt,
+        string? GoogleDriveClientId,
+        string? GoogleDriveClientSecret)
+    {
+        public static AppPreferencesSnapshot Create(AppPreferences preferences) =>
+            new(
+                preferences.Theme,
+                preferences.SearchItemsPerPage,
+                preferences.Language,
+                preferences.ConfirmDeletion,
+                preferences.WorkspacePasteMode,
+                preferences.WorkspaceBackground,
+                preferences.HomeWorkspaceViewMode,
+                preferences.WorkspaceDefaultZoomPercent,
+                preferences.WorkspaceHistoryLimit,
+                preferences.LastLocalBackupAt,
+                preferences.LastCloudBackupAt,
+                preferences.GoogleDriveClientId,
+                preferences.GoogleDriveClientSecret);
+
+        public AppPreferencesChangedEventArgs CompareTo(AppPreferences current) =>
+            new()
+            {
+                ThemeChanged = Theme != current.Theme,
+                SearchItemsPerPageChanged = SearchItemsPerPage != current.SearchItemsPerPage,
+                LanguageChanged = Language != current.Language,
+                ConfirmDeletionChanged = ConfirmDeletion != current.ConfirmDeletion,
+                WorkspacePasteModeChanged = WorkspacePasteMode != current.WorkspacePasteMode,
+                WorkspaceBackgroundChanged = WorkspaceBackground != current.WorkspaceBackground,
+                HomeWorkspaceViewModeChanged = HomeWorkspaceViewMode != current.HomeWorkspaceViewMode,
+                WorkspaceDefaultZoomChanged =
+                    WorkspaceDefaultZoomPercent != current.WorkspaceDefaultZoomPercent,
+                WorkspaceHistoryLimitChanged = WorkspaceHistoryLimit != current.WorkspaceHistoryLimit,
+                BackupPreferencesChanged =
+                    LastLocalBackupAt != current.LastLocalBackupAt ||
+                    LastCloudBackupAt != current.LastCloudBackupAt ||
+                    !string.Equals(GoogleDriveClientId, current.GoogleDriveClientId, StringComparison.Ordinal) ||
+                    !string.Equals(GoogleDriveClientSecret, current.GoogleDriveClientSecret, StringComparison.Ordinal)
+            };
     }
 }
 

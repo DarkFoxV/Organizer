@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:Organizer.Application.ViewModels"
+             x:Class="Organizer.Application.Components.BackgroundOperationHost"
+             x:DataType="vm:BackgroundOperationHostViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.operation-card">
+            <Setter Property="Width" Value="340" />
+            <Setter Property="MaxWidth" Value="340" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Background" Value="{DynamicResource OverlayCardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="11" />
+        </Style>
+
+        <Style Selector="Button.operation-cancel">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Padding" Value="12 5" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+
+        <Style Selector="Button.operation-cancel:pointerover">
+            <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DangerSoftTextBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel IsVisible="{Binding HasOperations}"
+                Spacing="10">
+        <Border Height="1"
+                Background="{DynamicResource FloatingBorderBrush}"
+                Margin="0 2" />
+
+        <ItemsControl ItemsSource="{Binding Operations}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="10" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:BackgroundOperationViewModel">
+                    <Border Classes="operation-card">
+                        <Grid ColumnDefinitions="Auto,*"
+                              ColumnSpacing="10">
+                            <ic:FluentIcon Icon="ArrowSync"
+                                           IconVariant="Regular"
+                                           IconSize="Size20"
+                                           Foreground="{DynamicResource AccentSoftTextBrush}"
+                                           VerticalAlignment="Top" />
+
+                            <StackPanel Grid.Column="1"
+                                        Spacing="7">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Grid.Column="1"
+                                               IsVisible="{Binding !IsIndeterminate}"
+                                               Text="{Binding ProgressText}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource AccentSoftTextBrush}" />
+                                </Grid>
+
+                                <TextBlock IsVisible="{Binding HasMessage}"
+                                           Text="{Binding Message}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           TextWrapping="Wrap" />
+
+                                <ProgressBar Height="5"
+                                             Minimum="0"
+                                             Maximum="100"
+                                             Value="{Binding Progress}"
+                                             IsIndeterminate="{Binding IsIndeterminate}" />
+
+                                <Button Classes="operation-cancel"
+                                        IsVisible="{Binding CanCancel}"
+                                        Command="{Binding CancelCommand}"
+                                        Content="{DynamicResource Loc.Common.Cancel}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

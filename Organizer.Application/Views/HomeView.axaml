@@ -79,6 +79,15 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
+        <Style Selector="Border.workspace-card-surface">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush"
+                                     Duration="0:0:0.18" />
+                </Transitions>
+            </Setter>
+        </Style>
+
         <Style Selector="Border.workspace-card:pointerover Border.workspace-card-surface">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
             <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />

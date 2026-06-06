@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,6 +24,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
     private readonly IImageService _imageService;
     private readonly ITagService _tagService;
     private readonly IClipboardService _clipboardService;
+    private readonly RegisterImageItemFactory _imageItemFactory;
     private readonly AppPreferencesService _preferencesService;
     private readonly IToastService _toastService;
 
@@ -70,6 +72,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         IImageService imageService,
         ITagService tagService,
         IClipboardService clipboardService,
+        RegisterImageItemFactory imageItemFactory,
         AppPreferencesService preferencesService,
         IToastService toastService)
     {
@@ -77,6 +80,7 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         _imageService = imageService;
         _tagService = tagService;
         _clipboardService = clipboardService;
+        _imageItemFactory = imageItemFactory;
         _preferencesService = preferencesService;
         _toastService = toastService;
         _preferencesService.PreferencesChanged += NotifyReady;
@@ -89,6 +93,14 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
         TagSelector.SelectionChanged += NotifyReady;
 
         _ = LoadTagsAsync();
+    }
+
+    private void NotifyReady(
+        object? sender,
+        AppPreferencesChangedEventArgs e)
+    {
+        if (e.LanguageChanged)
+            NotifyReady();
     }
 
     private void NotifyReady()
@@ -145,16 +157,42 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
                 ]
             });
 
-            var unownedFiles = files.ToList();
+            var pendingFiles = new Queue<IStorageFile>(files);
+            var preparedItems = new List<ImageOrderItemViewModel>();
 
             try
             {
-                await ImageOrder.AddImagesAsync(files, file => unownedFiles.Remove(file));
+                while (pendingFiles.TryDequeue(out var file))
+                {
+                    if (_isDisposed)
+                    {
+                        file.Dispose();
+                        break;
+                    }
+
+                    var item = await _imageItemFactory.CreateAsync(file);
+                    if (_isDisposed)
+                    {
+                        item.Dispose();
+                        break;
+                    }
+
+                    preparedItems.Add(item);
+                }
+
+                if (_isDisposed)
+                    return;
+
+                ImageOrder.AddRange(preparedItems);
+                preparedItems.Clear();
             }
             finally
             {
-                foreach (var file in unownedFiles)
+                foreach (var file in pendingFiles)
                     file.Dispose();
+
+                foreach (var item in preparedItems)
+                    item.Dispose();
             }
         }
         finally
@@ -190,10 +228,37 @@ public partial class RegisterViewModel : ObservableObject, IDisposable
                 return false;
             }
 
-            await ImageOrder.AddImagesAsync(images.Select(image => (
-                image.Filename,
-                image.MimeType,
-                image.Data)));
+            var preparedItems = new List<ImageOrderItemViewModel>();
+
+            try
+            {
+                foreach (var image in images)
+                {
+                    if (_isDisposed)
+                        return false;
+
+                    var item = await _imageItemFactory.CreateAsync(
+                        image.Filename,
+                        image.MimeType,
+                        image.Data);
+
+                    if (_isDisposed)
+                    {
+                        item.Dispose();
+                        return false;
+                    }
+
+                    preparedItems.Add(item);
+                }
+
+                ImageOrder.AddRange(preparedItems);
+                preparedItems.Clear();
+            }
+            finally
+            {
+                foreach (var item in preparedItems)
+                    item.Dispose();
+            }
 
             return true;
         }

@@ -136,8 +136,13 @@ public partial class GroupCopyPickerViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void OnPreferencesChanged()
+    private void OnPreferencesChanged(
+        object? sender,
+        AppPreferencesChangedEventArgs e)
     {
+        if (!e.LanguageChanged)
+            return;
+
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(CountText));
     }

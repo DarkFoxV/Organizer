@@ -53,15 +53,25 @@ public sealed class DatabaseFileService(AppDbContextFactory dbContextFactory)
     public async Task ExportSnapshotAsync(string destinationPath, CancellationToken cancellationToken = default)
     {
         var snapshotPath = await CreateConsistentSnapshotAsync(cancellationToken);
+        var tempDestinationPath = destinationPath + ".tmp";
 
         try
         {
             EnsureParentDirectory(destinationPath);
-            File.Copy(snapshotPath, destinationPath, overwrite: true);
+            DeleteIfExists(tempDestinationPath);
+
+            await using (var input = File.OpenRead(snapshotPath))
+            await using (var output = File.Create(tempDestinationPath))
+                await input.CopyToAsync(output, cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            DeleteIfExists(destinationPath);
+            File.Move(tempDestinationPath, destinationPath);
         }
         finally
         {
             DeleteIfExists(snapshotPath);
+            DeleteIfExists(tempDestinationPath);
         }
     }
 

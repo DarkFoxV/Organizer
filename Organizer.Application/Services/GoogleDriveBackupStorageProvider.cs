@@ -64,6 +64,11 @@ public sealed class GoogleDriveBackupStorageProvider(
 
             logger.Info("Google Drive backup upload completed.");
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            logger.Info("Google Drive backup upload canceled.");
+            throw;
+        }
         catch (Exception ex)
         {
             logger.Error("Google Drive backup upload failed", ex);
@@ -93,6 +98,10 @@ public sealed class GoogleDriveBackupStorageProvider(
                         latestFile.Size ?? 0,
                         latestFile.CreatedTimeDateTimeOffset)
                 ];
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -130,8 +139,15 @@ public sealed class GoogleDriveBackupStorageProvider(
 
             logger.Info("Google Drive backup download completed.");
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            DeleteIfExists(destinationPath);
+            logger.Info("Google Drive backup download canceled.");
+            throw;
+        }
         catch (Exception ex)
         {
+            DeleteIfExists(destinationPath);
             logger.Error("Google Drive backup download failed", ex);
             throw new InvalidOperationException(preferencesService.T("Loc.Backup.GoogleDriveDownloadFailed"), ex);
         }
@@ -213,5 +229,11 @@ public sealed class GoogleDriveBackupStorageProvider(
     private static string EscapeQueryValue(string value)
     {
         return value.Replace("\\", "\\\\").Replace("'", "\\'");
+    }
+
+    private static void DeleteIfExists(string path)
+    {
+        if (System.IO.File.Exists(path))
+            System.IO.File.Delete(path);
     }
 }

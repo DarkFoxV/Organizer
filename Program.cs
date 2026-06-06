@@ -47,10 +47,16 @@ internal class Program
         services.AddSingleton<ToastService>();
         services.AddSingleton<IToastService>(sp => sp.GetRequiredService<ToastService>());
         services.AddSingleton<IToastNotificationStore>(sp => sp.GetRequiredService<ToastService>());
+        services.AddSingleton<BackgroundOperationHostViewModel>();
+        services.AddSingleton<BackgroundOperationService>();
+        services.AddSingleton<IBackgroundOperationService>(sp =>
+            sp.GetRequiredService<BackgroundOperationService>());
         services.AddTransient<ICardService, CardService>();
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<ITagService, TagService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<RegisterImageItemFactory>();
+        services.AddSingleton<CardItemViewModelFactory>();
 
         // ─────────────────────────────
         // VIEW-MODELS (ROOT)
@@ -59,6 +65,7 @@ internal class Program
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<NavbarViewModel>();
         services.AddTransient<HomeViewModel>();
+        services.AddTransient<SearchResultsViewModel>();
         services.AddTransient<SearchViewModel>();
         services.AddSingleton<WorkspaceViewModel>();
         services.AddTransient<PreferencesViewModel>();
@@ -73,13 +80,13 @@ internal class Program
         services.AddTransient<SearchBarViewModel>();
         services.AddTransient<PaginationViewModel>();
         services.AddTransient<ImagePreviewViewModel>();
+        services.AddTransient<DeleteConfirmationViewModel>();
 
         services.AddTransient<TagSelectorViewModel>();
         services.AddTransient<TagItemViewModel>();
         services.AddTransient<TagRowViewModel>();
 
         services.AddTransient<ImageOrderListViewModel>();
-        services.AddTransient<ImageOrderItemViewModel>();
         services.AddTransient<CardItemViewModel>();
 
         // ─────────────────────────────

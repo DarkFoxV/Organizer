@@ -96,7 +96,7 @@
 
             <Grid Grid.Row="3">
                 <StackPanel Classes="status-panel"
-                            IsVisible="{Binding IsLoading}"
+                            IsVisible="{Binding Results.IsLoading}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Spacing="12">
@@ -110,7 +110,7 @@
                 </StackPanel>
 
                 <StackPanel Classes="status-panel"
-                            IsVisible="{Binding IsEmpty}"
+                            IsVisible="{Binding Results.IsEmpty}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Spacing="12"
@@ -128,12 +128,12 @@
                                HorizontalAlignment="Center" />
                 </StackPanel>
 
-                <ScrollViewer IsVisible="{Binding !IsEmpty}"
+                <ScrollViewer IsVisible="{Binding !Results.IsEmpty}"
                               HorizontalScrollBarVisibility="Disabled"
                               HorizontalAlignment="Center"
                               VerticalScrollBarVisibility="Auto">
 
-                    <ItemsControl ItemsSource="{Binding Cards}">
+                    <ItemsControl ItemsSource="{Binding Results.Cards}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel Orientation="Horizontal"
@@ -144,7 +144,8 @@
 
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="cvm:CardItemViewModel">
-                                <components:ImageContainer DataContext="{Binding}" Margin="0 0 10 10" />
+                                <components:ImageContainer DataContext="{Binding}"
+                                                           Margin="0 0 10 10" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
 
@@ -173,7 +174,7 @@
             DataContext="{Binding CopyPicker}" />
 
         <Border ZIndex="140"
-                IsVisible="{Binding IsDeleteConfirmationVisible}"
+                IsVisible="{Binding DeleteConfirmation.IsVisible}"
                 Background="{DynamicResource OverlayBrush}">
             <Border HorizontalAlignment="Center"
                     VerticalAlignment="Center"
@@ -186,11 +187,11 @@
                     BoxShadow="0 24 60 #99000000">
                 <StackPanel Spacing="18">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="{Binding DeleteConfirmationTitle}"
+                        <TextBlock Text="{Binding DeleteConfirmation.Title}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    FontSize="20"
                                    FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding DeleteConfirmationMessage}"
+                        <TextBlock Text="{Binding DeleteConfirmation.Message}"
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    FontSize="13"
                                    TextWrapping="Wrap" />
@@ -211,11 +212,11 @@
                                 HorizontalAlignment="Right"
                                 Spacing="10">
                         <Button Classes="confirm-action confirm-cancel"
-                                Command="{Binding CancelDeleteCommand}">
+                                Command="{Binding DeleteConfirmation.CancelCommand}">
                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{DynamicResource Loc.Common.Cancel}" />
                         </Button>
                         <Button Classes="confirm-action btn btn-danger"
-                                Command="{Binding ConfirmDeleteCommand}">
+                                Command="{Binding DeleteConfirmation.ConfirmCommand}">
                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{DynamicResource Loc.Common.Delete}" />
                         </Button>
                     </StackPanel>

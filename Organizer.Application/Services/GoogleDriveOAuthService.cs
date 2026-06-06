@@ -29,6 +29,11 @@ public sealed class GoogleDriveOAuthService(
             await AuthorizeAsync(cancellationToken);
             logger.Info("Google Drive login completed.");
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            logger.Info("Google Drive login canceled.");
+            throw;
+        }
         catch (Exception ex)
         {
             logger.Error("Google Drive login failed", ex);

@@ -16,7 +16,7 @@
         <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
-        <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1" Condition="'$(Configuration)' == 'Debug'" />
+        <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.2" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="FluentIcons.Avalonia" Version="2.1.328" />
         <PackageReference Include="Google.Apis.Auth" Version="1.74.0" />
@@ -34,21 +34,9 @@
     <ItemGroup>
         <Compile Remove="App.axaml.cs" />
         <Compile Remove="MainWindow.axaml.cs" />
-        <Compile Update="Organizer.Application\Components\SearchBar.axaml.cs">
-            <DependentUpon>SearchBar.axaml</DependentUpon>
-        </Compile>
-        <Compile Update="Organizer.Application\Views\ImagePreviewModal.axaml.cs">
-            <DependentUpon>ImagePreviewModal.axaml</DependentUpon>
-        </Compile>
-        <Compile Update="Organizer.Application\Components\Pagination.axaml.cs">
-            <DependentUpon>Pagination.axaml</DependentUpon>
-        </Compile>
         <Compile Update="Organizer.Application\Views\ManageTagsView.axaml.cs">
             <DependentUpon>ManageTagsView.axaml</DependentUpon>
             <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Organizer.Application\Components\TagSelector.axaml.cs">
-            <DependentUpon>TagSelector.axaml</DependentUpon>
         </Compile>
         <Compile Update="Organizer.Application\Views\RegisterView.axaml.cs">
             <DependentUpon>RegisterView.axaml</DependentUpon>
@@ -56,19 +44,57 @@
         <Compile Update="Organizer.Application\Views\EditView.axaml.cs">
           <DependentUpon>EditView.axaml</DependentUpon>
         </Compile>
-        <Compile Update="Organizer.Application\Views\GroupCopyPickerModal.axaml.cs">
+        <Compile Update="Organizer.Application\Components\Views\ImageContainer.axaml.cs">
+          <DependentUpon>ImageContainer.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\Navbar.axaml.cs">
+          <DependentUpon>Navbar.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\Pagination.axaml.cs">
+          <DependentUpon>Pagination.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\SearchBar.axaml.cs">
+          <DependentUpon>SearchBar.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\TagSelector.axaml.cs">
+          <DependentUpon>TagSelector.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\ToastHost.axaml.cs">
+          <DependentUpon>ToastHost.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\BackgroundOperationHost.axaml.cs">
+          <DependentUpon>BackgroundOperationHost.axaml</DependentUpon>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\ImagePreviewModal.axaml.cs">
+          <DependentUpon>ImagePreviewModal.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\ImageOrderList.axaml.cs">
+          <DependentUpon>ImageOrderList.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\GroupCopyPickerModal.axaml.cs">
           <DependentUpon>GroupCopyPickerModal.axaml</DependentUpon>
+          <SubType>Code</SubType>
         </Compile>
-        <Compile Update="Organizer.Application\Views\PreferencesBackupView.axaml.cs">
-          <DependentUpon>PreferencesBackupView.axaml</DependentUpon>
-        </Compile>
-        <Compile Update="Organizer.Application\Views\PreferencesAboutView.axaml.cs">
+        <Compile Update="Organizer.Application\Components\Views\PreferencesAboutView.axaml.cs">
           <DependentUpon>PreferencesAboutView.axaml</DependentUpon>
+          <SubType>Code</SubType>
         </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="Organizer.Application\Assets\Styles\" />
+        <Compile Update="Organizer.Application\Components\Views\PreferencesBackupView.axaml.cs">
+          <DependentUpon>PreferencesBackupView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Organizer.Application\Components\Views\PreferencesGeneralView.axaml.cs">
+          <DependentUpon>PreferencesGeneralView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>

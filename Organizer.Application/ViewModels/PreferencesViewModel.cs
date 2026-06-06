@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -20,11 +21,15 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     private readonly AppDbContextFactory _dbContextFactory;
     private readonly HomeWorkspaceCacheService _homeWorkspaceCacheService;
     private readonly IToastService _toastService;
+    private readonly IBackgroundOperationService _backgroundOperationService;
+    private readonly BackgroundOperationHostViewModel _backgroundOperationHost;
     private readonly DispatcherTimer _saveIndicatorTimer;
     private readonly DispatcherTimer _workspacePreferenceSaveTimer;
+    private readonly CancellationTokenSource _lifetimeCts = new();
     private bool _isRefreshingOptions;
     private bool _isSavingPreference;
     private bool _hasPendingWorkspacePreferences;
+    private bool _isDisposed;
 
     public ObservableCollection<PreferenceOption<AppThemePreference>> ThemeOptions { get; } =
         new();
@@ -65,7 +70,7 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
     public bool IsGeneralSectionVisible => SelectedSection == PreferencesSection.General;
     public bool IsDataBackupSectionVisible => SelectedSection == PreferencesSection.DataBackup;
     public bool IsAboutSectionVisible => SelectedSection == PreferencesSection.About;
-    public bool IsNotBusy => !IsBusy;
+    public bool IsNotBusy => !IsBusy && !_backgroundOperationHost.HasOperations;
 
     public bool IsGeneralSelected => SelectedSection == PreferencesSection.General;
     public bool IsDataBackupSelected => SelectedSection == PreferencesSection.DataBackup;
@@ -95,7 +100,9 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         GoogleDriveBackupStorageProvider googleDriveBackupStorageProvider,
         AppDbContextFactory dbContextFactory,
         HomeWorkspaceCacheService homeWorkspaceCacheService,
-        IToastService toastService)
+        IToastService toastService,
+        IBackgroundOperationService backgroundOperationService,
+        BackgroundOperationHostViewModel backgroundOperationHost)
     {
         _preferencesService = preferencesService;
         _backupService = backupService;
@@ -104,6 +111,8 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         _dbContextFactory = dbContextFactory;
         _homeWorkspaceCacheService = homeWorkspaceCacheService;
         _toastService = toastService;
+        _backgroundOperationService = backgroundOperationService;
+        _backgroundOperationHost = backgroundOperationHost;
         _saveIndicatorTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(2.5)
@@ -119,6 +128,7 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         RefreshDatabaseInfo();
         _ = RefreshAboutStatsAsync();
         _preferencesService.PreferencesChanged += OnPreferencesChanged;
+        _backgroundOperationHost.PropertyChanged += OnBackgroundOperationHostPropertyChanged;
     }
 
     partial void OnSelectedThemeChanged(PreferenceOption<AppThemePreference>? value)
@@ -262,31 +272,74 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         SelectedTheme = FindOption(ThemeOptions, AppThemePreference.Gray);
     }
 
-    public async Task CreateLocalBackupAsync(string destinationPath)
+    public Task CreateLocalBackupAsync(string destinationPath)
     {
-        await RunBackupActionAsync(
-            async () =>
+        if (!IsNotBusy)
+            return Task.CompletedTask;
+
+        var operation = _backgroundOperationService.Start(
+            _preferencesService.T("Loc.BackgroundOperation.LocalBackupTitle"),
+            _preferencesService.T("Loc.BackgroundOperation.Preparing"),
+            canCancel: true);
+
+        _ = RunBackgroundOperationAsync(
+            operation,
+            async cancellationToken =>
             {
-                await _backupService.CreateLocalBackupAsync(destinationPath);
+                operation.ReportProgress(
+                    15,
+                    _preferencesService.T("Loc.BackgroundOperation.CreatingSnapshot"));
+                var metadata = await Task.Run(
+                    () => _backupService.CreateLocalBackupAsync(
+                        destinationPath,
+                        recordLocalBackup: false,
+                        cancellationToken: cancellationToken),
+                    cancellationToken);
+                _preferencesService.Update(
+                    preferences => preferences.LastLocalBackupAt = metadata.CreatedAt);
+                operation.ReportProgress(
+                    100,
+                    _preferencesService.T("Loc.BackgroundOperation.Finalizing"));
                 RefreshDatabaseInfo();
                 _toastService.Success(
                     _preferencesService.T("Loc.Backup.ToastBackupCreatedTitle"),
                     _preferencesService.T("Loc.Backup.ToastBackupCreatedMessage"));
             },
             _preferencesService.T("Loc.Backup.ToastBackupFailedTitle"));
+
+        return Task.CompletedTask;
     }
 
-    public async Task ExportDatabaseAsync(string destinationPath)
+    public Task ExportDatabaseAsync(string destinationPath)
     {
-        await RunBackupActionAsync(
-            async () =>
+        if (!IsNotBusy)
+            return Task.CompletedTask;
+
+        var operation = _backgroundOperationService.Start(
+            _preferencesService.T("Loc.BackgroundOperation.ExportTitle"),
+            _preferencesService.T("Loc.BackgroundOperation.CreatingSnapshot"),
+            canCancel: true);
+
+        _ = RunBackgroundOperationAsync(
+            operation,
+            async cancellationToken =>
             {
-                await _backupService.ExportDatabaseAsync(destinationPath);
+                operation.ReportProgress(
+                    20,
+                    _preferencesService.T("Loc.BackgroundOperation.CreatingSnapshot"));
+                await Task.Run(
+                    () => _backupService.ExportDatabaseAsync(destinationPath, cancellationToken),
+                    cancellationToken);
+                operation.ReportProgress(
+                    100,
+                    _preferencesService.T("Loc.BackgroundOperation.Finalizing"));
                 _toastService.Success(
                     _preferencesService.T("Loc.Backup.ToastDatabaseExportedTitle"),
                     _preferencesService.T("Loc.Backup.ToastDatabaseExportedMessage"));
             },
             _preferencesService.T("Loc.Backup.ToastExportFailedTitle"));
+
+        return Task.CompletedTask;
     }
 
     public async Task<bool> ValidateBackupForRestoreAsync(string backupPath)
@@ -338,12 +391,21 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
             _preferencesService.T("Loc.Backup.ToastGoogleDriveMessage"));
     }
 
-    public async Task ConnectGoogleDriveAsync()
+    public Task ConnectGoogleDriveAsync()
     {
-        await RunBackupActionAsync(
-            async () =>
+        if (!IsNotBusy)
+            return Task.CompletedTask;
+
+        var operation = _backgroundOperationService.Start(
+            _preferencesService.T("Loc.BackgroundOperation.GoogleConnectTitle"),
+            _preferencesService.T("Loc.BackgroundOperation.GoogleConnectMessage"),
+            canCancel: true);
+
+        _ = RunBackgroundOperationAsync(
+            operation,
+            async cancellationToken =>
             {
-                await _googleDriveOAuthService.ConnectAsync();
+                await _googleDriveOAuthService.ConnectAsync(cancellationToken);
                 OnPropertyChanged(nameof(CloudProviderStatus));
                 OnPropertyChanged(nameof(IsCloudConnected));
                 OnPropertyChanged(nameof(IsCloudDisconnected));
@@ -352,12 +414,22 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
                     _preferencesService.T("Loc.Backup.ToastGoogleDriveConnectedMessage"));
             },
             _preferencesService.T("Loc.Backup.ToastGoogleDriveConnectFailedTitle"));
+
+        return Task.CompletedTask;
     }
 
-    public async Task DisconnectGoogleDriveAsync()
+    public Task DisconnectGoogleDriveAsync()
     {
-        await RunBackupActionAsync(
-            async () =>
+        if (!IsNotBusy)
+            return Task.CompletedTask;
+
+        var operation = _backgroundOperationService.Start(
+            _preferencesService.T("Loc.BackgroundOperation.GoogleDisconnectTitle"),
+            _preferencesService.T("Loc.BackgroundOperation.GoogleDisconnectMessage"));
+
+        _ = RunBackgroundOperationAsync(
+            operation,
+            async _ =>
             {
                 await _googleDriveOAuthService.DisconnectAsync();
                 OnPropertyChanged(nameof(CloudProviderStatus));
@@ -368,12 +440,25 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
                     _preferencesService.T("Loc.Backup.ToastGoogleDriveDisconnectedMessage"));
             },
             _preferencesService.T("Loc.Backup.ToastGoogleDriveDisconnectFailedTitle"));
+
+        return Task.CompletedTask;
     }
 
-    public async Task BackupToGoogleDriveAsync(CancellationToken cancellationToken = default)
+    public Task BackupToGoogleDriveAsync(CancellationToken cancellationToken = default)
     {
-        await RunBackupActionAsync(
-            async () =>
+        if (!IsNotBusy)
+            return Task.CompletedTask;
+
+        var operationCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var operation = _backgroundOperationService.Start(
+            _preferencesService.T("Loc.BackgroundOperation.CloudBackupTitle"),
+            _preferencesService.T("Loc.BackgroundOperation.Preparing"),
+            canCancel: true,
+            operationCts);
+
+        _ = RunBackgroundOperationAsync(
+            operation,
+            async operationCancellationToken =>
             {
                 EnsureGoogleDriveConnected();
 
@@ -381,23 +466,28 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
                     Path.GetTempPath(),
                     $"organizer-backup-{DateTimeOffset.Now:yyyy-MM-dd-HHmmss}.obak");
 
-                using var progressToast = _toastService.Progress(
-                    _preferencesService.T("Loc.Backup.ToastCloudBackupProgressTitle"),
-                    _preferencesService.T("Loc.Backup.ToastCloudBackupProgressMessage"));
-
                 try
                 {
+                    operation.ReportProgress(
+                        10,
+                        _preferencesService.T("Loc.BackgroundOperation.CreatingSnapshot"));
                     await Task.Run(
-                        async () =>
-                        {
-                            await _backupService.CreateLocalBackupAsync(
-                                backupPath,
-                                recordLocalBackup: false,
-                                cancellationToken);
-                            await _googleDriveBackupStorageProvider.UploadBackupAsync(backupPath, cancellationToken);
-                        },
-                        cancellationToken);
+                        () => _backupService.CreateLocalBackupAsync(
+                            backupPath,
+                            recordLocalBackup: false,
+                            operationCancellationToken),
+                        operationCancellationToken);
 
+                    operation.ReportProgress(
+                        55,
+                        _preferencesService.T("Loc.BackgroundOperation.Uploading"));
+                    await _googleDriveBackupStorageProvider.UploadBackupAsync(
+                        backupPath,
+                        operationCancellationToken);
+
+                    operation.ReportProgress(
+                        100,
+                        _preferencesService.T("Loc.BackgroundOperation.Finalizing"));
                     _preferencesService.Update(preferences => preferences.LastCloudBackupAt = DateTimeOffset.UtcNow);
                     RefreshDatabaseInfo();
                     _toastService.Success(
@@ -410,12 +500,25 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
                 }
             },
             _preferencesService.T("Loc.Backup.ToastCloudBackupFailedTitle"));
+
+        return Task.CompletedTask;
     }
 
-    public async Task RestoreLatestFromGoogleDriveAsync(CancellationToken cancellationToken = default)
+    public Task RestoreLatestFromGoogleDriveAsync(CancellationToken cancellationToken = default)
     {
-        await RunBackupActionAsync(
-            async () =>
+        if (!IsNotBusy)
+            return Task.CompletedTask;
+
+        var operationCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var operation = _backgroundOperationService.Start(
+            _preferencesService.T("Loc.BackgroundOperation.CloudRestoreTitle"),
+            _preferencesService.T("Loc.BackgroundOperation.Downloading"),
+            canCancel: true,
+            operationCts);
+
+        _ = RunBackgroundOperationAsync(
+            operation,
+            async operationCancellationToken =>
             {
                 EnsureGoogleDriveConnected();
 
@@ -423,20 +526,27 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
                     Path.GetTempPath(),
                     $"organizer-cloud-restore-{Guid.NewGuid():N}.obak");
 
-                using var progressToast = _toastService.Progress(
-                    _preferencesService.T("Loc.Backup.ToastCloudRestoreProgressTitle"),
-                    _preferencesService.T("Loc.Backup.ToastCloudRestoreProgressMessage"));
-
                 try
                 {
-                    await Task.Run(
-                        async () =>
-                        {
-                            await _googleDriveBackupStorageProvider.DownloadLatestBackupAsync(backupPath, cancellationToken);
-                            await _backupService.RestoreFromBackupAsync(backupPath, cancellationToken);
-                        },
-                        cancellationToken);
+                    operation.ReportProgress(
+                        15,
+                        _preferencesService.T("Loc.BackgroundOperation.Downloading"));
+                    await _googleDriveBackupStorageProvider.DownloadLatestBackupAsync(
+                        backupPath,
+                        operationCancellationToken);
 
+                    operation.ReportProgress(
+                        65,
+                        _preferencesService.T("Loc.BackgroundOperation.ValidatingRestore"));
+                    await Task.Run(
+                        () => _backupService.RestoreFromBackupAsync(
+                            backupPath,
+                            operationCancellationToken),
+                        operationCancellationToken);
+
+                    operation.ReportProgress(
+                        100,
+                        _preferencesService.T("Loc.BackgroundOperation.Finalizing"));
                     RefreshDatabaseInfo();
                     _toastService.Success(
                         _preferencesService.T("Loc.Backup.ToastBackupRestoredTitle"),
@@ -448,30 +558,68 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
                 }
             },
             _preferencesService.T("Loc.Backup.ToastRestoreFailedTitle"));
+
+        return Task.CompletedTask;
     }
 
     public void Dispose()
     {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _lifetimeCts.Cancel();
         FlushWorkspacePreferenceSave();
         _preferencesService.PreferencesChanged -= OnPreferencesChanged;
+        _backgroundOperationHost.PropertyChanged -= OnBackgroundOperationHostPropertyChanged;
         _saveIndicatorTimer.Stop();
         _saveIndicatorTimer.Tick -= OnSaveIndicatorTimerTick;
         _workspacePreferenceSaveTimer.Stop();
         _workspacePreferenceSaveTimer.Tick -= OnWorkspacePreferenceSaveTimerTick;
+        _lifetimeCts.Dispose();
     }
 
-    private void OnPreferencesChanged()
+    private void OnPreferencesChanged(
+        object? sender,
+        AppPreferencesChangedEventArgs e)
     {
-        if (!_isSavingPreference)
+        if (!_isSavingPreference &&
+            (e.LanguageChanged ||
+             e.ThemeChanged ||
+             e.SearchItemsPerPageChanged ||
+             e.ConfirmDeletionChanged ||
+             e.WorkspacePasteModeChanged ||
+             e.WorkspaceBackgroundChanged ||
+             e.WorkspaceDefaultZoomChanged ||
+             e.WorkspaceHistoryLimitChanged ||
+             e.BackupPreferencesChanged))
+        {
             RefreshOptions();
+        }
 
-        RefreshDatabaseInfo();
-        OnPropertyChanged(nameof(CloudProviderStatus));
-        OnPropertyChanged(nameof(IsCloudConnected));
-        OnPropertyChanged(nameof(IsCloudDisconnected));
-        OnPropertyChanged(nameof(AboutImagesText));
-        OnPropertyChanged(nameof(AboutWorkspacesText));
-        OnPropertyChanged(nameof(AboutTagsText));
+        if (e.BackupPreferencesChanged)
+        {
+            RefreshDatabaseInfo();
+            OnPropertyChanged(nameof(CloudProviderStatus));
+            OnPropertyChanged(nameof(IsCloudConnected));
+            OnPropertyChanged(nameof(IsCloudDisconnected));
+        }
+
+        if (e.LanguageChanged)
+        {
+            OnPropertyChanged(nameof(CloudProviderStatus));
+            OnPropertyChanged(nameof(AboutImagesText));
+            OnPropertyChanged(nameof(AboutWorkspacesText));
+            OnPropertyChanged(nameof(AboutTagsText));
+        }
+    }
+
+    private void OnBackgroundOperationHostPropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(BackgroundOperationHostViewModel.HasOperations))
+            OnPropertyChanged(nameof(IsNotBusy));
     }
 
     private void SavePreference(Action<AppPreferences> update)
@@ -538,7 +686,7 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
 
     private async Task RunBackupActionAsync(Func<Task> action, string errorTitle)
     {
-        if (IsBusy)
+        if (!IsNotBusy)
             return;
 
         IsBusy = true;
@@ -546,6 +694,9 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         try
         {
             await action();
+        }
+        catch (OperationCanceledException) when (_isDisposed)
+        {
         }
         catch (Exception ex)
         {
@@ -557,8 +708,37 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         }
     }
 
+    private async Task RunBackgroundOperationAsync(
+        IBackgroundOperation operation,
+        Func<CancellationToken, Task> action,
+        string errorTitle)
+    {
+        try
+        {
+            await action(operation.CancellationToken);
+            operation.Complete();
+        }
+        catch (OperationCanceledException) when (operation.CancellationToken.IsCancellationRequested)
+        {
+            operation.Cancel();
+            _toastService.Warning(
+                _preferencesService.T("Loc.BackgroundOperation.CanceledTitle"),
+                _preferencesService.T("Loc.BackgroundOperation.CanceledMessage"));
+        }
+        catch (Exception ex)
+        {
+            operation.Fail(ex);
+            _toastService.Error(errorTitle, ex.Message);
+        }
+    }
+
     private async Task<bool> RunValidationAsync(Func<Task> action, string errorTitle)
     {
+        if (!IsNotBusy)
+            return false;
+
+        IsBusy = true;
+
         try
         {
             await action();
@@ -568,6 +748,10 @@ public partial class PreferencesViewModel : ObservableObject, IDisposable
         {
             _toastService.Error(errorTitle, ex.Message);
             return false;
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 

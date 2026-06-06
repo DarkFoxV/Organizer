@@ -63,7 +63,7 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
     partial void OnIsWorkspaceListModeChanged(bool value)
     {
         OnPropertyChanged(nameof(IsWorkspaceGridMode));
-        _preferencesService.UpdateStoredData(preferences =>
+        _preferencesService.Update(preferences =>
             preferences.HomeWorkspaceViewMode = value
                 ? HomeWorkspaceViewPreference.List
                 : HomeWorkspaceViewPreference.Grid);
@@ -184,15 +184,28 @@ public sealed partial class HomeViewModel : ObservableObject, IDisposable
         RebuildWorkspaceItems();
     }
 
-    private void OnPreferencesChanged()
+    private void OnPreferencesChanged(
+        object? sender,
+        AppPreferencesChangedEventArgs e)
     {
         if (_isDisposed)
             return;
 
-        RebuildWorkspaceItems();
-        OnPropertyChanged(nameof(ImageTotalText));
-        OnPropertyChanged(nameof(WorkspaceTotalText));
-        OnPropertyChanged(nameof(TagTotalText));
+        if (e.HomeWorkspaceViewModeChanged)
+        {
+            IsWorkspaceListMode =
+                _preferencesService.Current.HomeWorkspaceViewMode == HomeWorkspaceViewPreference.List;
+        }
+
+        if (e.LanguageChanged || e.HomeWorkspaceViewModeChanged)
+            RebuildWorkspaceItems();
+
+        if (e.LanguageChanged)
+        {
+            OnPropertyChanged(nameof(ImageTotalText));
+            OnPropertyChanged(nameof(WorkspaceTotalText));
+            OnPropertyChanged(nameof(TagTotalText));
+        }
     }
 
     private void RebuildWorkspaceItems()

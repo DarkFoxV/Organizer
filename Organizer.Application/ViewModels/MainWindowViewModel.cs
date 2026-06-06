@@ -23,6 +23,7 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] private string _globalLoadingText = "Carregando, aguarde...";
 
     public NavbarViewModel Navbar { get; }
+    public BackgroundOperationHostViewModel BackgroundOperations { get; }
 
     public bool HasUnsavedWorkspaceChanges => _workspaceViewModel.HasUnsavedChanges;
 
@@ -35,12 +36,14 @@ public partial class MainWindowViewModel : ObservableObject
 
     public MainWindowViewModel(SearchViewModel searchViewModel,
         NavbarViewModel navbar,
+        BackgroundOperationHostViewModel backgroundOperations,
         IServiceProvider services)
     {
         _services = services;
         _searchViewModel = searchViewModel;
         _workspaceViewModel = _services.GetRequiredService<WorkspaceViewModel>();
         Navbar = navbar;
+        BackgroundOperations = backgroundOperations;
 
         _searchViewModel.RegisterRequested += GoToRegister;
         _searchViewModel.EditRequested += GoToEdit;
